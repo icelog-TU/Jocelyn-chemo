@@ -9,21 +9,19 @@
     --pink: #f4a7b9;
     --pink-light: #fde8ef;
     --pink-dark: #d97093;
-    --peach: #f9c784;
-    --peach-light: #fff4e0;
     --cream: #fdf8f2;
     --text: #4a3f3f;
     --text-light: #8a7070;
     --border: #ecd9d9;
-    --white: #ffffff;
-    --green: #81c784;
-    --green-light: #e8f5e9;
-    --red: #e57373;
-    --red-light: #fdecea;
-    --blue: #7eb8d4;
-    --blue-light: #e3f2fd;
     --shadow: 0 2px 12px rgba(180,120,120,0.10);
     --radius: 14px;
+    --c-med: #9c6fcf;
+    --c-food: #5aaa7a;
+    --c-sym: #e07050;
+    --c-act: #4a90d9;
+    --c-blood: #d94a4a;
+    --c-sleep: #5070b0;
+    --c-other: #8a8a8a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -31,229 +29,245 @@
     background: var(--cream);
     color: var(--text);
     min-height: 100vh;
-    padding-bottom: 80px;
+    padding-bottom: 70px;
   }
-  /* Header */
+
+  /* ── Header ── */
   .app-header {
     background: linear-gradient(135deg, var(--pink-dark) 0%, var(--pink) 100%);
     color: white;
-    padding: 16px 20px 14px;
+    padding: 14px 16px 12px;
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 2px 8px rgba(180,80,100,0.18);
   }
   .app-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
-  .app-header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; }
-  .app-header p { font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
-  .diag-badge {
-    background: rgba(255,255,255,0.22); border-radius: 10px;
-    padding: 4px 10px; text-align: center; flex-shrink: 0;
-  }
+  .app-header h1 { font-size: 1.15rem; font-weight: 700; }
+  .app-header p { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
+  .diag-badge { background: rgba(255,255,255,0.22); border-radius: 10px; padding: 4px 10px; text-align: center; }
   .diag-badge .day-num { font-size: 1.3rem; font-weight: 800; line-height: 1.1; }
-  .diag-badge .day-lbl { font-size: 0.62rem; opacity: 0.88; }
-  /* Bottom nav */
+  .diag-badge .day-lbl { font-size: 0.6rem; opacity: 0.88; }
+
+  /* ── Bottom nav ── */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: white;
-    border-top: 1.5px solid var(--border);
-    display: flex;
-    z-index: 100;
+    background: white; border-top: 1.5px solid var(--border);
+    display: flex; z-index: 100;
     box-shadow: 0 -2px 12px rgba(180,120,120,0.08);
   }
   .nav-btn {
     flex: 1; padding: 8px 4px 6px;
     background: none; border: none; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    color: var(--text-light); font-size: 0.65rem;
-    transition: color 0.2s;
+    color: var(--text-light); font-size: 0.65rem; transition: color 0.2s;
   }
   .nav-btn.active { color: var(--pink-dark); }
   .nav-btn svg { width: 22px; height: 22px; }
-  /* Pages */
-  .page { display: none; padding: 16px; }
+
+  /* ── Pages ── */
+  .page { display: none; }
   .page.active { display: block; }
-  /* Card */
+
+  /* ── Card ── */
   .card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 14px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+    background: white; border-radius: var(--radius);
+    padding: 14px; margin: 12px 12px 0;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
   }
   .card-title {
-    font-size: 0.9rem; font-weight: 700;
-    color: var(--pink-dark);
-    margin-bottom: 12px;
-    display: flex; align-items: center; gap: 6px;
+    font-size: 0.88rem; font-weight: 700; color: var(--pink-dark);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
   }
-  .card-title span { font-size: 1.1rem; }
-  /* Form elements */
-  label { font-size: 0.82rem; color: var(--text-light); display: block; margin-bottom: 4px; margin-top: 10px; }
-  label:first-child { margin-top: 0; }
-  input[type=text], input[type=number], input[type=date], textarea, select {
+
+  /* ── Date nav ── */
+  .date-nav {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px 0;
+  }
+  .date-nav input {
+    flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
+    border-radius: 9px; font-size: 0.88rem; color: var(--text);
+    background: white; outline: none; font-family: inherit;
+  }
+  .date-nav input:focus { border-color: var(--pink); }
+  .date-nav button {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: 9px; padding: 8px 12px; font-size: 1rem;
+    cursor: pointer; color: var(--text-light);
+  }
+
+  /* ── Timeline ── */
+  .timeline { padding: 10px 12px 0; }
+  .timeline-empty {
+    text-align: center; padding: 24px 0; color: var(--text-light); font-size: 0.85rem;
+  }
+  .timeline-empty .big { font-size: 2rem; margin-bottom: 6px; }
+  .log-entry {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: white; border-radius: 12px;
+    padding: 10px 12px; margin-bottom: 8px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    position: relative;
+  }
+  .log-time {
+    font-size: 0.78rem; font-weight: 700; color: var(--text-light);
+    min-width: 38px; padding-top: 2px; flex-shrink: 0;
+  }
+  .log-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 4px;
+  }
+  .log-body { flex: 1; min-width: 0; }
+  .log-cat { font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; }
+  .log-content { font-size: 0.85rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .log-meta { font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
+  .log-del {
+    background: none; border: none; color: #ccc; font-size: 1rem;
+    cursor: pointer; padding: 0 2px; flex-shrink: 0; align-self: flex-start;
+  }
+  .log-del:hover { color: var(--c-blood); }
+
+  /* Category colors */
+  .cat-用藥 { color: var(--c-med); } .dot-用藥 { background: var(--c-med); }
+  .cat-飲食 { color: var(--c-food); } .dot-飲食 { background: var(--c-food); }
+  .cat-症狀 { color: var(--c-sym); } .dot-症狀 { background: var(--c-sym); }
+  .cat-活動 { color: var(--c-act); } .dot-活動 { background: var(--c-act); }
+  .cat-血液 { color: var(--c-blood); } .dot-血液 { background: var(--c-blood); }
+  .cat-睡眠 { color: var(--c-sleep); } .dot-睡眠 { background: var(--c-sleep); }
+  .cat-其他 { color: var(--c-other); } .dot-其他 { background: var(--c-other); }
+
+  /* ── Entry form ── */
+  .entry-form {
+    background: white; border-radius: var(--radius);
+    padding: 14px; margin: 10px 12px 12px;
+    box-shadow: var(--shadow); border: 1.5px solid var(--pink-light);
+  }
+  .form-title { font-size: 0.82rem; font-weight: 700; color: var(--pink-dark); margin-bottom: 10px; }
+  .time-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .time-row label { font-size: 0.78rem; color: var(--text-light); white-space: nowrap; }
+  .time-row input {
+    padding: 7px 10px; border: 1.5px solid var(--border);
+    border-radius: 9px; font-size: 0.88rem; font-family: inherit;
+    color: var(--text); background: var(--cream); outline: none; width: 100px;
+  }
+  .time-row input:focus { border-color: var(--pink); background: white; }
+
+  /* Category chips */
+  .cat-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
+  .cat-chips::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    flex-shrink: 0; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;
+    border: 1.5px solid var(--border); background: white; cursor: pointer;
+    color: var(--text-light); white-space: nowrap; transition: all 0.18s;
+  }
+  .cat-chip.sel-用藥 { background: #f3ecfb; border-color: var(--c-med); color: var(--c-med); font-weight: 700; }
+  .cat-chip.sel-飲食 { background: #eaf7ee; border-color: var(--c-food); color: var(--c-food); font-weight: 700; }
+  .cat-chip.sel-症狀 { background: #fdf0ec; border-color: var(--c-sym); color: var(--c-sym); font-weight: 700; }
+  .cat-chip.sel-活動 { background: #eaf2fc; border-color: var(--c-act); color: var(--c-act); font-weight: 700; }
+  .cat-chip.sel-血液 { background: #fdeaea; border-color: var(--c-blood); color: var(--c-blood); font-weight: 700; }
+  .cat-chip.sel-睡眠 { background: #eaeff8; border-color: var(--c-sleep); color: var(--c-sleep); font-weight: 700; }
+  .cat-chip.sel-其他 { background: #f0f0f0; border-color: var(--c-other); color: var(--c-other); font-weight: 700; }
+
+  /* Form fields */
+  textarea, input[type=text], input[type=number], select {
     width: 100%; padding: 9px 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 9px; font-size: 0.88rem;
-    color: var(--text); background: var(--cream);
-    outline: none; transition: border-color 0.2s;
-    font-family: inherit;
+    border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 0.88rem; color: var(--text); background: var(--cream);
+    outline: none; transition: border-color 0.2s; font-family: inherit;
   }
-  input:focus, textarea:focus, select:focus { border-color: var(--pink); background: white; }
-  textarea { resize: none; min-height: 72px; }
-  /* Slider row */
-  .slider-row { margin-top: 10px; }
-  .slider-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .slider-label-row .lbl { font-size: 0.82rem; color: var(--text-light); }
-  .slider-label-row .val { font-size: 1rem; font-weight: 700; color: var(--pink-dark); min-width: 28px; text-align: right; }
-  input[type=range] {
-    width: 100%; height: 6px; accent-color: var(--pink-dark);
-    cursor: pointer;
-  }
-  .range-ends { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-light); margin-top: 2px; }
-  /* Toggle chips */
-  .chip-group { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
-  .chip {
-    padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;
-    border: 1.5px solid var(--border); background: white;
-    cursor: pointer; transition: all 0.18s; user-select: none;
-    color: var(--text-light);
-  }
-  .chip.selected { background: var(--pink-light); border-color: var(--pink-dark); color: var(--pink-dark); font-weight: 600; }
+  textarea:focus, input:focus, select:focus { border-color: var(--pink); background: white; }
+  textarea { resize: none; min-height: 76px; }
+  .field-label { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; margin-top: 10px; display: block; }
+  .field-label:first-child { margin-top: 0; }
+
+  /* Severity slider */
+  .sev-row { margin-top: 10px; }
+  .sev-label-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .sev-label-row span { font-size: 0.78rem; color: var(--text-light); }
+  .sev-label-row .val { font-weight: 700; color: var(--c-sym); }
+  input[type=range] { width: 100%; accent-color: var(--c-sym); }
+  .sev-ends { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-light); margin-top: 2px; }
+
+  /* Blood fields */
+  .blood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .blood-item label { font-size: 0.72rem; color: var(--text-light); display: block; margin-bottom: 3px; }
+  .blood-item input { padding: 7px 10px; font-size: 0.85rem; }
+
   /* Buttons */
   .btn {
-    display: block; width: 100%; padding: 13px;
+    display: block; width: 100%; padding: 12px;
     border-radius: var(--radius); border: none; cursor: pointer;
-    font-size: 0.95rem; font-weight: 700; font-family: inherit;
-    transition: opacity 0.18s, transform 0.1s;
+    font-size: 0.92rem; font-weight: 700; font-family: inherit;
+    transition: opacity 0.18s, transform 0.1s; margin-top: 10px;
   }
   .btn:active { transform: scale(0.98); }
   .btn-primary { background: linear-gradient(135deg, var(--pink-dark), var(--pink)); color: white; }
   .btn-secondary { background: var(--pink-light); color: var(--pink-dark); }
   .btn-ai { background: linear-gradient(135deg, #7c5cbf, #a07be0); color: white; }
   .btn:disabled { opacity: 0.5; }
-  .btn-sm {
-    display: inline-block; width: auto; padding: 7px 16px;
-    font-size: 0.82rem;
+  .btn-sm { display: inline-block; width: auto; padding: 7px 16px; font-size: 0.82rem; }
+
+  /* Alert */
+  .alert { padding: 9px 13px; border-radius: 10px; font-size: 0.82rem; margin: 8px 0; display: none; }
+  .alert.success { background: #e8f5e9; color: #388e3c; display: block; }
+  .alert.error { background: #fdecea; color: #c62828; display: block; }
+  .alert.info { background: #e3f2fd; color: #1565c0; display: block; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 5px;
   }
-  /* Section toggle */
-  .section-toggle {
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none;
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* History */
+  .hist-filter { padding: 10px 12px 0; display: flex; gap: 8px; align-items: flex-end; }
+  .hist-filter > div { flex: 1; }
+  .hist-filter label { font-size: 0.72rem; color: var(--text-light); display: block; margin-bottom: 3px; }
+  .hist-filter input { padding: 8px 10px; font-size: 0.82rem; }
+  .hist-filter button {
+    padding: 8px 14px; border-radius: 9px; border: none;
+    background: var(--pink-dark); color: white; font-size: 0.82rem;
+    font-weight: 700; cursor: pointer; flex-shrink: 0;
   }
-  .section-toggle .arrow { font-size: 0.9rem; transition: transform 0.2s; color: var(--text-light); }
-  .section-toggle.open .arrow { transform: rotate(180deg); }
-  .section-body { margin-top: 10px; }
-  /* Date nav */
-  .date-nav {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
-  }
-  .date-nav input { flex: 1; }
-  .date-nav button {
-    background: white; border: 1.5px solid var(--border);
-    border-radius: 9px; padding: 8px 12px; font-size: 1rem;
-    cursor: pointer; color: var(--text-light);
-  }
-  /* History list */
-  .history-item {
-    background: white; border-radius: var(--radius);
-    padding: 14px; margin-bottom: 10px;
-    border: 1px solid var(--border); box-shadow: var(--shadow);
-    cursor: pointer;
-  }
-  .history-item:hover { border-color: var(--pink); }
-  .history-date { font-weight: 700; color: var(--pink-dark); font-size: 0.92rem; }
-  .history-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .tag {
-    font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;
-    background: var(--pink-light); color: var(--pink-dark);
-  }
-  .tag.green { background: var(--green-light); color: #388e3c; }
-  .tag.blue { background: var(--blue-light); color: #1565c0; }
-  /* AI chat */
+  .hist-list { padding: 10px 12px; }
+
+  /* AI */
+  .chat-wrap { padding: 10px 12px; }
   .chat-box {
     background: white; border-radius: var(--radius);
-    border: 1px solid var(--border);
-    min-height: 240px; max-height: 380px;
+    border: 1px solid var(--border); min-height: 260px; max-height: 400px;
     overflow-y: auto; padding: 12px;
-    margin-bottom: 10px;
     display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 10px;
   }
   .msg { max-width: 88%; }
   .msg.user { align-self: flex-end; }
   .msg.ai { align-self: flex-start; }
-  .msg-bubble {
-    padding: 9px 13px; border-radius: 16px;
-    font-size: 0.86rem; line-height: 1.55;
-    white-space: pre-wrap;
-  }
+  .msg-bubble { padding: 9px 13px; border-radius: 16px; font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; }
   .msg.user .msg-bubble { background: var(--pink-dark); color: white; border-bottom-right-radius: 4px; }
   .msg.ai .msg-bubble { background: #f0ecf7; color: var(--text); border-bottom-left-radius: 4px; }
-  .msg-time { font-size: 0.68rem; color: var(--text-light); margin-top: 3px; text-align: right; }
-  .msg.ai .msg-time { text-align: left; }
-  .chat-input-row { display: flex; gap: 8px; }
-  .chat-input-row input { flex: 1; }
-  .chat-input-row button {
-    background: #7c5cbf; color: white; border: none;
-    border-radius: 9px; padding: 0 16px; font-size: 1.1rem; cursor: pointer;
-  }
+  .msg-time { font-size: 0.68rem; color: var(--text-light); margin-top: 3px; }
+  .msg.user .msg-time { text-align: right; }
+  .chat-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .chat-input-row input { flex: 1; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.88rem; font-family: inherit; color: var(--text); background: white; outline: none; }
+  .chat-input-row input:focus { border-color: var(--pink); }
+  .chat-input-row button { background: #7c5cbf; color: white; border: none; border-radius: 9px; padding: 0 16px; font-size: 1.1rem; cursor: pointer; }
+  .quick-btns { display: flex; flex-direction: column; gap: 7px; }
+
   /* Settings */
   .settings-group { margin-bottom: 10px; }
   .settings-label { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; }
-  /* Summary card */
-  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .summary-item {
-    background: var(--pink-light); border-radius: 10px;
-    padding: 10px; text-align: center;
-  }
-  .summary-item .si-label { font-size: 0.72rem; color: var(--text-light); }
-  .summary-item .si-val { font-size: 1.3rem; font-weight: 700; color: var(--pink-dark); margin-top: 2px; }
-  /* Alert */
-  .alert {
-    padding: 10px 14px; border-radius: 10px; font-size: 0.83rem;
-    margin-bottom: 10px; display: none;
-  }
-  .alert.success { background: var(--green-light); color: #388e3c; display: block; }
-  .alert.error { background: var(--red-light); color: #c62828; display: block; }
-  .alert.info { background: var(--blue-light); color: #1565c0; display: block; }
-  /* Loading */
-  .spinner {
-    display: inline-block; width: 18px; height: 18px;
-    border: 2.5px solid rgba(255,255,255,0.4);
-    border-top-color: white; border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    vertical-align: middle; margin-right: 6px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  /* Grid 2 col */
+
+  /* Misc */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  /* Number input small */
-  .num-input { width: 80px !important; display: inline-block; }
-  /* Blood count table */
-  .blood-table { width: 100%; border-collapse: collapse; }
-  .blood-table th, .blood-table td { padding: 7px 6px; font-size: 0.82rem; text-align: left; }
-  .blood-table th { color: var(--text-light); font-weight: 600; border-bottom: 1.5px solid var(--border); }
-  .blood-table td input { padding: 6px 8px; font-size: 0.85rem; }
-  /* Mood buttons */
-  .mood-row { display: flex; gap: 6px; flex-wrap: wrap; }
-  .mood-btn {
-    flex: 1; min-width: 50px; padding: 8px 4px; font-size: 1.3rem;
-    background: var(--cream); border: 1.5px solid var(--border);
-    border-radius: 10px; cursor: pointer; text-align: center;
-    transition: all 0.18s;
-  }
-  .mood-btn.selected { background: var(--peach-light); border-color: var(--peach); transform: scale(1.1); }
-  /* Empty state */
-  .empty { text-align: center; padding: 30px 10px; color: var(--text-light); font-size: 0.88rem; }
-  .empty .big { font-size: 2.5rem; margin-bottom: 8px; }
-  /* Responsive */
-  @media (max-width: 360px) {
-    .grid2 { grid-template-columns: 1fr; }
-    .summary-grid { grid-template-columns: 1fr; }
-  }
+  .pb12 { padding-bottom: 12px; }
 </style>
 </head>
 <body>
 
+<!-- Header -->
 <div class="app-header">
   <div class="app-header-row">
     <div>
@@ -267,7 +281,7 @@
   </div>
 </div>
 
-<!-- Pages -->
+<!-- ══ 記錄頁 ══ -->
 <div id="page-record" class="page active">
   <div class="date-nav">
     <button onclick="changeDate(-1)">◀</button>
@@ -275,293 +289,78 @@
     <button onclick="changeDate(1)">▶</button>
   </div>
 
-  <div id="save-alert" class="alert"></div>
-
-  <!-- 化療療程 -->
-  <div class="card">
-    <div class="section-toggle" onclick="toggleSection('chemo')">
-      <div class="card-title" style="margin:0"><span>💉</span> 化療療程</div>
-      <div class="arrow" id="arrow-chemo">▼</div>
-    </div>
-    <div class="section-body" id="body-chemo">
-      <div class="grid2">
-        <div>
-          <label>療程輪數</label>
-          <input type="number" id="chemo-round" placeholder="第 N 輪" min="1">
-        </div>
-        <div>
-          <label>第幾天</label>
-          <input type="number" id="chemo-day" placeholder="D1, D8..." min="1">
-        </div>
-      </div>
-      <label>用藥 / 方案</label>
-      <input type="text" id="chemo-drugs" placeholder="例：AC / Taxol / 順鉑...">
-      <label>點滴 / 備註</label>
-      <input type="text" id="chemo-notes" placeholder="例：打了 Neulasta、止吐藥...">
-    </div>
+  <!-- Timeline -->
+  <div class="timeline" id="timeline-wrap">
+    <div class="timeline-empty"><div class="big">📭</div>今天還沒有記錄</div>
   </div>
 
-  <!-- 症狀記錄 -->
-  <div class="card">
-    <div class="section-toggle open" onclick="toggleSection('symptoms')">
-      <div class="card-title" style="margin:0"><span>🌡️</span> 症狀與副作用</div>
-      <div class="arrow" id="arrow-symptoms">▼</div>
+  <!-- Entry form -->
+  <div class="entry-form">
+    <div class="form-title">＋ 新增記錄</div>
+    <div id="form-alert" class="alert"></div>
+
+    <div class="time-row">
+      <label>時間</label>
+      <input type="time" id="entry-time">
     </div>
-    <div class="section-body" id="body-symptoms">
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">😞 噁心感</span>
-          <span class="val" id="val-nausea">0</span>
+
+    <div class="cat-chips" id="cat-chips">
+      <div class="cat-chip" data-cat="用藥" onclick="selectCat(this)">💊 用藥</div>
+      <div class="cat-chip" data-cat="飲食" onclick="selectCat(this)">🥗 飲食</div>
+      <div class="cat-chip" data-cat="症狀" onclick="selectCat(this)">🌡️ 症狀</div>
+      <div class="cat-chip" data-cat="活動" onclick="selectCat(this)">🚶 活動</div>
+      <div class="cat-chip" data-cat="血液" onclick="selectCat(this)">🩸 血液</div>
+      <div class="cat-chip" data-cat="睡眠" onclick="selectCat(this)">💤 睡眠</div>
+      <div class="cat-chip" data-cat="其他" onclick="selectCat(this)">💬 其他</div>
+    </div>
+
+    <span class="field-label">內容</span>
+    <textarea id="entry-content" placeholder="輸入記錄內容…"></textarea>
+
+    <!-- 症狀嚴重度 -->
+    <div id="sev-section" style="display:none">
+      <div class="sev-row">
+        <div class="sev-label-row">
+          <span>嚴重程度</span>
+          <span class="val" id="sev-val">0</span>
         </div>
-        <input type="range" min="0" max="10" value="0" id="sl-nausea" oninput="updateSlider('nausea',this.value)">
-        <div class="range-ends"><span>沒有</span><span>非常嚴重</span></div>
-      </div>
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">🤢 嘔吐次數</span>
-          <span class="val" id="val-vomit">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-vomit" oninput="updateSlider('vomit',this.value)">
-        <div class="range-ends"><span>0 次</span><span>10+ 次</span></div>
-      </div>
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">😴 疲勞</span>
-          <span class="val" id="val-fatigue">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-fatigue" oninput="updateSlider('fatigue',this.value)">
-        <div class="range-ends"><span>沒有</span><span>完全沒力</span></div>
-      </div>
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">🔥 疼痛</span>
-          <span class="val" id="val-pain">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-pain" oninput="updateSlider('pain',this.value)">
-        <div class="range-ends"><span>沒有</span><span>非常痛</span></div>
-      </div>
-      <div class="grid2" style="margin-top:10px">
-        <div>
-          <label>🌡 體溫 (°C)</label>
-          <input type="number" id="sym-temp" placeholder="36.5" step="0.1" min="34" max="42">
-        </div>
-        <div>
-          <label>💊 有發燒？</label>
-          <select id="sym-fever">
-            <option value="">不確定</option>
-            <option value="no">沒有</option>
-            <option value="yes">有（≥38°C）</option>
-          </select>
-        </div>
-      </div>
-      <label>其他症狀（可複選）</label>
-      <div class="chip-group" id="chips-other-sym">
-        <div class="chip" data-val="口腔潰瘍">口腔潰瘍</div>
-        <div class="chip" data-val="掉髮">掉髮</div>
-        <div class="chip" data-val="皮膚紅疹">皮膚紅疹</div>
-        <div class="chip" data-val="水腫">水腫</div>
-        <div class="chip" data-val="心悸">心悸</div>
-        <div class="chip" data-val="呼吸困難">呼吸困難</div>
-        <div class="chip" data-val="頭痛">頭痛</div>
-        <div class="chip" data-val="頭暈">頭暈</div>
+        <input type="range" min="0" max="10" value="0" id="sev-slider" oninput="document.getElementById('sev-val').textContent=this.value">
+        <div class="sev-ends"><span>沒有</span><span>非常嚴重</span></div>
       </div>
     </div>
+
+    <!-- 血液指數 -->
+    <div id="blood-section" style="display:none">
+      <div class="blood-grid">
+        <div class="blood-item"><label>WBC (×10³/μL)</label><input type="number" id="b-wbc" placeholder="4.5" step="0.01"></div>
+        <div class="blood-item"><label>ANC (×10³/μL)</label><input type="number" id="b-anc" placeholder="2.0" step="0.01"></div>
+        <div class="blood-item"><label>Hb (g/dL)</label><input type="number" id="b-hb" placeholder="12.5" step="0.1"></div>
+        <div class="blood-item"><label>PLT (×10³/μL)</label><input type="number" id="b-plt" placeholder="150" step="1"></div>
+        <div class="blood-item"><label>ALT (U/L)</label><input type="number" id="b-alt" placeholder="25" step="1"></div>
+        <div class="blood-item"><label>Cr (mg/dL)</label><input type="number" id="b-cr" placeholder="0.8" step="0.01"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 儲存</button>
   </div>
-
-  <!-- 神經學狀況 -->
-  <div class="card">
-    <div class="section-toggle" onclick="toggleSection('neuro')">
-      <div class="card-title" style="margin:0"><span>⚡</span> 神經學狀況</div>
-      <div class="arrow" id="arrow-neuro">▼</div>
-    </div>
-    <div class="section-body" id="body-neuro" style="display:none">
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">🤲 手腳麻木</span>
-          <span class="val" id="val-numbness">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-numbness" oninput="updateSlider('numbness',this.value)">
-        <div class="range-ends"><span>沒有</span><span>嚴重</span></div>
-      </div>
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">⚡ 刺痛感</span>
-          <span class="val" id="val-tingling">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-tingling" oninput="updateSlider('tingling',this.value)">
-        <div class="range-ends"><span>沒有</span><span>嚴重</span></div>
-      </div>
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <span class="lbl">💪 肌肉無力</span>
-          <span class="val" id="val-weakness">0</span>
-        </div>
-        <input type="range" min="0" max="10" value="0" id="sl-weakness" oninput="updateSlider('weakness',this.value)">
-        <div class="range-ends"><span>沒有</span><span>嚴重</span></div>
-      </div>
-      <label>部位</label>
-      <div class="chip-group" id="chips-neuro-loc">
-        <div class="chip" data-val="手指">手指</div>
-        <div class="chip" data-val="手掌">手掌</div>
-        <div class="chip" data-val="手臂">手臂</div>
-        <div class="chip" data-val="腳趾">腳趾</div>
-        <div class="chip" data-val="腳掌">腳掌</div>
-        <div class="chip" data-val="小腿">小腿</div>
-        <div class="chip" data-val="臉部">臉部</div>
-      </div>
-      <label>備註</label>
-      <textarea id="neuro-notes" placeholder="描述神經症狀的情況..."></textarea>
-    </div>
-  </div>
-
-  <!-- 飲食排便睡眠 -->
-  <div class="card">
-    <div class="section-toggle" onclick="toggleSection('daily')">
-      <div class="card-title" style="margin:0"><span>🥗</span> 飲食・排便・睡眠</div>
-      <div class="arrow" id="arrow-daily">▼</div>
-    </div>
-    <div class="section-body" id="body-daily" style="display:none">
-      <label>今日心情</label>
-      <div class="mood-row" id="mood-btns">
-        <button class="mood-btn" data-val="😊" onclick="selectMood(this)">😊</button>
-        <button class="mood-btn" data-val="😐" onclick="selectMood(this)">😐</button>
-        <button class="mood-btn" data-val="😔" onclick="selectMood(this)">😔</button>
-        <button class="mood-btn" data-val="😢" onclick="selectMood(this)">😢</button>
-        <button class="mood-btn" data-val="😤" onclick="selectMood(this)">😤</button>
-      </div>
-
-      <label>飲食狀況</label>
-      <div class="chip-group" id="chips-diet">
-        <div class="chip" data-val="正常進食">正常進食</div>
-        <div class="chip" data-val="食慾差">食慾差</div>
-        <div class="chip" data-val="只喝流質">只喝流質</div>
-        <div class="chip" data-val="幾乎沒吃">幾乎沒吃</div>
-      </div>
-      <label>今日飲食記錄</label>
-      <textarea id="daily-diet" placeholder="例：早餐吃稀飯，午餐只喝湯..."></textarea>
-      <label>飲水量（毫升）</label>
-      <input type="number" id="daily-water" placeholder="例：1500" min="0">
-
-      <label>排便狀況</label>
-      <div class="chip-group" id="chips-bowel">
-        <div class="chip" data-val="正常">正常</div>
-        <div class="chip" data-val="便秘">便秘</div>
-        <div class="chip" data-val="腹瀉">腹瀉</div>
-        <div class="chip" data-val="未排便">未排便</div>
-        <div class="chip" data-val="帶血">帶血</div>
-      </div>
-      <div class="grid2">
-        <div>
-          <label>排便次數</label>
-          <input type="number" id="daily-bowel-count" placeholder="次" min="0">
-        </div>
-        <div>
-          <label>睡眠（小時）</label>
-          <input type="number" id="daily-sleep" placeholder="小時" min="0" max="24" step="0.5">
-        </div>
-      </div>
-      <label>睡眠品質</label>
-      <div class="chip-group" id="chips-sleep">
-        <div class="chip" data-val="很好">很好</div>
-        <div class="chip" data-val="普通">普通</div>
-        <div class="chip" data-val="不好">不好</div>
-        <div class="chip" data-val="失眠">失眠</div>
-      </div>
-      <label>今日備註</label>
-      <textarea id="daily-notes" placeholder="其他想記錄的事情..."></textarea>
-    </div>
-  </div>
-
-  <!-- 血液指數 -->
-  <div class="card">
-    <div class="section-toggle" onclick="toggleSection('blood')">
-      <div class="card-title" style="margin:0"><span>🩸</span> 血液指數</div>
-      <div class="arrow" id="arrow-blood">▼</div>
-    </div>
-    <div class="section-body" id="body-blood" style="display:none">
-      <table class="blood-table">
-        <tr>
-          <th>項目</th>
-          <th>數值</th>
-          <th>單位</th>
-        </tr>
-        <tr>
-          <td>WBC（白血球）</td>
-          <td><input type="number" id="b-wbc" placeholder="4.5" step="0.01" min="0"></td>
-          <td>×10³/μL</td>
-        </tr>
-        <tr>
-          <td>ANC（嗜中性球）</td>
-          <td><input type="number" id="b-anc" placeholder="2.0" step="0.01" min="0"></td>
-          <td>×10³/μL</td>
-        </tr>
-        <tr>
-          <td>Hb（血紅素）</td>
-          <td><input type="number" id="b-hb" placeholder="12.5" step="0.1" min="0"></td>
-          <td>g/dL</td>
-        </tr>
-        <tr>
-          <td>PLT（血小板）</td>
-          <td><input type="number" id="b-plt" placeholder="150" step="1" min="0"></td>
-          <td>×10³/μL</td>
-        </tr>
-        <tr>
-          <td>ALT（肝功能）</td>
-          <td><input type="number" id="b-alt" placeholder="25" step="1" min="0"></td>
-          <td>U/L</td>
-        </tr>
-        <tr>
-          <td>Cr（腎功能）</td>
-          <td><input type="number" id="b-cr" placeholder="0.8" step="0.01" min="0"></td>
-          <td>mg/dL</td>
-        </tr>
-      </table>
-      <label style="margin-top:10px">抽血備註</label>
-      <textarea id="blood-notes" placeholder="例：門診抽血、化療前確認..."></textarea>
-    </div>
-  </div>
-
-  <!-- 每日摘要 -->
-  <div class="card">
-    <div class="card-title"><span>📋</span> 今日摘要</div>
-    <label>摘要 / 給自己的話</label>
-    <textarea id="daily-summary" placeholder="今天整體狀況，或給自己或家人的話..."></textarea>
-  </div>
-
-  <button class="btn btn-primary" onclick="saveRecord()" id="save-btn">
-    💾 儲存今日記錄
-  </button>
 </div>
 
-<!-- History Page -->
+<!-- ══ 歷史頁 ══ -->
 <div id="page-history" class="page">
-  <div class="card">
-    <div class="card-title"><span>📅</span> 歷史記錄</div>
-    <div class="grid2" style="margin-bottom:10px">
-      <div>
-        <label>從</label>
-        <input type="date" id="hist-from">
-      </div>
-      <div>
-        <label>到</label>
-        <input type="date" id="hist-to">
-      </div>
-    </div>
-    <button class="btn btn-secondary" onclick="loadHistory()">🔍 查詢</button>
+  <div class="hist-filter">
+    <div><label>從</label><input type="date" id="hist-from"></div>
+    <div><label>到</label><input type="date" id="hist-to"></div>
+    <button onclick="loadHistory()">查詢</button>
   </div>
-  <div id="history-list"></div>
+  <div class="hist-list" id="hist-list"></div>
 </div>
 
-<!-- AI Page -->
+<!-- ══ AI 頁 ══ -->
 <div id="page-ai" class="page">
-  <div class="card">
-    <div class="card-title"><span>🤖</span> AI 小助理</div>
-    <p style="font-size:0.8rem;color:var(--text-light);margin-bottom:12px">
-      可以問關於琳琳的化療記錄、症狀趨勢、或任何關心的問題。
-    </p>
+  <div class="chat-wrap">
     <div class="chat-box" id="chat-box">
       <div class="msg ai">
-        <div class="msg-bubble">您好！我是琳琳的化療記錄助理 🌸<br>我可以幫你查詢記錄、分析症狀趨勢，或回答任何關於治療過程的問題。<br>請問有什麼想了解的嗎？</div>
+        <div class="msg-bubble">您好！我是琳琳的化療記錄助理 🌸<br>可以幫你查詢記錄、分析症狀，或回答任何問題。</div>
         <div class="msg-time">剛剛</div>
       </div>
     </div>
@@ -569,598 +368,378 @@
       <input type="text" id="chat-input" placeholder="輸入問題…" onkeydown="if(event.key==='Enter')sendChat()">
       <button onclick="sendChat()" id="chat-send-btn">➤</button>
     </div>
-  </div>
-  <div class="card" style="background:var(--peach-light)">
-    <div class="card-title" style="color:#b06000"><span>💡</span> 快速提問</div>
-    <div style="display:flex;flex-direction:column;gap:7px">
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近一週的症狀趨勢如何？有什麼需要注意的嗎？')">📈 最近症狀趨勢</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('上一次化療是什麼時候？現在是第幾輪第幾天？')">💉 化療進度</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的血液指數正常嗎？有哪些數值偏低或偏高？')">🩸 血液指數分析</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的睡眠和飲食狀況如何？')">🥗 飲食睡眠狀況</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('神經學症狀（麻木刺痛）最近有變化嗎？')">⚡ 神經症狀趨勢</button>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近一週的症狀趨勢如何？有什麼需要注意的？')">📈 最近症狀趨勢</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的用藥記錄有哪些？')">💊 用藥記錄</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的血液指數正常嗎？')">🩸 血液指數分析</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的飲食和睡眠狀況如何？')">🥗 飲食睡眠狀況</button>
     </div>
   </div>
 </div>
 
-<!-- Settings Page -->
-<div id="page-settings" class="page">
-  <div class="card">
+<!-- ══ 設定頁 ══ -->
+<div id="page-settings" class="page pb12">
+  <div class="card" style="margin-top:12px">
     <div class="card-title"><span>🔥</span> Firebase 設定</div>
-    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">請填入 Firebase 專案的設定資訊</p>
-    <div class="settings-group">
-      <div class="settings-label">API Key</div>
-      <input type="text" id="cfg-apiKey" placeholder="AIza...">
-    </div>
-    <div class="settings-group">
-      <div class="settings-label">Auth Domain</div>
-      <input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com">
-    </div>
-    <div class="settings-group">
-      <div class="settings-label">Project ID</div>
-      <input type="text" id="cfg-projectId" placeholder="your-project-id">
-    </div>
-    <div class="settings-group">
-      <div class="settings-label">App ID</div>
-      <input type="text" id="cfg-appId" placeholder="1:123:web:abc">
-    </div>
-    <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="margin-top:4px">
-      💾 儲存 Firebase 設定
-    </button>
-    <div id="firebase-alert" class="alert" style="margin-top:8px"></div>
+    <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..."></div>
+    <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com"></div>
+    <div class="settings-group"><div class="settings-label">Project ID</div><input type="text" id="cfg-projectId" placeholder="your-project-id"></div>
+    <div class="settings-group"><div class="settings-label">App ID</div><input type="text" id="cfg-appId" placeholder="1:123:web:abc"></div>
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 儲存 Firebase 設定</button>
+    <div id="firebase-alert" class="alert"></div>
   </div>
 
   <div class="card">
     <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
-    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">
-      填入 OpenAI API Key 以啟用 AI 助理功能<br>
-      <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a>
-    </p>
-    <div class="settings-group">
-      <div class="settings-label">OpenAI API Key</div>
-      <input type="password" id="cfg-claudeKey" placeholder="sk-...">
-    </div>
-    <button class="btn btn-primary" onclick="saveClaudeConfig()" style="margin-top:4px">
-      💾 儲存 AI 設定
-    </button>
-    <div id="claude-alert" class="alert" style="margin-top:8px"></div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key 以啟用 AI 助理<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
+    <div class="settings-group"><div class="settings-label">OpenAI API Key</div><input type="password" id="cfg-claudeKey" placeholder="sk-..."></div>
+    <button class="btn btn-primary" onclick="saveClaudeConfig()">💾 儲存 AI 設定</button>
+    <div id="claude-alert" class="alert"></div>
   </div>
 
   <div class="card">
     <div class="card-title"><span>ℹ️</span> 關於</div>
-    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">
-      琳琳的化療記錄 App<br>
-      紀錄治療過程，陪伴每一天 🌸<br><br>
-      資料儲存於 Firebase Firestore（雲端）<br>
-      AI 功能由 Claude (Anthropic) 提供
-    </p>
+    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App<br>紀錄治療過程，陪伴每一天 🌸<br><br>資料儲存於 Firebase Firestore（雲端）<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
   </div>
 </div>
 
-<!-- Bottom Nav -->
+<!-- Bottom nav -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="showPage('record',this)" id="nav-record">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-    </svg>
+  <button class="nav-btn active" onclick="showPage('record',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
     記錄
   </button>
-  <button class="nav-btn" onclick="showPage('history',this)" id="nav-history">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
+  <button class="nav-btn" onclick="showPage('history',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     歷史
   </button>
-  <button class="nav-btn" onclick="showPage('ai',this)" id="nav-ai">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-    </svg>
+  <button class="nav-btn" onclick="showPage('ai',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
     AI助理
   </button>
-  <button class="nav-btn" onclick="showPage('settings',this)" id="nav-settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-    </svg>
+  <button class="nav-btn" onclick="showPage('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     設定
   </button>
 </nav>
 
-<!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// ── Global state ──────────────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────────────────────
 let db = null;
 let currentDate = todayStr();
-let selectedMood = '';
-let selectedChips = {}; // chipGroupId → Set of selected values
+let selectedCat = '';
 
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
+const CAT_ICON = { '用藥':'💊', '飲食':'🥗', '症狀':'🌡️', '活動':'🚶', '血液':'🩸', '睡眠':'💤', '其他':'💬' };
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function nowTime() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
 }
-
-function formatDateTW(dateStr) {
-  const [y, m, d] = dateStr.split('-');
+function formatDateTW(s) {
+  const [y,m,d] = s.split('-');
   return `${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日`;
 }
-
-function now() {
-  return new Date().toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function nowChatTime() {
+  return new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  // Header date
   document.getElementById('record-date').value = currentDate;
   document.getElementById('header-date').textContent = formatDateTW(currentDate);
 
-  // 診斷後天數（診斷日：2025-12-31）
+  // D-counter
   const diagDate = new Date('2025-12-31T00:00:00');
   const todayD = new Date(); todayD.setHours(0,0,0,0);
-  const daysSince = Math.floor((todayD - diagDate) / (1000 * 60 * 60 * 24));
-  document.getElementById('diag-day').textContent = 'D' + daysSince;
+  document.getElementById('diag-day').textContent = 'D' + Math.floor((todayD - diagDate) / 86400000);
 
-  // Set history default range (last 30 days)
+  // Time input default
+  document.getElementById('entry-time').value = nowTime();
+
+  // History defaults
   const from = new Date(); from.setDate(from.getDate() - 30);
   document.getElementById('hist-from').value = from.toISOString().split('T')[0];
   document.getElementById('hist-to').value = todayStr();
 
-  // Init chip groups
-  initChipGroups();
-
-  // Load Firebase config from localStorage
+  // Firebase
   tryInitFirebase();
-
-  // Load today's record
-  loadRecord(currentDate);
-
-  // Restore settings fields
   restoreSettingsFields();
+  loadTimeline(currentDate);
 });
 
 function tryInitFirebase() {
   const cfg = getFirebaseConfig();
-  if (cfg && cfg.projectId) {
-    try {
-      const app = initializeApp(cfg, 'chemo-app');
-      db = getFirestore(app);
-      console.log('Firebase ready');
-    } catch(e) {
-      if (e.code === 'app/duplicate-app') {
-        // Already initialized — not a problem for SPAs
-      } else {
-        console.warn('Firebase init error:', e);
-      }
-    }
-  }
+  if (!cfg?.projectId) return;
+  try {
+    const app = getApps().length ? getApps()[0] : initializeApp(cfg);
+    db = getFirestore(app);
+  } catch(e) { console.warn('Firebase:', e); }
 }
 
 function getFirebaseConfig() {
   try { return JSON.parse(localStorage.getItem('fb_config') || 'null'); } catch { return null; }
 }
-
-function getClaudeKey() {
-  return localStorage.getItem('openai_key') || '';
-}
+function getOpenAIKey() { return localStorage.getItem('openai_key') || ''; }
 
 // ── Navigation ─────────────────────────────────────────────────────────────────
 window.showPage = (page, btn) => {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   if (page === 'history') loadHistory();
 };
 
-// ── Sections toggle ────────────────────────────────────────────────────────────
-window.toggleSection = (name) => {
-  const body = document.getElementById('body-' + name);
-  const arrow = document.getElementById('arrow-' + name);
-  const toggle = arrow.closest('.section-toggle');
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
-  toggle.classList.toggle('open', !isOpen);
-};
-
-// Init: open symptoms by default, close others
-document.addEventListener('DOMContentLoaded', () => {
-  ['chemo','neuro','daily','blood'].forEach(s => {
-    const body = document.getElementById('body-' + s);
-    if (body) body.style.display = 'none';
-  });
-  document.getElementById('body-symptoms').style.display = 'block';
-  document.getElementById('arrow-symptoms').closest('.section-toggle').classList.add('open');
-});
-
-// ── Sliders ────────────────────────────────────────────────────────────────────
-window.updateSlider = (name, val) => {
-  document.getElementById('val-' + name).textContent = val;
-};
-
-// ── Chips ──────────────────────────────────────────────────────────────────────
-function initChipGroups() {
-  const groups = ['chips-other-sym', 'chips-neuro-loc', 'chips-diet', 'chips-bowel', 'chips-sleep'];
-  groups.forEach(gid => {
-    selectedChips[gid] = new Set();
-    document.getElementById(gid)?.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const val = chip.dataset.val;
-        if (selectedChips[gid].has(val)) { selectedChips[gid].delete(val); chip.classList.remove('selected'); }
-        else { selectedChips[gid].add(val); chip.classList.add('selected'); }
-      });
-    });
-  });
-}
-
-function setChips(gid, values) {
-  selectedChips[gid] = new Set(values || []);
-  document.getElementById(gid)?.querySelectorAll('.chip').forEach(chip => {
-    chip.classList.toggle('selected', selectedChips[gid].has(chip.dataset.val));
-  });
-}
-
-// ── Mood ───────────────────────────────────────────────────────────────────────
-window.selectMood = (btn) => {
-  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedMood = btn.dataset.val;
-};
-
-function setMood(val) {
-  selectedMood = val || '';
-  document.querySelectorAll('.mood-btn').forEach(b => {
-    b.classList.toggle('selected', b.dataset.val === val);
-  });
-}
-
-// ── Date navigation ────────────────────────────────────────────────────────────
-window.changeDate = (delta) => {
-  const d = new Date(currentDate + 'T00:00:00');
-  d.setDate(d.getDate() + delta);
-  const s = d.toISOString().split('T')[0];
+// ── Date nav ───────────────────────────────────────────────────────────────────
+window.changeDate = (d) => {
+  const dt = new Date(currentDate + 'T00:00:00');
+  dt.setDate(dt.getDate() + d);
+  const s = dt.toISOString().split('T')[0];
   if (s > todayStr()) return;
   currentDate = s;
-  document.getElementById('record-date').value = currentDate;
-  document.getElementById('header-date').textContent = formatDateTW(currentDate);
-  loadRecord(currentDate);
+  document.getElementById('record-date').value = s;
+  document.getElementById('header-date').textContent = formatDateTW(s);
+  loadTimeline(s);
 };
-
 window.onDateChange = () => {
   currentDate = document.getElementById('record-date').value;
   document.getElementById('header-date').textContent = formatDateTW(currentDate);
-  loadRecord(currentDate);
+  loadTimeline(currentDate);
 };
 
-// ── Save record ────────────────────────────────────────────────────────────────
-window.saveRecord = async () => {
-  if (!db) { showAlert('save-alert', 'error', '⚠️ 請先到「設定」填入 Firebase 設定！'); return; }
+// ── Category select ────────────────────────────────────────────────────────────
+window.selectCat = (chip) => {
+  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
+  const cat = chip.dataset.cat;
+  chip.classList.add('sel-' + cat);
+  selectedCat = cat;
+  document.getElementById('sev-section').style.display = cat === '症狀' ? 'block' : 'none';
+  document.getElementById('blood-section').style.display = cat === '血液' ? 'block' : 'none';
+};
+
+// ── Save entry ─────────────────────────────────────────────────────────────────
+window.saveEntry = async () => {
+  if (!db) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 Firebase 設定！'); return; }
+  if (!selectedCat) { showAlert('form-alert','error','請選擇類別'); return; }
+  const content = document.getElementById('entry-content').value.trim();
+  const time = document.getElementById('entry-time').value;
+
+  // 血液類別：內容可以是空的（從欄位組合）
+  let finalContent = content;
+  let bloodData = null;
+  if (selectedCat === '血液') {
+    const bFields = ['wbc','anc','hb','plt','alt','cr'];
+    const labels = {wbc:'WBC',anc:'ANC',hb:'Hb',plt:'PLT',alt:'ALT',cr:'Cr'};
+    bloodData = {};
+    const parts = [];
+    bFields.forEach(f => {
+      const v = document.getElementById('b-'+f).value;
+      if (v) { bloodData[f] = +v; parts.push(`${labels[f]} ${v}`); }
+    });
+    if (!finalContent && parts.length) finalContent = parts.join('　');
+    if (!finalContent) { showAlert('form-alert','error','請填入至少一項血液數值'); return; }
+  } else if (!finalContent) {
+    showAlert('form-alert','error','請填入記錄內容'); return;
+  }
+
   const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>儲存中…';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>儲存中…';
 
-  const data = collectFormData();
+  const entry = {
+    date: currentDate,
+    time: time || nowTime(),
+    timestamp: currentDate + 'T' + (time || nowTime()) + ':00',
+    category: selectedCat,
+    content: finalContent,
+    severity: selectedCat === '症狀' ? +document.getElementById('sev-slider').value : null,
+    blood: bloodData,
+    createdAt: new Date().toISOString(),
+  };
+
   try {
-    await setDoc(doc(db, 'records', currentDate), data);
-    showAlert('save-alert', 'success', '✅ 記錄已儲存！');
+    await addDoc(collection(db, 'logs'), entry);
+    showAlert('form-alert','success','✅ 已儲存！');
+    // Reset form
+    document.getElementById('entry-content').value = '';
+    document.getElementById('sev-slider').value = 0;
+    document.getElementById('sev-val').textContent = '0';
+    ['wbc','anc','hb','plt','alt','cr'].forEach(f => document.getElementById('b-'+f).value = '');
+    document.getElementById('entry-time').value = nowTime();
+    loadTimeline(currentDate);
   } catch(e) {
-    showAlert('save-alert', 'error', '❌ 儲存失敗：' + e.message);
+    showAlert('form-alert','error','❌ 儲存失敗：' + e.message);
   }
-  btn.disabled = false;
-  btn.innerHTML = '💾 儲存今日記錄';
+  btn.disabled = false; btn.innerHTML = '💾 儲存';
 };
 
-function collectFormData() {
-  return {
-    date: currentDate,
-    updatedAt: new Date().toISOString(),
-    chemo: {
-      round: document.getElementById('chemo-round').value,
-      day: document.getElementById('chemo-day').value,
-      drugs: document.getElementById('chemo-drugs').value,
-      notes: document.getElementById('chemo-notes').value,
-    },
-    symptoms: {
-      nausea: +document.getElementById('sl-nausea').value,
-      vomit: +document.getElementById('sl-vomit').value,
-      fatigue: +document.getElementById('sl-fatigue').value,
-      pain: +document.getElementById('sl-pain').value,
-      temp: document.getElementById('sym-temp').value,
-      fever: document.getElementById('sym-fever').value,
-      other: [...(selectedChips['chips-other-sym'] || [])],
-    },
-    neuro: {
-      numbness: +document.getElementById('sl-numbness').value,
-      tingling: +document.getElementById('sl-tingling').value,
-      weakness: +document.getElementById('sl-weakness').value,
-      locations: [...(selectedChips['chips-neuro-loc'] || [])],
-      notes: document.getElementById('neuro-notes').value,
-    },
-    daily: {
-      mood: selectedMood,
-      diet: [...(selectedChips['chips-diet'] || [])],
-      dietNotes: document.getElementById('daily-diet').value,
-      water: document.getElementById('daily-water').value,
-      bowel: [...(selectedChips['chips-bowel'] || [])],
-      bowelCount: document.getElementById('daily-bowel-count').value,
-      sleep: document.getElementById('daily-sleep').value,
-      sleepQuality: [...(selectedChips['chips-sleep'] || [])],
-      notes: document.getElementById('daily-notes').value,
-    },
-    blood: {
-      wbc: document.getElementById('b-wbc').value,
-      anc: document.getElementById('b-anc').value,
-      hb: document.getElementById('b-hb').value,
-      plt: document.getElementById('b-plt').value,
-      alt: document.getElementById('b-alt').value,
-      cr: document.getElementById('b-cr').value,
-      notes: document.getElementById('blood-notes').value,
-    },
-    summary: document.getElementById('daily-summary').value,
-  };
-}
-
-// ── Load record ────────────────────────────────────────────────────────────────
-async function loadRecord(dateStr) {
-  clearForm();
-  if (!db) return;
+// ── Timeline ───────────────────────────────────────────────────────────────────
+async function loadTimeline(dateStr) {
+  const wrap = document.getElementById('timeline-wrap');
+  if (!db) { wrap.innerHTML = '<div class="timeline-empty"><div class="big">🔥</div>請先設定 Firebase</div>'; return; }
+  wrap.innerHTML = '<div class="timeline-empty">載入中…</div>';
   try {
-    const snap = await getDoc(doc(db, 'records', dateStr));
-    if (snap.exists()) fillForm(snap.data());
-  } catch(e) { console.warn('Load error:', e); }
+    const q = query(collection(db,'logs'), where('date','==',dateStr), orderBy('timestamp','asc'));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      wrap.innerHTML = '<div class="timeline-empty"><div class="big">📭</div>今天還沒有記錄</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    snap.forEach(d => wrap.appendChild(buildLogCard(d.id, d.data())));
+  } catch(e) {
+    wrap.innerHTML = `<div class="timeline-empty">載入失敗：${e.message}</div>`;
+  }
 }
 
-function clearForm() {
-  // Sliders
-  ['nausea','vomit','fatigue','pain','numbness','tingling','weakness'].forEach(n => {
-    const el = document.getElementById('sl-' + n);
-    if (el) { el.value = 0; updateSlider(n, 0); }
-  });
-  // Inputs
-  ['chemo-round','chemo-day','chemo-drugs','chemo-notes',
-   'sym-temp','neuro-notes','daily-diet','daily-water','daily-bowel-count',
-   'daily-sleep','daily-notes','blood-notes','daily-summary',
-   'b-wbc','b-anc','b-hb','b-plt','b-alt','b-cr'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('sym-fever').value = '';
-  // Chips
-  Object.keys(selectedChips).forEach(gid => setChips(gid, []));
-  setMood('');
+function buildLogCard(id, d) {
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  const icon = CAT_ICON[d.category] || '📝';
+  let extra = '';
+  if (d.severity > 0) extra = `<div class="log-meta">嚴重程度 ${d.severity}/10</div>`;
+  div.innerHTML = `
+    <div class="log-time">${d.time || ''}</div>
+    <div class="log-dot dot-${d.category}"></div>
+    <div class="log-body">
+      <div class="log-cat cat-${d.category}">${icon} ${d.category}</div>
+      <div class="log-content">${escapeHtml(d.content)}</div>
+      ${extra}
+    </div>
+    <button class="log-del" onclick="deleteEntry('${id}')" title="刪除">✕</button>
+  `;
+  return div;
 }
 
-function fillForm(d) {
-  if (!d) return;
-  const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
-  const setSl = (name, val) => { const el = document.getElementById('sl-' + name); if (el) { el.value = val || 0; updateSlider(name, val || 0); } };
-
-  if (d.chemo) {
-    set('chemo-round', d.chemo.round); set('chemo-day', d.chemo.day);
-    set('chemo-drugs', d.chemo.drugs); set('chemo-notes', d.chemo.notes);
-  }
-  if (d.symptoms) {
-    setSl('nausea', d.symptoms.nausea); setSl('vomit', d.symptoms.vomit);
-    setSl('fatigue', d.symptoms.fatigue); setSl('pain', d.symptoms.pain);
-    set('sym-temp', d.symptoms.temp); set('sym-fever', d.symptoms.fever);
-    setChips('chips-other-sym', d.symptoms.other);
-  }
-  if (d.neuro) {
-    setSl('numbness', d.neuro.numbness); setSl('tingling', d.neuro.tingling);
-    setSl('weakness', d.neuro.weakness);
-    setChips('chips-neuro-loc', d.neuro.locations);
-    set('neuro-notes', d.neuro.notes);
-  }
-  if (d.daily) {
-    setMood(d.daily.mood);
-    setChips('chips-diet', d.daily.diet);
-    set('daily-diet', d.daily.dietNotes);
-    set('daily-water', d.daily.water);
-    setChips('chips-bowel', d.daily.bowel);
-    set('daily-bowel-count', d.daily.bowelCount);
-    set('daily-sleep', d.daily.sleep);
-    setChips('chips-sleep', d.daily.sleepQuality);
-    set('daily-notes', d.daily.notes);
-  }
-  if (d.blood) {
-    set('b-wbc', d.blood.wbc); set('b-anc', d.blood.anc);
-    set('b-hb', d.blood.hb); set('b-plt', d.blood.plt);
-    set('b-alt', d.blood.alt); set('b-cr', d.blood.cr);
-    set('blood-notes', d.blood.notes);
-  }
-  set('daily-summary', d.summary);
-}
+window.deleteEntry = async (id) => {
+  if (!confirm('確定刪除這筆記錄？')) return;
+  try {
+    await deleteDoc(doc(db, 'logs', id));
+    loadTimeline(currentDate);
+  } catch(e) { alert('刪除失敗：' + e.message); }
+};
 
 // ── History ────────────────────────────────────────────────────────────────────
 window.loadHistory = async () => {
-  const container = document.getElementById('history-list');
-  if (!db) {
-    container.innerHTML = '<div class="card"><div class="empty"><div class="big">🔥</div>請先設定 Firebase</div></div>';
-    return;
-  }
-  container.innerHTML = '<div class="card"><div class="empty">載入中…</div></div>';
+  const list = document.getElementById('hist-list');
+  if (!db) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>'; return; }
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">載入中…</div>';
   const from = document.getElementById('hist-from').value;
   const to = document.getElementById('hist-to').value;
   try {
-    const q = query(collection(db, 'records'), where('date', '>=', from), where('date', '<=', to), orderBy('date', 'desc'));
+    const q = query(collection(db,'logs'), where('date','>=',from), where('date','<=',to), orderBy('date','desc'), orderBy('timestamp','desc'));
     const snap = await getDocs(q);
-    if (snap.empty) {
-      container.innerHTML = '<div class="card"><div class="empty"><div class="big">📭</div>這段期間沒有記錄</div></div>';
-      return;
-    }
-    container.innerHTML = '';
-    snap.forEach(docSnap => {
-      const d = docSnap.data();
-      container.appendChild(buildHistoryItem(d));
+    if (snap.empty) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>'; return; }
+    // Group by date
+    const byDate = {};
+    snap.forEach(d => { const data = d.data(); if (!byDate[data.date]) byDate[data.date] = []; byDate[data.date].push({id:d.id,...data}); });
+    list.innerHTML = '';
+    Object.keys(byDate).sort().reverse().forEach(date => {
+      const section = document.createElement('div');
+      section.style.marginBottom = '14px';
+      const header = document.createElement('div');
+      header.style.cssText = 'font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
+      header.textContent = formatDateTW(date);
+      section.appendChild(header);
+      byDate[date].forEach(d => section.appendChild(buildLogCard(d.id, d)));
+      list.appendChild(section);
     });
-  } catch(e) {
-    container.innerHTML = `<div class="card"><div class="empty">載入失敗：${e.message}</div></div>`;
-  }
+  } catch(e) { list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-light)">載入失敗：${e.message}</div>`; }
 };
-
-function buildHistoryItem(d) {
-  const div = document.createElement('div');
-  div.className = 'history-item';
-  const tags = [];
-  if (d.chemo?.round) tags.push(`<span class="tag">第${d.chemo.round}輪 D${d.chemo.day||'?'}</span>`);
-  if (d.symptoms?.nausea > 0) tags.push(`<span class="tag">噁心 ${d.symptoms.nausea}/10</span>`);
-  if (d.symptoms?.fatigue > 0) tags.push(`<span class="tag">疲勞 ${d.symptoms.fatigue}/10</span>`);
-  if (d.symptoms?.temp) tags.push(`<span class="tag blue">體溫 ${d.symptoms.temp}°C</span>`);
-  if (d.blood?.hb) tags.push(`<span class="tag green">Hb ${d.blood.hb}</span>`);
-  if (d.daily?.mood) tags.push(`<span class="tag">${d.daily.mood}</span>`);
-  div.innerHTML = `
-    <div class="history-date">${formatDateTW(d.date)}</div>
-    <div class="history-tags">${tags.join('')}</div>
-    ${d.summary ? `<div style="font-size:0.8rem;color:var(--text-light);margin-top:6px;line-height:1.5">${d.summary}</div>` : ''}
-  `;
-  div.onclick = () => {
-    currentDate = d.date;
-    document.getElementById('record-date').value = d.date;
-    document.getElementById('header-date').textContent = formatDateTW(d.date);
-    fillForm(d);
-    showPage('record', document.getElementById('nav-record'));
-    window.scrollTo(0, 0);
-  };
-  return div;
-}
 
 // ── AI Chat ────────────────────────────────────────────────────────────────────
 window.sendChat = async () => {
   const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
+  const msg = input.value.trim(); if (!msg) return;
   input.value = '';
   appendChat('user', msg);
   await doAiChat(msg);
 };
-
 window.quickAsk = (msg) => {
+  showPage('ai', document.querySelector('.nav-btn:nth-child(3)'));
   document.getElementById('chat-input').value = msg;
-  showPage('ai', document.getElementById('nav-ai'));
   sendChat();
 };
 
 function appendChat(role, text) {
   const box = document.getElementById('chat-box');
   const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  div.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${now()}</div>`;
+  div.className = 'msg ' + role;
+  div.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${nowChatTime()}</div>`;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   return div;
 }
 
-function appendAiTyping() {
-  const box = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = 'msg ai';
-  div.id = 'typing-indicator';
-  div.innerHTML = `<div class="msg-bubble">…</div>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-}
-
-function removeTyping() {
-  const el = document.getElementById('typing-indicator');
-  if (el) el.remove();
-}
-
 async function doAiChat(userMsg) {
-  const key = getClaudeKey();
-  if (!key) {
-    appendChat('ai', '⚠️ 請先到「設定」頁面輸入 Claude API Key！');
-    return;
-  }
+  const key = getOpenAIKey();
+  if (!key) { appendChat('ai','⚠️ 請先在「設定」填入 OpenAI API Key！'); return; }
   const btn = document.getElementById('chat-send-btn');
   btn.disabled = true;
-  appendAiTyping();
 
-  // Fetch recent records for context
+  // typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'msg ai'; typing.id = 'typing';
+  typing.innerHTML = '<div class="msg-bubble">…</div>';
+  document.getElementById('chat-box').appendChild(typing);
+  document.getElementById('chat-box').scrollTop = 9999;
+
+  // fetch recent logs
   let context = '（無法讀取記錄，Firebase 未設定）';
   if (db) {
     try {
-      const from = new Date(); from.setDate(from.getDate() - 30);
+      const from = new Date(); from.setDate(from.getDate()-30);
       const fromStr = from.toISOString().split('T')[0];
-      const q = query(collection(db, 'records'), where('date', '>=', fromStr), orderBy('date', 'desc'));
+      const q = query(collection(db,'logs'), where('date','>=',fromStr), orderBy('date','desc'), orderBy('timestamp','desc'));
       const snap = await getDocs(q);
-      const records = [];
-      snap.forEach(s => records.push(s.data()));
-      context = records.length ? recordsToText(records) : '過去 30 天內沒有記錄。';
-    } catch(e) { context = '（讀取記錄失敗：' + e.message + '）'; }
+      const entries = [];
+      snap.forEach(d => entries.push(d.data()));
+      context = entries.length ? logsToText(entries) : '過去 30 天內沒有記錄。';
+    } catch(e) { context = '（讀取失敗：'+e.message+')'; }
   }
 
-  const systemPrompt = `你是琳琳的化療記錄 AI 助理。琳琳是一位正在接受化療的病患。
-你的任務是根據以下的健康記錄，用溫暖、關心的繁體中文回答問題。
-回答要簡潔、清楚、容易理解，避免使用太多醫學術語。
-如果有需要注意的警示症狀（如高燒、嚴重疼痛、血球過低等），要明確指出。
+  const system = `你是琳琳的化療記錄 AI 助理。琳琳正在接受化療。
+根據以下記錄，用溫暖的繁體中文回答問題。簡潔清楚，若有警示症狀（高燒、嚴重疼痛、血球過低）要明確指出。
 
-最近 30 天的記錄如下：
+最近 30 天記錄：
 ${context}`;
 
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key,
-      },
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: 1024,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMsg },
-        ],
-      }),
+        model:'gpt-4o-mini', max_tokens:1024,
+        messages:[{role:'system',content:system},{role:'user',content:userMsg}]
+      })
     });
     const data = await res.json();
-    removeTyping();
-    if (data.choices?.[0]?.message?.content) {
-      appendChat('ai', data.choices[0].message.content);
-    } else if (data.error) {
-      appendChat('ai', '❌ AI 回應錯誤：' + (data.error.message || JSON.stringify(data.error)));
-    } else {
-      appendChat('ai', '❌ 未預期的回應格式。');
-    }
+    document.getElementById('typing')?.remove();
+    if (data.choices?.[0]?.message?.content) appendChat('ai', data.choices[0].message.content);
+    else appendChat('ai','❌ 錯誤：'+(data.error?.message||JSON.stringify(data.error)));
   } catch(e) {
-    removeTyping();
-    appendChat('ai', '❌ 連線失敗：' + e.message);
+    document.getElementById('typing')?.remove();
+    appendChat('ai','❌ 連線失敗：'+e.message);
   }
   btn.disabled = false;
 }
 
-function recordsToText(records) {
-  return records.map(d => {
-    const lines = [`【${d.date}】`];
-    if (d.chemo?.round) lines.push(`化療：第${d.chemo.round}輪 第${d.chemo.day||'?'}天 藥物：${d.chemo.drugs||'未填'}`);
-    if (d.symptoms) {
-      const s = d.symptoms;
-      lines.push(`症狀：噁心${s.nausea}/10 嘔吐${s.vomit}/10 疲勞${s.fatigue}/10 疼痛${s.pain}/10 體溫${s.temp||'未測'}°C${s.fever==='yes'?' ⚠️發燒':''}`);
-      if (s.other?.length) lines.push(`其他症狀：${s.other.join('、')}`);
-    }
-    if (d.neuro) {
-      const n = d.neuro;
-      if (n.numbness>0||n.tingling>0||n.weakness>0)
-        lines.push(`神經：麻木${n.numbness}/10 刺痛${n.tingling}/10 無力${n.weakness}/10${n.locations?.length?' 部位：'+n.locations.join('、'):''}`);
-    }
-    if (d.daily) {
-      const dl = d.daily;
-      lines.push(`日常：心情${dl.mood||'未記'} 飲食${dl.diet?.join('、')||'未記'} 睡眠${dl.sleep||'?'}小時(${dl.sleepQuality?.join('')||'未評'})`);
-      if (dl.bowel?.length) lines.push(`排便：${dl.bowel.join('、')} ${dl.bowelCount||''}次`);
-    }
-    if (d.blood) {
-      const b = d.blood;
-      const bItems = [];
-      if (b.wbc) bItems.push(`WBC ${b.wbc}`);
-      if (b.anc) bItems.push(`ANC ${b.anc}`);
-      if (b.hb) bItems.push(`Hb ${b.hb}`);
-      if (b.plt) bItems.push(`PLT ${b.plt}`);
-      if (bItems.length) lines.push(`血液：${bItems.join(' ')}`);
-    }
-    if (d.summary) lines.push(`摘要：${d.summary}`);
-    return lines.join('\n');
-  }).join('\n\n');
+function logsToText(entries) {
+  return entries.map(d => {
+    let line = `[${d.date} ${d.time}] ${d.category}：${d.content}`;
+    if (d.severity > 0) line += `（嚴重程度 ${d.severity}/10）`;
+    return line;
+  }).join('\n');
 }
 
-// ── Settings ────────────────────────────────────────────────────────────────────
+// ── Settings ───────────────────────────────────────────────────────────────────
 window.saveFirebaseConfig = () => {
   const cfg = {
     apiKey: document.getElementById('cfg-apiKey').value.trim(),
@@ -1168,51 +747,33 @@ window.saveFirebaseConfig = () => {
     projectId: document.getElementById('cfg-projectId').value.trim(),
     appId: document.getElementById('cfg-appId').value.trim(),
   };
-  if (!cfg.apiKey || !cfg.projectId) {
-    showAlert('firebase-alert', 'error', '請填入 API Key 和 Project ID');
-    return;
-  }
+  if (!cfg.apiKey || !cfg.projectId) { showAlert('firebase-alert','error','請填入 API Key 和 Project ID'); return; }
   localStorage.setItem('fb_config', JSON.stringify(cfg));
-  showAlert('firebase-alert', 'success', '✅ Firebase 設定已儲存，重新整理頁面後生效。');
+  showAlert('firebase-alert','success','✅ 已儲存，重新整理頁面後生效。');
 };
-
 window.saveClaudeConfig = () => {
   const key = document.getElementById('cfg-claudeKey').value.trim();
-  if (!key || !key.startsWith('sk-')) {
-    showAlert('claude-alert', 'error', '請填入有效的 API Key（以 sk- 開頭）');
-    return;
-  }
+  if (!key || !key.startsWith('sk-')) { showAlert('claude-alert','error','請填入有效的 API Key（以 sk- 開頭）'); return; }
   localStorage.setItem('openai_key', key);
-  showAlert('claude-alert', 'success', '✅ AI 設定已儲存！');
+  showAlert('claude-alert','success','✅ AI 設定已儲存！');
 };
-
 function restoreSettingsFields() {
   const cfg = getFirebaseConfig();
   if (cfg) {
-    const set = (id, val) => { if (val) document.getElementById(id).value = val; };
-    set('cfg-apiKey', cfg.apiKey);
-    set('cfg-authDomain', cfg.authDomain);
-    set('cfg-projectId', cfg.projectId);
-    set('cfg-appId', cfg.appId);
+    const s = (id,v) => { if(v) document.getElementById(id).value=v; };
+    s('cfg-apiKey',cfg.apiKey); s('cfg-authDomain',cfg.authDomain);
+    s('cfg-projectId',cfg.projectId); s('cfg-appId',cfg.appId);
   }
-  const key = localStorage.getItem('openai_key') || '';
-  if (key) document.getElementById('cfg-claudeKey').value = key;
+  const k = getOpenAIKey();
+  if (k) document.getElementById('cfg-claudeKey').value = k;
 }
 
-// ── Utilities ──────────────────────────────────────────────────────────────────
+// ── Utils ──────────────────────────────────────────────────────────────────────
 function showAlert(id, type, msg) {
   const el = document.getElementById(id);
-  el.className = 'alert ' + type;
-  el.textContent = msg;
-  setTimeout(() => { el.className = 'alert'; }, 4000);
+  el.className = 'alert ' + type; el.textContent = msg;
+  setTimeout(() => el.className = 'alert', 4000);
 }
-
-function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-// Make page nav globally available (already set via onclick attr, but also expose for JS)
-window.showPage = window.showPage; // already global
 </script>
 </body>
 </html>
