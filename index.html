@@ -698,7 +698,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const diagDate = new Date('2025-12-31T00:00:00');
   const todayD = new Date(); todayD.setHours(0,0,0,0);
   const daysSince = Math.floor((todayD - diagDate) / (1000 * 60 * 60 * 24));
-  document.getElementById('diag-day').textContent = 'D+' + daysSince;
+  document.getElementById('diag-day').textContent = 'D' + daysSince;
 
   // Set history default range (last 30 days)
   const from = new Date(); from.setDate(from.getDate() - 30);
