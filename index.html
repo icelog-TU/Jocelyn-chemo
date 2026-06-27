@@ -595,14 +595,14 @@
   </div>
 
   <div class="card">
-    <div class="card-title"><span>🤖</span> Claude AI 設定</div>
+    <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
     <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">
-      填入 Anthropic API Key 以啟用 AI 助理功能<br>
-      <a href="https://console.anthropic.com" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a>
+      填入 OpenAI API Key 以啟用 AI 助理功能<br>
+      <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a>
     </p>
     <div class="settings-group">
-      <div class="settings-label">Anthropic API Key</div>
-      <input type="password" id="cfg-claudeKey" placeholder="sk-ant-...">
+      <div class="settings-label">OpenAI API Key</div>
+      <input type="password" id="cfg-claudeKey" placeholder="sk-...">
     </div>
     <button class="btn btn-primary" onclick="saveClaudeConfig()" style="margin-top:4px">
       💾 儲存 AI 設定
@@ -719,7 +719,7 @@ function getFirebaseConfig() {
 }
 
 function getClaudeKey() {
-  return localStorage.getItem('claude_key') || '';
+  return localStorage.getItem('openai_key') || '';
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────────
@@ -1075,25 +1075,25 @@ async function doAiChat(userMsg) {
 ${context}`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-calls': 'true',
+        'Authorization': 'Bearer ' + key,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'gpt-4o-mini',
         max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }],
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMsg },
+        ],
       }),
     });
     const data = await res.json();
     removeTyping();
-    if (data.content?.[0]?.text) {
-      appendChat('ai', data.content[0].text);
+    if (data.choices?.[0]?.message?.content) {
+      appendChat('ai', data.choices[0].message.content);
     } else if (data.error) {
       appendChat('ai', '❌ AI 回應錯誤：' + (data.error.message || JSON.stringify(data.error)));
     } else {
@@ -1157,11 +1157,11 @@ window.saveFirebaseConfig = () => {
 
 window.saveClaudeConfig = () => {
   const key = document.getElementById('cfg-claudeKey').value.trim();
-  if (!key || !key.startsWith('sk-ant-')) {
-    showAlert('claude-alert', 'error', '請填入有效的 API Key（以 sk-ant- 開頭）');
+  if (!key || !key.startsWith('sk-')) {
+    showAlert('claude-alert', 'error', '請填入有效的 API Key（以 sk- 開頭）');
     return;
   }
-  localStorage.setItem('claude_key', key);
+  localStorage.setItem('openai_key', key);
   showAlert('claude-alert', 'success', '✅ AI 設定已儲存！');
 };
 
@@ -1174,7 +1174,7 @@ function restoreSettingsFields() {
     set('cfg-projectId', cfg.projectId);
     set('cfg-appId', cfg.appId);
   }
-  const key = getClaudeKey();
+  const key = localStorage.getItem('openai_key') || '';
   if (key) document.getElementById('cfg-claudeKey').value = key;
 }
 
