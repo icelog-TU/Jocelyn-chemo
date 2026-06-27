@@ -260,6 +260,27 @@
   .settings-group { margin-bottom: 10px; }
   .settings-label { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; }
 
+  /* Mode toggle */
+  .mode-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+  .mode-btn {
+    flex: 1; padding: 7px; border-radius: 9px; border: 1.5px solid var(--border);
+    background: white; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    color: var(--text-light); font-family: inherit; transition: all 0.18s;
+  }
+  .mode-btn.active { background: var(--pink-light); border-color: var(--pink-dark); color: var(--pink-dark); }
+
+  /* AI preview */
+  .ai-preview-card {
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .ai-preview-card .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .ai-preview-card .pc-cat { font-size: 0.78rem; font-weight: 700; }
+  .ai-preview-card .pc-time { font-size: 0.75rem; color: var(--text-light); }
+  .ai-preview-card .pc-content { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
+  .ai-preview-card .pc-sev { font-size: 0.72rem; color: var(--c-sym); margin-top: 3px; }
+  .ai-preview-empty { text-align: center; padding: 16px; color: var(--text-light); font-size: 0.83rem; }
+
   /* Misc */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .pb12 { padding-bottom: 12px; }
@@ -299,6 +320,22 @@
     <div class="form-title">＋ 新增記錄</div>
     <div id="form-alert" class="alert"></div>
 
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">手動</button>
+      <button class="mode-btn" id="mode-ai" onclick="setMode('ai')">✨ AI 智慧輸入</button>
+    </div>
+
+    <!-- AI 輸入區 -->
+    <div id="ai-section" style="display:none">
+      <span class="field-label">直接說你要記錄的事，AI 幫你分類</span>
+      <textarea id="ai-raw" placeholder="例：下午兩點打了嗎啡 5mg，之後噁心感很強大概 7 分，然後吃了半碗稀飯" style="min-height:90px"></textarea>
+      <button class="btn btn-ai" id="ai-parse-btn" onclick="parseWithAI()" style="margin-top:8px">✨ AI 解析</button>
+      <div id="ai-preview" style="margin-top:10px"></div>
+      <button class="btn btn-primary" id="ai-save-all-btn" onclick="saveAllParsed()" style="display:none">💾 全部儲存</button>
+    </div>
+
+    <!-- 手動輸入區 -->
+    <div id="manual-section">
     <div class="time-row">
       <label>時間</label>
       <input type="time" id="entry-time">
@@ -342,6 +379,7 @@
     </div>
 
     <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 儲存</button>
+    </div><!-- end manual-section -->
   </div>
 </div>
 
@@ -425,7 +463,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let db = null;
@@ -515,6 +553,102 @@ window.onDateChange = () => {
   loadTimeline(currentDate);
 };
 
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+let parsedEntries = [];
+
+window.setMode = (mode) => {
+  const isAI = mode === 'ai';
+  document.getElementById('ai-section').style.display = isAI ? 'block' : 'none';
+  document.getElementById('manual-section').style.display = isAI ? 'none' : 'block';
+  document.getElementById('mode-manual').classList.toggle('active', !isAI);
+  document.getElementById('mode-ai').classList.toggle('active', isAI);
+};
+
+// ── AI Parse ──────────────────────────────────────────────────────────────────
+window.parseWithAI = async () => {
+  const key = getOpenAIKey();
+  if (!key) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 OpenAI API Key！'); return; }
+  const raw = document.getElementById('ai-raw').value.trim();
+  if (!raw) { showAlert('form-alert','error','請先輸入要記錄的內容'); return; }
+
+  const btn = document.getElementById('ai-parse-btn');
+  btn.disabled = true; btn.textContent = '解析中…';
+  document.getElementById('ai-preview').innerHTML = '<div class="ai-preview-empty">AI 分析中，請稍候…</div>';
+  document.getElementById('ai-save-all-btn').style.display = 'none';
+
+  const currentTime = nowTime();
+  const prompt = `你是化療病患記錄助理。請將以下文字解析成結構化記錄，返回 JSON 陣列（不要任何其他文字）。
+每筆記錄包含：
+- time: "HH:MM"（若未提及時間則用 ${currentTime}）
+- category: 只能是 ["用藥","飲食","症狀","活動","血液","睡眠","其他"] 之一
+- content: 繁體中文描述（簡潔）
+- severity: 症狀類別填 0-10 數字，其他填 null
+
+文字：${raw}`;
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+      body: JSON.stringify({ model:'gpt-4o-mini', max_tokens:800,
+        messages:[{role:'system',content:'你只回傳 JSON 陣列，不含任何其他文字或 markdown。'},{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    const jsonStr = text.replace(/```json|```/g,'').trim();
+    parsedEntries = JSON.parse(jsonStr);
+    renderAIPreview(parsedEntries);
+  } catch(e) {
+    document.getElementById('ai-preview').innerHTML = `<div class="ai-preview-empty">❌ 解析失敗：${e.message}</div>`;
+  }
+  btn.disabled = false; btn.textContent = '✨ AI 解析';
+};
+
+function renderAIPreview(entries) {
+  const box = document.getElementById('ai-preview');
+  if (!entries.length) { box.innerHTML = '<div class="ai-preview-empty">無法解析，請重試</div>'; return; }
+  const CAT_ICON = {'用藥':'💊','飲食':'🥗','症狀':'🌡️','活動':'🚶','血液':'🩸','睡眠':'💤','其他':'💬'};
+  box.innerHTML = entries.map((e,i) => `
+    <div class="ai-preview-card">
+      <div class="pc-header">
+        <span class="pc-cat cat-${e.category}">${CAT_ICON[e.category]||'📝'} ${e.category}</span>
+        <span class="pc-time">${e.time||nowTime()}</span>
+      </div>
+      <div class="pc-content">${escapeHtml(e.content)}</div>
+      ${e.severity!=null&&e.severity>0?`<div class="pc-sev">嚴重程度 ${e.severity}/10</div>`:''}
+    </div>
+  `).join('');
+  document.getElementById('ai-save-all-btn').style.display = 'block';
+}
+
+window.saveAllParsed = async () => {
+  if (!db) { showAlert('form-alert','error','⚠️ 請先設定 Firebase！'); return; }
+  if (!parsedEntries.length) return;
+  const btn = document.getElementById('ai-save-all-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>儲存中…';
+  try {
+    for (const e of parsedEntries) {
+      const t = e.time || nowTime();
+      await addDoc(collection(db,'logs'), {
+        date: currentDate, time: t,
+        timestamp: currentDate + 'T' + t + ':00',
+        category: e.category, content: e.content,
+        severity: e.severity ?? null, blood: null,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    showAlert('form-alert','success',`✅ 已儲存 ${parsedEntries.length} 筆記錄！`);
+    document.getElementById('ai-raw').value = '';
+    document.getElementById('ai-preview').innerHTML = '';
+    parsedEntries = [];
+    btn.style.display = 'none';
+    loadTimeline(currentDate);
+  } catch(e) {
+    showAlert('form-alert','error','❌ 儲存失敗：'+e.message);
+  }
+  btn.disabled = false; btn.innerHTML = '💾 全部儲存';
+};
+
 // ── Category select ────────────────────────────────────────────────────────────
 window.selectCat = (chip) => {
   document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
@@ -586,14 +720,17 @@ async function loadTimeline(dateStr) {
   if (!db) { wrap.innerHTML = '<div class="timeline-empty"><div class="big">🔥</div>請先設定 Firebase</div>'; return; }
   wrap.innerHTML = '<div class="timeline-empty">載入中…</div>';
   try {
-    const q = query(collection(db,'logs'), where('date','==',dateStr), orderBy('timestamp','asc'));
+    const q = query(collection(db,'logs'), where('date','==',dateStr));
     const snap = await getDocs(q);
     if (snap.empty) {
       wrap.innerHTML = '<div class="timeline-empty"><div class="big">📭</div>今天還沒有記錄</div>';
       return;
     }
+    const entries = [];
+    snap.forEach(d => entries.push({id:d.id,...d.data()}));
+    entries.sort((a,b) => (a.timestamp||'').localeCompare(b.timestamp||''));
     wrap.innerHTML = '';
-    snap.forEach(d => wrap.appendChild(buildLogCard(d.id, d.data())));
+    entries.forEach(d => wrap.appendChild(buildLogCard(d.id, d)));
   } catch(e) {
     wrap.innerHTML = `<div class="timeline-empty">載入失敗：${e.message}</div>`;
   }
@@ -634,12 +771,12 @@ window.loadHistory = async () => {
   const from = document.getElementById('hist-from').value;
   const to = document.getElementById('hist-to').value;
   try {
-    const q = query(collection(db,'logs'), where('date','>=',from), where('date','<=',to), orderBy('date','desc'), orderBy('timestamp','desc'));
+    const q = query(collection(db,'logs'), where('date','>=',from), where('date','<=',to));
     const snap = await getDocs(q);
     if (snap.empty) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>'; return; }
-    // Group by date
     const byDate = {};
     snap.forEach(d => { const data = d.data(); if (!byDate[data.date]) byDate[data.date] = []; byDate[data.date].push({id:d.id,...data}); });
+    Object.values(byDate).forEach(arr => arr.sort((a,b) => (a.timestamp||'').localeCompare(b.timestamp||'')));
     list.innerHTML = '';
     Object.keys(byDate).sort().reverse().forEach(date => {
       const section = document.createElement('div');
@@ -697,10 +834,11 @@ async function doAiChat(userMsg) {
     try {
       const from = new Date(); from.setDate(from.getDate()-30);
       const fromStr = from.toISOString().split('T')[0];
-      const q = query(collection(db,'logs'), where('date','>=',fromStr), orderBy('date','desc'), orderBy('timestamp','desc'));
+      const q = query(collection(db,'logs'), where('date','>=',fromStr));
       const snap = await getDocs(q);
       const entries = [];
       snap.forEach(d => entries.push(d.data()));
+      entries.sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
       context = entries.length ? logsToText(entries) : '過去 30 天內沒有記錄。';
     } catch(e) { context = '（讀取失敗：'+e.message+')'; }
   }
