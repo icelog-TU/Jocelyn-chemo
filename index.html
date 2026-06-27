@@ -6,311 +6,219 @@
 <title>琳琳的化療記錄</title>
 <style>
   :root {
-    --pink: #f4a7b9;
-    --pink-light: #fde8ef;
-    --pink-dark: #d97093;
-    --cream: #fdf8f2;
-    --text: #4a3f3f;
-    --text-light: #8a7070;
-    --border: #ecd9d9;
-    --shadow: 0 2px 12px rgba(180,120,120,0.10);
-    --radius: 14px;
-    --c-med: #9c6fcf;
-    --c-food: #5aaa7a;
-    --c-sym: #e07050;
-    --c-act: #4a90d9;
-    --c-blood: #d94a4a;
-    --c-sleep: #5070b0;
-    --c-other: #8a8a8a;
+    --pink: #f4a7b9; --pink-light: #fde8ef; --pink-dark: #d97093;
+    --cream: #fdf8f2; --text: #4a3f3f; --text-light: #8a7070;
+    --border: #ecd9d9; --shadow: 0 2px 12px rgba(180,120,120,0.10); --radius: 14px;
+    --c-med:    #9c6fcf;
+    --c-neuro:  #e03060;
+    --c-sym:    #e07050;
+    --c-food:   #5aaa7a;
+    --c-act:    #4a90d9;
+    --c-toilet: #8b6340;
+    --c-sleep:  #5070b0;
+    --c-exam:   #b03030;
+    --c-assess: #c07800;
+    --c-plan:   #16a085;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    min-height: 100vh;
-    padding-bottom: 70px;
-  }
+  body { font-family: -apple-system,'PingFang TC','Noto Sans TC',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; padding-bottom:72px; }
 
-  /* ── Header ── */
-  .app-header {
-    background: linear-gradient(135deg, var(--pink-dark) 0%, var(--pink) 100%);
-    color: white;
-    padding: 14px 16px 12px;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(180,80,100,0.18);
-  }
-  .app-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
-  .app-header h1 { font-size: 1.15rem; font-weight: 700; }
-  .app-header p { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
-  .diag-badge { background: rgba(255,255,255,0.22); border-radius: 10px; padding: 4px 10px; text-align: center; }
-  .diag-badge .day-num { font-size: 1.3rem; font-weight: 800; line-height: 1.1; }
-  .diag-badge .day-lbl { font-size: 0.6rem; opacity: 0.88; }
+  /* Header */
+  .app-header { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; padding:14px 16px 12px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(180,80,100,0.18); }
+  .app-header-row { display:flex; justify-content:space-between; align-items:flex-start; }
+  .app-header h1 { font-size:1.15rem; font-weight:700; }
+  .app-header p { font-size:0.75rem; opacity:0.85; margin-top:2px; }
+  .diag-badge { background:rgba(255,255,255,0.22); border-radius:10px; padding:5px 12px; text-align:center; }
+  .diag-badge .day-num { font-size:1.3rem; font-weight:800; line-height:1.1; }
 
-  /* ── Bottom nav ── */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-top: 1.5px solid var(--border);
-    display: flex; z-index: 100;
-    box-shadow: 0 -2px 12px rgba(180,120,120,0.08);
-  }
-  .nav-btn {
-    flex: 1; padding: 8px 4px 6px;
-    background: none; border: none; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    color: var(--text-light); font-size: 0.65rem; transition: color 0.2s;
-  }
-  .nav-btn.active { color: var(--pink-dark); }
-  .nav-btn svg { width: 22px; height: 22px; }
+  /* Nav */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1.5px solid var(--border); display:flex; z-index:100; box-shadow:0 -2px 12px rgba(180,120,120,0.08); }
+  .nav-btn { flex:1; padding:8px 4px 6px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-light); font-size:0.65rem; transition:color 0.2s; }
+  .nav-btn.active { color:var(--pink-dark); }
+  .nav-btn svg { width:22px; height:22px; }
 
-  /* ── Pages ── */
-  .page { display: none; }
-  .page.active { display: block; }
+  /* Pages */
+  .page { display:none; }
+  .page.active { display:block; }
 
-  /* ── Card ── */
-  .card {
-    background: white; border-radius: var(--radius);
-    padding: 14px; margin: 12px 12px 0;
-    box-shadow: var(--shadow); border: 1px solid var(--border);
-  }
-  .card-title {
-    font-size: 0.88rem; font-weight: 700; color: var(--pink-dark);
-    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
-  }
+  /* Card */
+  .card { background:white; border-radius:var(--radius); padding:14px; margin:12px 12px 0; box-shadow:var(--shadow); border:1px solid var(--border); }
+  .card-title { font-size:0.88rem; font-weight:700; color:var(--pink-dark); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
 
-  /* ── Date nav ── */
-  .date-nav {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 12px 0;
-  }
-  .date-nav input {
-    flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
-    border-radius: 9px; font-size: 0.88rem; color: var(--text);
-    background: white; outline: none; font-family: inherit;
-  }
-  .date-nav input:focus { border-color: var(--pink); }
-  .date-nav button {
-    background: white; border: 1.5px solid var(--border);
-    border-radius: 9px; padding: 8px 12px; font-size: 1rem;
-    cursor: pointer; color: var(--text-light);
-  }
+  /* Date nav */
+  .date-nav { display:flex; align-items:center; gap:8px; padding:10px 12px 0; }
+  .date-nav input { flex:1; padding:8px 10px; border:1.5px solid var(--border); border-radius:9px; font-size:0.88rem; color:var(--text); background:white; outline:none; font-family:inherit; }
+  .date-nav input:focus { border-color:var(--pink); }
+  .date-nav button { background:white; border:1.5px solid var(--border); border-radius:9px; padding:8px 12px; font-size:1rem; cursor:pointer; color:var(--text-light); }
 
-  /* ── Timeline ── */
-  .timeline { padding: 10px 12px 0; }
-  .timeline-empty {
-    text-align: center; padding: 24px 0; color: var(--text-light); font-size: 0.85rem;
-  }
-  .timeline-empty .big { font-size: 2rem; margin-bottom: 6px; }
-  .log-entry {
-    display: flex; gap: 10px; align-items: flex-start;
-    background: white; border-radius: 12px;
-    padding: 10px 12px; margin-bottom: 8px;
-    border: 1px solid var(--border); box-shadow: var(--shadow);
-    position: relative;
-  }
-  .log-time {
-    font-size: 0.78rem; font-weight: 700; color: var(--text-light);
-    min-width: 38px; padding-top: 2px; flex-shrink: 0;
-  }
-  .log-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    flex-shrink: 0; margin-top: 4px;
-  }
-  .log-body { flex: 1; min-width: 0; }
-  .log-cat { font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; }
-  .log-content { font-size: 0.85rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; word-break: break-word; }
-  .log-meta { font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
-  .log-del {
-    background: none; border: none; color: #ccc; font-size: 1rem;
-    cursor: pointer; padding: 0 2px; flex-shrink: 0; align-self: flex-start;
-  }
-  .log-del:hover { color: var(--c-blood); }
+  /* Timeline */
+  .timeline { padding:10px 12px 0; }
+  .tl-empty { text-align:center; padding:24px 0; color:var(--text-light); font-size:0.85rem; }
+  .tl-empty .big { font-size:2rem; margin-bottom:6px; }
+  .log-entry { display:flex; gap:10px; align-items:flex-start; background:white; border-radius:12px; padding:10px 12px; margin-bottom:8px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .log-time { font-size:0.78rem; font-weight:700; color:var(--text-light); min-width:36px; padding-top:2px; flex-shrink:0; }
+  .log-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .log-body { flex:1; min-width:0; cursor:pointer; }
+  .log-body:active { opacity:0.7; }
+  .log-cat { font-size:0.72rem; font-weight:700; margin-bottom:3px; }
+  .log-content { font-size:0.85rem; line-height:1.5; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+  .log-meta { font-size:0.72rem; color:var(--text-light); margin-top:3px; }
+  .log-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  .log-tag { font-size:0.68rem; padding:2px 7px; border-radius:10px; background:#f0ecfb; color:#6a4caf; font-weight:600; }
+  .log-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; padding:0 2px; flex-shrink:0; align-self:flex-start; }
+  .log-del:hover { color:var(--c-exam); }
 
   /* Category colors */
-  .cat-用藥 { color: var(--c-med); } .dot-用藥 { background: var(--c-med); }
-  .cat-飲食 { color: var(--c-food); } .dot-飲食 { background: var(--c-food); }
-  .cat-症狀 { color: var(--c-sym); } .dot-症狀 { background: var(--c-sym); }
-  .cat-活動 { color: var(--c-act); } .dot-活動 { background: var(--c-act); }
-  .cat-血液 { color: var(--c-blood); } .dot-血液 { background: var(--c-blood); }
-  .cat-睡眠 { color: var(--c-sleep); } .dot-睡眠 { background: var(--c-sleep); }
-  .cat-其他 { color: var(--c-other); } .dot-其他 { background: var(--c-other); }
+  .cat-用藥    { color:var(--c-med); }    .dot-用藥    { background:var(--c-med); }
+  .cat-神經毒性 { color:var(--c-neuro); }  .dot-神經毒性 { background:var(--c-neuro); }
+  .cat-症狀    { color:var(--c-sym); }    .dot-症狀    { background:var(--c-sym); }
+  .cat-飲食    { color:var(--c-food); }   .dot-飲食    { background:var(--c-food); }
+  .cat-活動功能 { color:var(--c-act); }    .dot-活動功能 { background:var(--c-act); }
+  .cat-排泄    { color:var(--c-toilet); } .dot-排泄    { background:var(--c-toilet); }
+  .cat-睡眠    { color:var(--c-sleep); }  .dot-睡眠    { background:var(--c-sleep); }
+  .cat-檢查    { color:var(--c-exam); }   .dot-檢查    { background:var(--c-exam); }
+  .cat-評估    { color:var(--c-assess); } .dot-評估    { background:var(--c-assess); }
+  .cat-醫療計畫 { color:var(--c-plan); }   .dot-醫療計畫 { background:var(--c-plan); }
 
-  /* ── Entry form ── */
-  .entry-form {
-    background: white; border-radius: var(--radius);
-    padding: 14px; margin: 10px 12px 12px;
-    box-shadow: var(--shadow); border: 1.5px solid var(--pink-light);
-  }
-  .form-title { font-size: 0.82rem; font-weight: 700; color: var(--pink-dark); margin-bottom: 10px; }
-  .time-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .time-row label { font-size: 0.78rem; color: var(--text-light); white-space: nowrap; }
-  .time-row input {
-    padding: 7px 10px; border: 1.5px solid var(--border);
-    border-radius: 9px; font-size: 0.88rem; font-family: inherit;
-    color: var(--text); background: var(--cream); outline: none; width: 100px;
-  }
-  .time-row input:focus { border-color: var(--pink); background: white; }
-
-  /* Category chips */
-  .cat-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
-  .cat-chips::-webkit-scrollbar { display: none; }
-  .cat-chip {
-    flex-shrink: 0; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;
-    border: 1.5px solid var(--border); background: white; cursor: pointer;
-    color: var(--text-light); white-space: nowrap; transition: all 0.18s;
-  }
-  .cat-chip.sel-用藥 { background: #f3ecfb; border-color: var(--c-med); color: var(--c-med); font-weight: 700; }
-  .cat-chip.sel-飲食 { background: #eaf7ee; border-color: var(--c-food); color: var(--c-food); font-weight: 700; }
-  .cat-chip.sel-症狀 { background: #fdf0ec; border-color: var(--c-sym); color: var(--c-sym); font-weight: 700; }
-  .cat-chip.sel-活動 { background: #eaf2fc; border-color: var(--c-act); color: var(--c-act); font-weight: 700; }
-  .cat-chip.sel-血液 { background: #fdeaea; border-color: var(--c-blood); color: var(--c-blood); font-weight: 700; }
-  .cat-chip.sel-睡眠 { background: #eaeff8; border-color: var(--c-sleep); color: var(--c-sleep); font-weight: 700; }
-  .cat-chip.sel-其他 { background: #f0f0f0; border-color: var(--c-other); color: var(--c-other); font-weight: 700; }
-
-  /* Form fields */
-  textarea, input[type=text], input[type=number], select {
-    width: 100%; padding: 9px 12px;
-    border: 1.5px solid var(--border); border-radius: 9px;
-    font-size: 0.88rem; color: var(--text); background: var(--cream);
-    outline: none; transition: border-color 0.2s; font-family: inherit;
-  }
-  textarea:focus, input:focus, select:focus { border-color: var(--pink); background: white; }
-  textarea { resize: none; min-height: 76px; }
-  .field-label { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; margin-top: 10px; display: block; }
-  .field-label:first-child { margin-top: 0; }
-
-  /* Severity slider */
-  .sev-row { margin-top: 10px; }
-  .sev-label-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-  .sev-label-row span { font-size: 0.78rem; color: var(--text-light); }
-  .sev-label-row .val { font-weight: 700; color: var(--c-sym); }
-  input[type=range] { width: 100%; accent-color: var(--c-sym); }
-  .sev-ends { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-light); margin-top: 2px; }
-
-  /* Blood fields */
-  .blood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .blood-item label { font-size: 0.72rem; color: var(--text-light); display: block; margin-bottom: 3px; }
-  .blood-item input { padding: 7px 10px; font-size: 0.85rem; }
-
-  /* Buttons */
-  .btn {
-    display: block; width: 100%; padding: 12px;
-    border-radius: var(--radius); border: none; cursor: pointer;
-    font-size: 0.92rem; font-weight: 700; font-family: inherit;
-    transition: opacity 0.18s, transform 0.1s; margin-top: 10px;
-  }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary { background: linear-gradient(135deg, var(--pink-dark), var(--pink)); color: white; }
-  .btn-secondary { background: var(--pink-light); color: var(--pink-dark); }
-  .btn-ai { background: linear-gradient(135deg, #7c5cbf, #a07be0); color: white; }
-  .btn:disabled { opacity: 0.5; }
-  .btn-sm { display: inline-block; width: auto; padding: 7px 16px; font-size: 0.82rem; }
-
-  /* Alert */
-  .alert { padding: 9px 13px; border-radius: 10px; font-size: 0.82rem; margin: 8px 0; display: none; }
-  .alert.success { background: #e8f5e9; color: #388e3c; display: block; }
-  .alert.error { background: #fdecea; color: #c62828; display: block; }
-  .alert.info { background: #e3f2fd; color: #1565c0; display: block; }
-
-  /* Spinner */
-  .spinner {
-    display: inline-block; width: 16px; height: 16px;
-    border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white;
-    border-radius: 50%; animation: spin 0.8s linear infinite;
-    vertical-align: middle; margin-right: 5px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* History */
-  .hist-filter { padding: 10px 12px 0; display: flex; gap: 8px; align-items: flex-end; }
-  .hist-filter > div { flex: 1; }
-  .hist-filter label { font-size: 0.72rem; color: var(--text-light); display: block; margin-bottom: 3px; }
-  .hist-filter input { padding: 8px 10px; font-size: 0.82rem; }
-  .hist-filter button {
-    padding: 8px 14px; border-radius: 9px; border: none;
-    background: var(--pink-dark); color: white; font-size: 0.82rem;
-    font-weight: 700; cursor: pointer; flex-shrink: 0;
-  }
-  .hist-list { padding: 10px 12px; }
-
-  /* AI */
-  .chat-wrap { padding: 10px 12px; }
-  .chat-box {
-    background: white; border-radius: var(--radius);
-    border: 1px solid var(--border); min-height: 260px; max-height: 400px;
-    overflow-y: auto; padding: 12px;
-    display: flex; flex-direction: column; gap: 10px;
-    margin-bottom: 10px;
-  }
-  .msg { max-width: 88%; }
-  .msg.user { align-self: flex-end; }
-  .msg.ai { align-self: flex-start; }
-  .msg-bubble { padding: 9px 13px; border-radius: 16px; font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; }
-  .msg.user .msg-bubble { background: var(--pink-dark); color: white; border-bottom-right-radius: 4px; }
-  .msg.ai .msg-bubble { background: #f0ecf7; color: var(--text); border-bottom-left-radius: 4px; }
-  .msg-time { font-size: 0.68rem; color: var(--text-light); margin-top: 3px; }
-  .msg.user .msg-time { text-align: right; }
-  .chat-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
-  .chat-input-row input { flex: 1; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.88rem; font-family: inherit; color: var(--text); background: white; outline: none; }
-  .chat-input-row input:focus { border-color: var(--pink); }
-  .chat-input-row button { background: #7c5cbf; color: white; border: none; border-radius: 9px; padding: 0 16px; font-size: 1.1rem; cursor: pointer; }
-  .quick-btns { display: flex; flex-direction: column; gap: 7px; }
-
-  /* Settings */
-  .settings-group { margin-bottom: 10px; }
-  .settings-label { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; }
+  /* Entry form */
+  .entry-form { background:white; border-radius:var(--radius); padding:14px; margin:10px 12px 12px; box-shadow:var(--shadow); border:1.5px solid var(--pink-light); }
+  .form-title { font-size:0.82rem; font-weight:700; color:var(--pink-dark); margin-bottom:10px; }
 
   /* Mode toggle */
-  .mode-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
-  .mode-btn {
-    flex: 1; padding: 7px; border-radius: 9px; border: 1.5px solid var(--border);
-    background: white; font-size: 0.82rem; font-weight: 600; cursor: pointer;
-    color: var(--text-light); font-family: inherit; transition: all 0.18s;
-  }
-  .mode-btn.active { background: var(--pink-light); border-color: var(--pink-dark); color: var(--pink-dark); }
+  .mode-toggle { display:flex; gap:6px; margin-bottom:12px; }
+  .mode-btn { flex:1; padding:7px; border-radius:9px; border:1.5px solid var(--border); background:white; font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--text-light); font-family:inherit; transition:all 0.18s; }
+  .mode-btn.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); }
 
-  /* AI preview */
-  .ai-preview-card {
-    background: var(--cream); border: 1.5px solid var(--border);
-    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
-  }
-  .ai-preview-card .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .ai-preview-card .pc-cat { font-size: 0.78rem; font-weight: 700; }
-  .ai-preview-card .pc-time { font-size: 0.75rem; color: var(--text-light); }
-  .ai-preview-card .pc-content { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
-  .ai-preview-card .pc-sev { font-size: 0.72rem; color: var(--c-sym); margin-top: 3px; }
-  .ai-preview-empty { text-align: center; padding: 16px; color: var(--text-light); font-size: 0.83rem; }
+  /* Category chips */
+  .cat-chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:10px; scrollbar-width:none; }
+  .cat-chips::-webkit-scrollbar { display:none; }
+  .cat-chip { flex-shrink:0; padding:5px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; transition:all 0.18s; }
+  .cat-chip.sel-用藥    { background:#f3ecfb; border-color:var(--c-med);    color:var(--c-med);    font-weight:700; }
+  .cat-chip.sel-神經毒性 { background:#fdeaf0; border-color:var(--c-neuro);  color:var(--c-neuro);  font-weight:700; }
+  .cat-chip.sel-症狀    { background:#fdf0ec; border-color:var(--c-sym);    color:var(--c-sym);    font-weight:700; }
+  .cat-chip.sel-飲食    { background:#eaf7ee; border-color:var(--c-food);   color:var(--c-food);   font-weight:700; }
+  .cat-chip.sel-活動功能 { background:#eaf2fc; border-color:var(--c-act);    color:var(--c-act);    font-weight:700; }
+  .cat-chip.sel-排泄    { background:#f5ede6; border-color:var(--c-toilet); color:var(--c-toilet); font-weight:700; }
+  .cat-chip.sel-睡眠    { background:#eaeff8; border-color:var(--c-sleep);  color:var(--c-sleep);  font-weight:700; }
+  .cat-chip.sel-檢查    { background:#fdeaea; border-color:var(--c-exam);   color:var(--c-exam);   font-weight:700; }
+  .cat-chip.sel-評估    { background:#fff4e0; border-color:var(--c-assess); color:var(--c-assess); font-weight:700; }
+  .cat-chip.sel-醫療計畫 { background:#e6f7f4; border-color:var(--c-plan);   color:var(--c-plan);   font-weight:700; }
 
-  /* Edit modal (bottom sheet) */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.35); z-index: 200;
+  /* Form fields */
+  textarea, input[type=text], input[type=number], input[type=time], select {
+    width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px;
+    font-size:0.88rem; color:var(--text); background:var(--cream); outline:none;
+    transition:border-color 0.2s; font-family:inherit;
   }
-  .modal-overlay.open { display: block; }
-  .modal-sheet {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-radius: 20px 20px 0 0;
-    padding: 20px 16px 36px; z-index: 201;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
-    transform: translateY(100%); transition: transform 0.28s cubic-bezier(.32,.72,0,1);
-  }
-  .modal-sheet.open { transform: translateY(0); }
-  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
-  .modal-title { font-size: 1rem; font-weight: 700; color: var(--pink-dark); margin-bottom: 14px; }
-  .modal-row { display: flex; gap: 8px; margin-bottom: 10px; }
-  .modal-row > div { flex: 1; }
-  .modal-row label { font-size: 0.75rem; color: var(--text-light); display: block; margin-bottom: 3px; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
-  .modal-btns button { flex: 1; padding: 12px; border-radius: var(--radius); border: none; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .modal-btn-cancel { background: var(--pink-light); color: var(--pink-dark); }
-  .modal-btn-save { background: linear-gradient(135deg, var(--pink-dark), var(--pink)); color: white; }
-  /* Log card clickable hint */
-  .log-body { cursor: pointer; }
-  .log-body:active { opacity: 0.7; }
+  textarea:focus, input:focus, select:focus { border-color:var(--pink); background:white; }
+  textarea { resize:none; min-height:76px; }
+  .field-label { font-size:0.78rem; color:var(--text-light); margin-bottom:4px; margin-top:10px; display:block; }
+  .field-label:first-child { margin-top:0; }
+  .time-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .time-row label { font-size:0.78rem; color:var(--text-light); white-space:nowrap; }
+  .time-row input { width:110px !important; }
 
-  /* Misc */
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .pb12 { padding-bottom: 12px; }
+  /* Severity */
+  .sev-row { margin-top:10px; }
+  .sev-lbl-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .sev-lbl-row span { font-size:0.78rem; color:var(--text-light); }
+  .sev-lbl-row .val { font-weight:700; color:var(--c-sym); }
+  input[type=range] { width:100%; accent-color:var(--c-sym); }
+  .sev-ends { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-light); margin-top:2px; }
+
+  /* Blood fields */
+  .blood-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .blood-item label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .blood-item input { padding:7px 10px; font-size:0.85rem; }
+
+  /* Tags */
+  .tag-section { margin-top:10px; }
+  .tag-input-row { display:flex; gap:6px; margin-bottom:6px; }
+  .tag-input-row input { flex:1; padding:7px 10px; font-size:0.82rem; }
+  .tag-input-row button { background:var(--pink-dark); color:white; border:none; border-radius:9px; padding:7px 12px; font-size:0.8rem; cursor:pointer; white-space:nowrap; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; min-height:0; }
+  .tag-chip { display:flex; align-items:center; gap:4px; font-size:0.72rem; padding:3px 9px; border-radius:10px; background:#f0ecfb; color:#6a4caf; font-weight:600; }
+  .tag-chip button { background:none; border:none; color:#9c6fcf; cursor:pointer; font-size:0.85rem; padding:0; line-height:1; }
+  .tag-suggest { display:flex; flex-wrap:wrap; gap:5px; }
+  .tag-sug-chip { font-size:0.72rem; padding:3px 9px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; white-space:nowrap; }
+  .tag-sug-chip:hover { background:#f0ecfb; }
+
+  /* AI input */
+  .ai-preview-card { background:var(--cream); border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .ai-preview-card .pc-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .ai-preview-card .pc-cat { font-size:0.78rem; font-weight:700; }
+  .ai-preview-card .pc-time { font-size:0.75rem; color:var(--text-light); }
+  .ai-preview-card .pc-content { font-size:0.85rem; line-height:1.5; }
+  .ai-preview-card .pc-sev { font-size:0.72rem; color:var(--c-sym); margin-top:3px; }
+  .ai-preview-card .pc-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+
+  /* Buttons */
+  .btn { display:block; width:100%; padding:12px; border-radius:var(--radius); border:none; cursor:pointer; font-size:0.92rem; font-weight:700; font-family:inherit; transition:opacity 0.18s,transform 0.1s; margin-top:10px; }
+  .btn:active { transform:scale(0.98); }
+  .btn-primary { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; }
+  .btn-secondary { background:var(--pink-light); color:var(--pink-dark); }
+  .btn-ai { background:linear-gradient(135deg,#7c5cbf,#a07be0); color:white; }
+  .btn:disabled { opacity:0.5; }
+  .btn-sm { display:inline-block; width:auto; padding:7px 16px; font-size:0.82rem; }
+
+  /* Alert */
+  .alert { padding:9px 13px; border-radius:10px; font-size:0.82rem; margin:8px 0; display:none; }
+  .alert.success { background:#e8f5e9; color:#388e3c; display:block; }
+  .alert.error { background:#fdecea; color:#c62828; display:block; }
+
+  /* Spinner */
+  .spinner { display:inline-block; width:16px; height:16px; border:2.5px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:5px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* History */
+  .hist-filter { padding:10px 12px 0; }
+  .hist-date-row { display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; }
+  .hist-date-row > div { flex:1; }
+  .hist-date-row label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .hist-date-row input { padding:8px 10px; font-size:0.82rem; }
+  .hist-date-row button { padding:8px 14px; border-radius:9px; border:none; background:var(--pink-dark); color:white; font-size:0.82rem; font-weight:700; cursor:pointer; }
+  .hist-tag-row { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .hist-tag-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; }
+  .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
+  .hist-list { padding:10px 12px; }
+
+  /* AI chat */
+  .chat-wrap { padding:10px 12px; }
+  .chat-box { background:white; border-radius:var(--radius); border:1px solid var(--border); min-height:260px; max-height:380px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+  .msg { max-width:88%; }
+  .msg.user { align-self:flex-end; }
+  .msg.ai { align-self:flex-start; }
+  .msg-bubble { padding:9px 13px; border-radius:16px; font-size:0.86rem; line-height:1.55; white-space:pre-wrap; }
+  .msg.user .msg-bubble { background:var(--pink-dark); color:white; border-bottom-right-radius:4px; }
+  .msg.ai .msg-bubble { background:#f0ecf7; color:var(--text); border-bottom-left-radius:4px; }
+  .msg-time { font-size:0.68rem; color:var(--text-light); margin-top:3px; }
+  .msg.user .msg-time { text-align:right; }
+  .chat-input-row { display:flex; gap:8px; margin-bottom:10px; }
+  .chat-input-row input { flex:1; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px; font-size:0.88rem; font-family:inherit; color:var(--text); background:white; outline:none; }
+  .chat-input-row input:focus { border-color:var(--pink); }
+  .chat-input-row button { background:#7c5cbf; color:white; border:none; border-radius:9px; padding:0 16px; font-size:1.1rem; cursor:pointer; }
+  .quick-btns { display:flex; flex-direction:column; gap:7px; }
+
+  /* Settings */
+  .settings-group { margin-bottom:10px; }
+  .settings-label { font-size:0.78rem; color:var(--text-light); margin-bottom:4px; }
+
+  /* Edit modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
+  .modal-overlay.open { display:block; }
+  .modal-sheet { position:fixed; bottom:0; left:0; right:0; background:white; border-radius:20px 20px 0 0; padding:20px 16px 36px; z-index:201; box-shadow:0 -4px 24px rgba(0,0,0,0.15); transform:translateY(100%); transition:transform 0.28s cubic-bezier(.32,.72,0,1); max-height:90vh; overflow-y:auto; }
+  .modal-sheet.open { transform:translateY(0); }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+  .modal-title { font-size:1rem; font-weight:700; color:var(--pink-dark); margin-bottom:14px; }
+  .modal-row { display:flex; gap:8px; margin-bottom:10px; }
+  .modal-row > div { flex:1; }
+  .modal-row label { font-size:0.75rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .modal-btns { display:flex; gap:8px; margin-top:14px; }
+  .modal-btns button { flex:1; padding:12px; border-radius:var(--radius); border:none; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .modal-btn-cancel { background:var(--pink-light); color:var(--pink-dark); }
+  .modal-btn-save { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; }
+  .modal-field { margin-bottom:10px; }
+  .modal-field label { font-size:0.75rem; color:var(--text-light); display:block; margin-bottom:3px; }
 </style>
 </head>
 <body>
@@ -328,20 +236,18 @@
   </div>
 </div>
 
-<!-- ══ 記錄頁 ══ -->
+<!-- 記錄頁 -->
 <div id="page-record" class="page active">
   <div class="date-nav">
     <button onclick="changeDate(-1)">◀</button>
     <input type="date" id="record-date" onchange="onDateChange()">
     <button onclick="changeDate(1)">▶</button>
   </div>
-
-  <!-- Timeline -->
   <div class="timeline" id="timeline-wrap">
-    <div class="timeline-empty"><div class="big">📭</div>今天還沒有記錄</div>
+    <div class="tl-empty"><div class="big">📭</div>今天還沒有記錄</div>
   </div>
 
-  <!-- Entry form -->
+  <!-- 新增記錄表單 -->
   <div class="entry-form">
     <div class="form-title">＋ 新增記錄</div>
     <div id="form-alert" class="alert"></div>
@@ -351,80 +257,94 @@
       <button class="mode-btn" id="mode-ai" onclick="setMode('ai')">✨ AI 智慧輸入</button>
     </div>
 
-    <!-- AI 輸入區 -->
+    <!-- AI 輸入 -->
     <div id="ai-section" style="display:none">
       <span class="field-label">直接說你要記錄的事，AI 幫你分類</span>
       <textarea id="ai-raw" placeholder="例：下午兩點打了嗎啡 5mg，之後噁心感很強大概 7 分，然後吃了半碗稀飯" style="min-height:90px"></textarea>
-      <button class="btn btn-ai" id="ai-parse-btn" onclick="parseWithAI()" style="margin-top:8px">✨ AI 解析</button>
+      <button class="btn btn-ai" id="ai-parse-btn" onclick="parseWithAI()">✨ AI 解析</button>
       <div id="ai-preview" style="margin-top:10px"></div>
       <button class="btn btn-primary" id="ai-save-all-btn" onclick="saveAllParsed()" style="display:none">💾 全部儲存</button>
     </div>
 
-    <!-- 手動輸入區 -->
+    <!-- 手動輸入 -->
     <div id="manual-section">
-    <div class="time-row">
-      <label>時間</label>
-      <input type="time" id="entry-time">
-    </div>
+      <div class="time-row">
+        <label>時間</label>
+        <input type="time" id="entry-time">
+      </div>
 
-    <div class="cat-chips" id="cat-chips">
-      <div class="cat-chip" data-cat="用藥" onclick="selectCat(this)">💊 用藥</div>
-      <div class="cat-chip" data-cat="飲食" onclick="selectCat(this)">🥗 飲食</div>
-      <div class="cat-chip" data-cat="症狀" onclick="selectCat(this)">🌡️ 症狀</div>
-      <div class="cat-chip" data-cat="活動" onclick="selectCat(this)">🚶 活動</div>
-      <div class="cat-chip" data-cat="血液" onclick="selectCat(this)">🩸 血液</div>
-      <div class="cat-chip" data-cat="睡眠" onclick="selectCat(this)">💤 睡眠</div>
-      <div class="cat-chip" data-cat="其他" onclick="selectCat(this)">💬 其他</div>
-    </div>
+      <div class="cat-chips" id="cat-chips">
+        <div class="cat-chip" data-cat="用藥"    onclick="selectCat(this)">💊 用藥</div>
+        <div class="cat-chip" data-cat="神經毒性" onclick="selectCat(this)">❤️ 神經毒性</div>
+        <div class="cat-chip" data-cat="症狀"    onclick="selectCat(this)">🤒 症狀</div>
+        <div class="cat-chip" data-cat="飲食"    onclick="selectCat(this)">🍚 飲食</div>
+        <div class="cat-chip" data-cat="活動功能" onclick="selectCat(this)">🚶 活動/功能</div>
+        <div class="cat-chip" data-cat="排泄"    onclick="selectCat(this)">🚽 排泄</div>
+        <div class="cat-chip" data-cat="睡眠"    onclick="selectCat(this)">😴 睡眠</div>
+        <div class="cat-chip" data-cat="檢查"    onclick="selectCat(this)">🔬 檢查</div>
+        <div class="cat-chip" data-cat="評估"    onclick="selectCat(this)">📈 評估</div>
+        <div class="cat-chip" data-cat="醫療計畫" onclick="selectCat(this)">👩‍⚕️ 醫療計畫</div>
+      </div>
 
-    <span class="field-label">內容</span>
-    <textarea id="entry-content" placeholder="輸入記錄內容…"></textarea>
+      <span class="field-label">內容</span>
+      <textarea id="entry-content" placeholder="輸入記錄內容…"></textarea>
 
-    <!-- 症狀嚴重度 -->
-    <div id="sev-section" style="display:none">
-      <div class="sev-row">
-        <div class="sev-label-row">
-          <span>嚴重程度</span>
-          <span class="val" id="sev-val">0</span>
+      <!-- 症狀/神經毒性嚴重度 -->
+      <div id="sev-section" style="display:none">
+        <div class="sev-row">
+          <div class="sev-lbl-row"><span>嚴重程度</span><span class="val" id="sev-val">0</span></div>
+          <input type="range" min="0" max="10" value="0" id="sev-slider" oninput="document.getElementById('sev-val').textContent=this.value">
+          <div class="sev-ends"><span>沒有</span><span>非常嚴重</span></div>
         </div>
-        <input type="range" min="0" max="10" value="0" id="sev-slider" oninput="document.getElementById('sev-val').textContent=this.value">
-        <div class="sev-ends"><span>沒有</span><span>非常嚴重</span></div>
       </div>
-    </div>
 
-    <!-- 血液指數 -->
-    <div id="blood-section" style="display:none">
-      <div class="blood-grid">
-        <div class="blood-item"><label>WBC (×10³/μL)</label><input type="number" id="b-wbc" placeholder="4.5" step="0.01"></div>
-        <div class="blood-item"><label>ANC (×10³/μL)</label><input type="number" id="b-anc" placeholder="2.0" step="0.01"></div>
-        <div class="blood-item"><label>Hb (g/dL)</label><input type="number" id="b-hb" placeholder="12.5" step="0.1"></div>
-        <div class="blood-item"><label>PLT (×10³/μL)</label><input type="number" id="b-plt" placeholder="150" step="1"></div>
-        <div class="blood-item"><label>ALT (U/L)</label><input type="number" id="b-alt" placeholder="25" step="1"></div>
-        <div class="blood-item"><label>Cr (mg/dL)</label><input type="number" id="b-cr" placeholder="0.8" step="0.01"></div>
+      <!-- 血液/檢查欄位 -->
+      <div id="blood-section" style="display:none">
+        <div class="blood-grid">
+          <div class="blood-item"><label>WBC (×10³/μL)</label><input type="number" id="b-wbc" placeholder="4.5" step="0.01"></div>
+          <div class="blood-item"><label>ANC (×10³/μL)</label><input type="number" id="b-anc" placeholder="2.0" step="0.01"></div>
+          <div class="blood-item"><label>Hb (g/dL)</label><input type="number" id="b-hb" placeholder="12.5" step="0.1"></div>
+          <div class="blood-item"><label>PLT (×10³/μL)</label><input type="number" id="b-plt" placeholder="150" step="1"></div>
+          <div class="blood-item"><label>ALT (U/L)</label><input type="number" id="b-alt" placeholder="25" step="1"></div>
+          <div class="blood-item"><label>Cr (mg/dL)</label><input type="number" id="b-cr" placeholder="0.8" step="0.01"></div>
+        </div>
       </div>
-    </div>
 
-    <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 儲存</button>
-    </div><!-- end manual-section -->
+      <!-- 標籤 -->
+      <div class="tag-section">
+        <span class="field-label">標籤（可選）</span>
+        <div class="tag-list" id="tag-list"></div>
+        <div class="tag-input-row">
+          <input type="text" id="tag-input" placeholder="輸入標籤後按＋" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
+          <button onclick="addTag()">＋</button>
+        </div>
+        <div class="tag-suggest" id="tag-suggest"></div>
+      </div>
+
+      <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 儲存</button>
+    </div>
   </div>
 </div>
 
-<!-- ══ 歷史頁 ══ -->
+<!-- 歷史頁 -->
 <div id="page-history" class="page">
   <div class="hist-filter">
-    <div><label>從</label><input type="date" id="hist-from"></div>
-    <div><label>到</label><input type="date" id="hist-to"></div>
-    <button onclick="loadHistory()">查詢</button>
+    <div class="hist-date-row">
+      <div><label>從</label><input type="date" id="hist-from"></div>
+      <div><label>到</label><input type="date" id="hist-to"></div>
+      <button onclick="loadHistory()">查詢</button>
+    </div>
+    <div id="hist-tag-filter" class="hist-tag-row"></div>
   </div>
   <div class="hist-list" id="hist-list"></div>
 </div>
 
-<!-- ══ AI 頁 ══ -->
+<!-- AI 頁 -->
 <div id="page-ai" class="page">
   <div class="chat-wrap">
     <div class="chat-box" id="chat-box">
       <div class="msg ai">
-        <div class="msg-bubble">您好！我是琳琳的化療記錄助理 🌸<br>可以幫你查詢記錄、分析症狀，或回答任何問題。</div>
+        <div class="msg-bubble">您好！我是琳琳的化療記錄助理 🌸<br>可以幫你查詢記錄、分析症狀趨勢，或回答任何問題。</div>
         <div class="msg-time">剛剛</div>
       </div>
     </div>
@@ -433,16 +353,17 @@
       <button onclick="sendChat()" id="chat-send-btn">➤</button>
     </div>
     <div class="quick-btns">
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近一週的症狀趨勢如何？有什麼需要注意的？')">📈 最近症狀趨勢</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的用藥記錄有哪些？')">💊 用藥記錄</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的血液指數正常嗎？')">🩸 血液指數分析</button>
-      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的飲食和睡眠狀況如何？')">🥗 飲食睡眠狀況</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近神經毒性的症狀有什麼變化？Jaw pain 和手腳麻有改善嗎？')">❤️ 神經毒性趨勢</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近一週的用藥記錄有哪些？止痛藥使用頻率如何？')">💊 用藥記錄</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的血液和檢查數據正常嗎？有哪些需要注意？')">🔬 檢查數據分析</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('排便和排尿狀況最近如何？有便秘或尿滯留嗎？')">🚽 排泄狀況</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('活動功能最近有變化嗎？能走路、站立的狀況怎樣？')">🚶 活動功能評估</button>
     </div>
   </div>
 </div>
 
-<!-- ══ 設定頁 ══ -->
-<div id="page-settings" class="page pb12">
+<!-- 設定頁 -->
+<div id="page-settings" class="page">
   <div class="card" style="margin-top:12px">
     <div class="card-title"><span>🔥</span> Firebase 設定</div>
     <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..."></div>
@@ -452,47 +373,52 @@
     <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 儲存 Firebase 設定</button>
     <div id="firebase-alert" class="alert"></div>
   </div>
-
   <div class="card">
     <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
-    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key 以啟用 AI 助理<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
     <div class="settings-group"><div class="settings-label">OpenAI API Key</div><input type="password" id="cfg-claudeKey" placeholder="sk-..."></div>
     <button class="btn btn-primary" onclick="saveClaudeConfig()">💾 儲存 AI 設定</button>
     <div id="claude-alert" class="alert"></div>
   </div>
-
-  <div class="card">
+  <div class="card" style="margin-bottom:12px">
     <div class="card-title"><span>ℹ️</span> 關於</div>
-    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App<br>紀錄治療過程，陪伴每一天 🌸<br><br>資料儲存於 Firebase Firestore（雲端）<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
+    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App 🌸<br>資料儲存於 Firebase Firestore<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
   </div>
 </div>
 
-<!-- Edit modal -->
+<!-- 編輯 Modal -->
 <div class="modal-overlay" id="edit-overlay" onclick="closeEditModal()"></div>
 <div class="modal-sheet" id="edit-sheet">
   <div class="modal-handle"></div>
   <div class="modal-title">✏️ 編輯記錄</div>
   <div class="modal-row">
-    <div>
-      <label>時間</label>
-      <input type="time" id="edit-time" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none">
-    </div>
+    <div><label>時間</label><input type="time" id="edit-time"></div>
     <div>
       <label>類別</label>
-      <select id="edit-cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none">
-        <option>用藥</option><option>飲食</option><option>症狀</option>
-        <option>活動</option><option>血液</option><option>睡眠</option><option>其他</option>
+      <select id="edit-cat" onchange="onEditCatChange()">
+        <option>用藥</option><option>神經毒性</option><option>症狀</option>
+        <option>飲食</option><option>活動功能</option><option>排泄</option>
+        <option>睡眠</option><option>檢查</option><option>評估</option><option>醫療計畫</option>
       </select>
     </div>
   </div>
-  <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:3px">內容</label>
-  <textarea id="edit-content" style="width:100%;min-height:80px;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none;resize:none"></textarea>
-  <div id="edit-sev-row" style="margin-top:10px;display:none">
+  <div class="modal-field"><label>內容</label><textarea id="edit-content" style="min-height:80px"></textarea></div>
+  <div id="edit-sev-row" style="display:none;margin-bottom:10px">
+    <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:4px">嚴重程度</label>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="font-size:0.78rem;color:var(--text-light)">嚴重程度</span>
+      <span style="font-size:0.78rem;color:var(--text-light)">0 = 沒有</span>
       <span style="font-size:0.88rem;font-weight:700;color:var(--c-sym)" id="edit-sev-val">0</span>
     </div>
-    <input type="range" min="0" max="10" value="0" id="edit-sev" oninput="document.getElementById('edit-sev-val').textContent=this.value" style="width:100%;accent-color:var(--c-sym)">
+    <input type="range" min="0" max="10" value="0" id="edit-sev" oninput="document.getElementById('edit-sev-val').textContent=this.value">
+  </div>
+  <!-- 編輯標籤 -->
+  <div class="modal-field">
+    <label>標籤</label>
+    <div class="tag-list" id="edit-tag-list"></div>
+    <div class="tag-input-row">
+      <input type="text" id="edit-tag-input" placeholder="新增標籤" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag()}">
+      <button onclick="addEditTag()">＋</button>
+    </div>
   </div>
   <div class="modal-btns">
     <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
@@ -500,7 +426,7 @@
   </div>
 </div>
 
-<!-- Bottom nav -->
+<!-- Bottom Nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('record',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -524,52 +450,49 @@
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// ── State ──────────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+const CAT_ICON = {
+  '用藥':'💊','神經毒性':'❤️','症狀':'🤒','飲食':'🍚',
+  '活動功能':'🚶','排泄':'🚽','睡眠':'😴','檢查':'🔬','評估':'📈','醫療計畫':'👩‍⚕️'
+};
+const SUGGESTED_TAGS = ['Vincristine','嗎啡','Pregabalin','Ibuprofen','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺'];
+const SEV_CATS = new Set(['症狀','神經毒性']);
+const BLOOD_CATS = new Set(['檢查']);
+
+// ── State ─────────────────────────────────────────────────────────────────────
 let db = null;
 let currentDate = todayStr();
 let selectedCat = '';
-
-const CAT_ICON = { '用藥':'💊', '飲食':'🥗', '症狀':'🌡️', '活動':'🚶', '血液':'🩸', '睡眠':'💤', '其他':'💬' };
+let entryTags = [];
+let editTags = [];
+let parsedEntries = [];
+let allTags = [];
+let activeTagFilter = '';
+let editingId = null, editingDate = null;
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
-function nowTime() {
-  const d = new Date();
-  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-}
-function formatDateTW(s) {
-  const [y,m,d] = s.split('-');
-  return `${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日`;
-}
-function escapeHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-function nowChatTime() {
-  return new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-}
+function nowTime() { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function formatDateTW(s) { const[y,m,d]=s.split('-'); return `${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日`; }
+function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function nowChatTime() { return new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}); }
+function getOpenAIKey() { return localStorage.getItem('openai_key')||''; }
+function getFirebaseConfig() { try{return JSON.parse(localStorage.getItem('fb_config')||'null');}catch{return null;} }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // Header date
   document.getElementById('record-date').value = currentDate;
   document.getElementById('header-date').textContent = formatDateTW(currentDate);
-
-  // D-counter
   const diagDate = new Date('2025-12-31T00:00:00');
   const todayD = new Date(); todayD.setHours(0,0,0,0);
-  document.getElementById('diag-day').textContent = 'D' + Math.floor((todayD - diagDate) / 86400000);
-
-  // Time input default
+  document.getElementById('diag-day').textContent = 'D' + Math.floor((todayD-diagDate)/86400000);
   document.getElementById('entry-time').value = nowTime();
-
-  // History defaults
-  const from = new Date(); from.setDate(from.getDate() - 30);
+  const from=new Date(); from.setDate(from.getDate()-30);
   document.getElementById('hist-from').value = from.toISOString().split('T')[0];
   document.getElementById('hist-to').value = todayStr();
-
-  // Firebase
   tryInitFirebase();
   restoreSettingsFields();
   loadTimeline(currentDate);
+  renderSuggestedTags();
 });
 
 function tryInitFirebase() {
@@ -578,96 +501,167 @@ function tryInitFirebase() {
   try {
     const app = getApps().length ? getApps()[0] : initializeApp(cfg);
     db = getFirestore(app);
-  } catch(e) { console.warn('Firebase:', e); }
+  } catch(e) { console.warn('Firebase:',e); }
 }
 
-function getFirebaseConfig() {
-  try { return JSON.parse(localStorage.getItem('fb_config') || 'null'); } catch { return null; }
-}
-function getOpenAIKey() { return localStorage.getItem('openai_key') || ''; }
-
-// ── Navigation ─────────────────────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────────────────────────────
 window.showPage = (page, btn) => {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  if (btn) btn.classList.add('active');
-  if (page === 'history') loadHistory();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(page==='history') loadHistory();
 };
 
-// ── Date nav ───────────────────────────────────────────────────────────────────
 window.changeDate = (d) => {
-  const dt = new Date(currentDate + 'T00:00:00');
-  dt.setDate(dt.getDate() + d);
+  const dt = new Date(currentDate+'T00:00:00'); dt.setDate(dt.getDate()+d);
   const s = dt.toISOString().split('T')[0];
-  if (s > todayStr()) return;
-  currentDate = s;
-  document.getElementById('record-date').value = s;
-  document.getElementById('header-date').textContent = formatDateTW(s);
+  if(s>todayStr()) return;
+  currentDate=s;
+  document.getElementById('record-date').value=s;
+  document.getElementById('header-date').textContent=formatDateTW(s);
   loadTimeline(s);
 };
 window.onDateChange = () => {
-  currentDate = document.getElementById('record-date').value;
-  document.getElementById('header-date').textContent = formatDateTW(currentDate);
+  currentDate=document.getElementById('record-date').value;
+  document.getElementById('header-date').textContent=formatDateTW(currentDate);
   loadTimeline(currentDate);
 };
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
-let parsedEntries = [];
-
 window.setMode = (mode) => {
-  const isAI = mode === 'ai';
-  document.getElementById('ai-section').style.display = isAI ? 'block' : 'none';
-  document.getElementById('manual-section').style.display = isAI ? 'none' : 'block';
-  document.getElementById('mode-manual').classList.toggle('active', !isAI);
-  document.getElementById('mode-ai').classList.toggle('active', isAI);
+  const isAI = mode==='ai';
+  document.getElementById('ai-section').style.display = isAI?'block':'none';
+  document.getElementById('manual-section').style.display = isAI?'none':'block';
+  document.getElementById('mode-manual').classList.toggle('active',!isAI);
+  document.getElementById('mode-ai').classList.toggle('active',isAI);
+};
+
+// ── Category select ───────────────────────────────────────────────────────────
+window.selectCat = (chip) => {
+  document.querySelectorAll('.cat-chip').forEach(c=>c.className='cat-chip');
+  const cat = chip.dataset.cat;
+  chip.classList.add('sel-'+cat);
+  selectedCat = cat;
+  document.getElementById('sev-section').style.display = SEV_CATS.has(cat)?'block':'none';
+  document.getElementById('blood-section').style.display = BLOOD_CATS.has(cat)?'block':'none';
+};
+
+// ── Tags (entry form) ─────────────────────────────────────────────────────────
+function renderEntryTags() {
+  const list = document.getElementById('tag-list');
+  list.innerHTML = entryTags.map(t=>`
+    <div class="tag-chip">${escapeHtml(t)}<button onclick="removeEntryTag('${escapeHtml(t)}')">×</button></div>
+  `).join('');
+}
+window.addTag = () => {
+  const inp = document.getElementById('tag-input');
+  const val = inp.value.trim();
+  if(val && !entryTags.includes(val)) { entryTags.push(val); renderEntryTags(); saveRecentTag(val); }
+  inp.value='';
+};
+window.removeEntryTag = (t) => { entryTags=entryTags.filter(x=>x!==t); renderEntryTags(); };
+window.addSuggestedTag = (t) => {
+  if(!entryTags.includes(t)) { entryTags.push(t); renderEntryTags(); saveRecentTag(t); }
+};
+
+function renderSuggestedTags() {
+  const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
+  const combined = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0,16);
+  allTags = combined;
+  document.getElementById('tag-suggest').innerHTML = combined.map(t=>
+    `<div class="tag-sug-chip" onclick="addSuggestedTag('${escapeHtml(t)}')">${escapeHtml(t)}</div>`
+  ).join('');
+}
+function saveRecentTag(t) {
+  const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
+  const updated = [t, ...recent.filter(x=>x!==t)].slice(0,10);
+  localStorage.setItem('recent_tags', JSON.stringify(updated));
+  renderSuggestedTags();
+}
+
+// ── Save entry ────────────────────────────────────────────────────────────────
+window.saveEntry = async () => {
+  if(!db) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 Firebase 設定！'); return; }
+  if(!selectedCat) { showAlert('form-alert','error','請選擇類別'); return; }
+  const content = document.getElementById('entry-content').value.trim();
+  const time = document.getElementById('entry-time').value;
+  let finalContent = content, bloodData = null;
+  if(BLOOD_CATS.has(selectedCat)) {
+    const labels={wbc:'WBC',anc:'ANC',hb:'Hb',plt:'PLT',alt:'ALT',cr:'Cr'};
+    bloodData={}; const parts=[];
+    ['wbc','anc','hb','plt','alt','cr'].forEach(f=>{
+      const v=document.getElementById('b-'+f).value;
+      if(v){bloodData[f]=+v; parts.push(`${labels[f]} ${v}`);}
+    });
+    if(!finalContent && parts.length) finalContent=parts.join('　');
+    if(!finalContent){showAlert('form-alert','error','請填入至少一項數值');return;}
+  } else if(!finalContent){showAlert('form-alert','error','請填入記錄內容');return;}
+
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>儲存中…';
+  try {
+    await addDoc(collection(db,'logs'),{
+      date:currentDate, time:time||nowTime(),
+      timestamp:currentDate+'T'+(time||nowTime())+':00',
+      category:selectedCat, content:finalContent,
+      severity:SEV_CATS.has(selectedCat)?+document.getElementById('sev-slider').value:null,
+      blood:bloodData, tags:[...entryTags],
+      createdAt:new Date().toISOString(),
+    });
+    showAlert('form-alert','success','✅ 已儲存！');
+    document.getElementById('entry-content').value='';
+    document.getElementById('sev-slider').value=0;
+    document.getElementById('sev-val').textContent='0';
+    ['wbc','anc','hb','plt','alt','cr'].forEach(f=>document.getElementById('b-'+f).value='');
+    document.getElementById('entry-time').value=nowTime();
+    entryTags=[]; renderEntryTags();
+    loadTimeline(currentDate);
+  } catch(e){showAlert('form-alert','error','❌ 儲存失敗：'+e.message);}
+  btn.disabled=false; btn.innerHTML='💾 儲存';
 };
 
 // ── AI Parse ──────────────────────────────────────────────────────────────────
 window.parseWithAI = async () => {
-  const key = getOpenAIKey();
-  if (!key) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 OpenAI API Key！'); return; }
-  const raw = document.getElementById('ai-raw').value.trim();
-  if (!raw) { showAlert('form-alert','error','請先輸入要記錄的內容'); return; }
+  const key=getOpenAIKey();
+  if(!key){showAlert('form-alert','error','⚠️ 請先設定 OpenAI API Key！');return;}
+  const raw=document.getElementById('ai-raw').value.trim();
+  if(!raw){showAlert('form-alert','error','請輸入要記錄的內容');return;}
+  const btn=document.getElementById('ai-parse-btn');
+  btn.disabled=true; btn.textContent='解析中…';
+  document.getElementById('ai-preview').innerHTML='<div style="text-align:center;padding:12px;color:var(--text-light);font-size:0.83rem">AI 分析中…</div>';
+  document.getElementById('ai-save-all-btn').style.display='none';
 
-  const btn = document.getElementById('ai-parse-btn');
-  btn.disabled = true; btn.textContent = '解析中…';
-  document.getElementById('ai-preview').innerHTML = '<div class="ai-preview-empty">AI 分析中，請稍候…</div>';
-  document.getElementById('ai-save-all-btn').style.display = 'none';
-
-  const currentTime = nowTime();
-  const prompt = `你是化療病患記錄助理。請將以下文字解析成結構化記錄，返回 JSON 陣列（不要任何其他文字）。
-每筆記錄包含：
-- time: "HH:MM"（若未提及時間則用 ${currentTime}）
-- category: 只能是 ["用藥","飲食","症狀","活動","血液","睡眠","其他"] 之一
-- content: 繁體中文描述（簡潔）
-- severity: 症狀類別填 0-10 數字，其他填 null
-
+  const prompt=`你是化療病患記錄助理。將以下文字解析成記錄，返回 JSON 陣列（不要其他文字）。
+每筆欄位：
+- time: "HH:MM"（若未提及用 ${nowTime()}）
+- category: 只能是 ["用藥","神經毒性","症狀","飲食","活動功能","排泄","睡眠","檢查","評估","醫療計畫"] 之一
+- content: 繁體中文，簡潔
+- severity: 症狀/神經毒性填 0-10，其他填 null
+- tags: 相關標籤陣列（藥名、症狀名等，可空陣列）
 文字：${raw}`;
 
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
-      body: JSON.stringify({ model:'gpt-4o-mini', max_tokens:800,
-        messages:[{role:'system',content:'你只回傳 JSON 陣列，不含任何其他文字或 markdown。'},{role:'user',content:prompt}] })
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1000,
+        messages:[{role:'system',content:'只回傳 JSON 陣列，不含 markdown。'},{role:'user',content:prompt}]})
     });
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
-    const jsonStr = text.replace(/```json|```/g,'').trim();
-    parsedEntries = JSON.parse(jsonStr);
+    const data=await res.json();
+    const text=data.choices?.[0]?.message?.content||'';
+    parsedEntries=JSON.parse(text.replace(/```json|```/g,'').trim());
     renderAIPreview(parsedEntries);
-  } catch(e) {
-    document.getElementById('ai-preview').innerHTML = `<div class="ai-preview-empty">❌ 解析失敗：${e.message}</div>`;
+  } catch(e){
+    document.getElementById('ai-preview').innerHTML=`<div style="text-align:center;padding:12px;color:var(--c-exam)">❌ 解析失敗：${e.message}</div>`;
   }
-  btn.disabled = false; btn.textContent = '✨ AI 解析';
+  btn.disabled=false; btn.textContent='✨ AI 解析';
 };
 
 function renderAIPreview(entries) {
-  const box = document.getElementById('ai-preview');
-  if (!entries.length) { box.innerHTML = '<div class="ai-preview-empty">無法解析，請重試</div>'; return; }
-  const CAT_ICON = {'用藥':'💊','飲食':'🥗','症狀':'🌡️','活動':'🚶','血液':'🩸','睡眠':'💤','其他':'💬'};
-  box.innerHTML = entries.map((e,i) => `
+  const box=document.getElementById('ai-preview');
+  if(!entries.length){box.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-light)">無法解析</div>';return;}
+  box.innerHTML=entries.map(e=>`
     <div class="ai-preview-card">
       <div class="pc-header">
         <span class="pc-cat cat-${e.category}">${CAT_ICON[e.category]||'📝'} ${e.category}</span>
@@ -675,352 +669,279 @@ function renderAIPreview(entries) {
       </div>
       <div class="pc-content">${escapeHtml(e.content)}</div>
       ${e.severity!=null&&e.severity>0?`<div class="pc-sev">嚴重程度 ${e.severity}/10</div>`:''}
+      ${e.tags?.length?`<div class="pc-tags">${e.tags.map(t=>`<span class="log-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
     </div>
   `).join('');
-  document.getElementById('ai-save-all-btn').style.display = 'block';
+  document.getElementById('ai-save-all-btn').style.display='block';
 }
 
 window.saveAllParsed = async () => {
-  if (!db) { showAlert('form-alert','error','⚠️ 請先設定 Firebase！'); return; }
-  if (!parsedEntries.length) return;
-  const btn = document.getElementById('ai-save-all-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>儲存中…';
+  if(!db){showAlert('form-alert','error','⚠️ 請先設定 Firebase！');return;}
+  if(!parsedEntries.length) return;
+  const btn=document.getElementById('ai-save-all-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>儲存中…';
   try {
-    for (const e of parsedEntries) {
-      const t = e.time || nowTime();
-      await addDoc(collection(db,'logs'), {
-        date: currentDate, time: t,
-        timestamp: currentDate + 'T' + t + ':00',
-        category: e.category, content: e.content,
-        severity: e.severity ?? null, blood: null,
-        createdAt: new Date().toISOString(),
+    for(const e of parsedEntries){
+      const t=e.time||nowTime();
+      await addDoc(collection(db,'logs'),{
+        date:currentDate,time:t,timestamp:currentDate+'T'+t+':00',
+        category:e.category,content:e.content,
+        severity:e.severity??null,blood:null,tags:e.tags||[],
+        createdAt:new Date().toISOString(),
       });
     }
-    showAlert('form-alert','success',`✅ 已儲存 ${parsedEntries.length} 筆記錄！`);
-    document.getElementById('ai-raw').value = '';
-    document.getElementById('ai-preview').innerHTML = '';
-    parsedEntries = [];
-    btn.style.display = 'none';
+    showAlert('form-alert','success',`✅ 已儲存 ${parsedEntries.length} 筆！`);
+    document.getElementById('ai-raw').value='';
+    document.getElementById('ai-preview').innerHTML='';
+    parsedEntries=[]; btn.style.display='none';
     loadTimeline(currentDate);
-  } catch(e) {
-    showAlert('form-alert','error','❌ 儲存失敗：'+e.message);
-  }
-  btn.disabled = false; btn.innerHTML = '💾 全部儲存';
+  } catch(e){showAlert('form-alert','error','❌ 儲存失敗：'+e.message);}
+  btn.disabled=false; btn.innerHTML='💾 全部儲存';
 };
 
-// ── Category select ────────────────────────────────────────────────────────────
-window.selectCat = (chip) => {
-  document.querySelectorAll('.cat-chip').forEach(c => c.className = 'cat-chip');
-  const cat = chip.dataset.cat;
-  chip.classList.add('sel-' + cat);
-  selectedCat = cat;
-  document.getElementById('sev-section').style.display = cat === '症狀' ? 'block' : 'none';
-  document.getElementById('blood-section').style.display = cat === '血液' ? 'block' : 'none';
-};
-
-// ── Save entry ─────────────────────────────────────────────────────────────────
-window.saveEntry = async () => {
-  if (!db) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 Firebase 設定！'); return; }
-  if (!selectedCat) { showAlert('form-alert','error','請選擇類別'); return; }
-  const content = document.getElementById('entry-content').value.trim();
-  const time = document.getElementById('entry-time').value;
-
-  // 血液類別：內容可以是空的（從欄位組合）
-  let finalContent = content;
-  let bloodData = null;
-  if (selectedCat === '血液') {
-    const bFields = ['wbc','anc','hb','plt','alt','cr'];
-    const labels = {wbc:'WBC',anc:'ANC',hb:'Hb',plt:'PLT',alt:'ALT',cr:'Cr'};
-    bloodData = {};
-    const parts = [];
-    bFields.forEach(f => {
-      const v = document.getElementById('b-'+f).value;
-      if (v) { bloodData[f] = +v; parts.push(`${labels[f]} ${v}`); }
-    });
-    if (!finalContent && parts.length) finalContent = parts.join('　');
-    if (!finalContent) { showAlert('form-alert','error','請填入至少一項血液數值'); return; }
-  } else if (!finalContent) {
-    showAlert('form-alert','error','請填入記錄內容'); return;
-  }
-
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>儲存中…';
-
-  const entry = {
-    date: currentDate,
-    time: time || nowTime(),
-    timestamp: currentDate + 'T' + (time || nowTime()) + ':00',
-    category: selectedCat,
-    content: finalContent,
-    severity: selectedCat === '症狀' ? +document.getElementById('sev-slider').value : null,
-    blood: bloodData,
-    createdAt: new Date().toISOString(),
-  };
-
-  try {
-    await addDoc(collection(db, 'logs'), entry);
-    showAlert('form-alert','success','✅ 已儲存！');
-    // Reset form
-    document.getElementById('entry-content').value = '';
-    document.getElementById('sev-slider').value = 0;
-    document.getElementById('sev-val').textContent = '0';
-    ['wbc','anc','hb','plt','alt','cr'].forEach(f => document.getElementById('b-'+f).value = '');
-    document.getElementById('entry-time').value = nowTime();
-    loadTimeline(currentDate);
-  } catch(e) {
-    showAlert('form-alert','error','❌ 儲存失敗：' + e.message);
-  }
-  btn.disabled = false; btn.innerHTML = '💾 儲存';
-};
-
-// ── Timeline ───────────────────────────────────────────────────────────────────
+// ── Timeline ──────────────────────────────────────────────────────────────────
 async function loadTimeline(dateStr) {
-  const wrap = document.getElementById('timeline-wrap');
-  if (!db) { wrap.innerHTML = '<div class="timeline-empty"><div class="big">🔥</div>請先設定 Firebase</div>'; return; }
-  wrap.innerHTML = '<div class="timeline-empty">載入中…</div>';
+  const wrap=document.getElementById('timeline-wrap');
+  if(!db){wrap.innerHTML='<div class="tl-empty"><div class="big">🔥</div>請先設定 Firebase</div>';return;}
+  wrap.innerHTML='<div class="tl-empty">載入中…</div>';
   try {
-    const q = query(collection(db,'logs'), where('date','==',dateStr));
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      wrap.innerHTML = '<div class="timeline-empty"><div class="big">📭</div>今天還沒有記錄</div>';
-      return;
-    }
-    const entries = [];
-    snap.forEach(d => entries.push({id:d.id,...d.data()}));
-    entries.sort((a,b) => (a.timestamp||'').localeCompare(b.timestamp||''));
-    wrap.innerHTML = '';
-    entries.forEach(d => wrap.appendChild(buildLogCard(d.id, d)));
-  } catch(e) {
-    wrap.innerHTML = `<div class="timeline-empty">載入失敗：${e.message}</div>`;
-  }
+    const snap=await getDocs(query(collection(db,'logs'),where('date','==',dateStr)));
+    if(snap.empty){wrap.innerHTML='<div class="tl-empty"><div class="big">📭</div>今天還沒有記錄</div>';return;}
+    const entries=[];
+    snap.forEach(d=>entries.push({id:d.id,...d.data()}));
+    entries.sort((a,b)=>(a.timestamp||'').localeCompare(b.timestamp||''));
+    wrap.innerHTML='';
+    entries.forEach(d=>wrap.appendChild(buildLogCard(d.id,d)));
+  } catch(e){wrap.innerHTML=`<div class="tl-empty">載入失敗：${e.message}</div>`;}
 }
 
 function buildLogCard(id, d) {
-  const div = document.createElement('div');
-  div.className = 'log-entry';
-  const icon = CAT_ICON[d.category] || '📝';
-  let extra = '';
-  if (d.severity > 0) extra = `<div class="log-meta">嚴重程度 ${d.severity}/10</div>`;
-  const dataJson = JSON.stringify(d).replace(/"/g,'&quot;');
-  div.innerHTML = `
-    <div class="log-time">${d.time || ''}</div>
+  const div=document.createElement('div');
+  div.className='log-entry';
+  const icon=CAT_ICON[d.category]||'📝';
+  const dataStr=JSON.stringify(d).replace(/"/g,'&quot;');
+  const tagsHtml=d.tags?.length?`<div class="log-tags">${d.tags.map(t=>`<span class="log-tag">${escapeHtml(t)}</span>`).join('')}</div>`:'';
+  const sevHtml=d.severity>0?`<div class="log-meta">嚴重程度 ${d.severity}/10</div>`:'';
+  div.innerHTML=`
+    <div class="log-time">${d.time||''}</div>
     <div class="log-dot dot-${d.category}"></div>
-    <div class="log-body" onclick="openEditModal('${id}', ${dataJson})">
+    <div class="log-body" onclick="openEditModal('${id}',${dataStr})">
       <div class="log-cat cat-${d.category}">${icon} ${d.category}</div>
       <div class="log-content">${escapeHtml(d.content)}</div>
-      ${extra}
+      ${sevHtml}${tagsHtml}
     </div>
-    <button class="log-del" onclick="deleteEntry('${id}')" title="刪除">✕</button>
-  `;
+    <button class="log-del" onclick="deleteEntry('${id}')">✕</button>`;
   return div;
 }
 
-// ── Edit modal ─────────────────────────────────────────────────────────────────
-let editingId = null;
-let editingDate = null;
+window.deleteEntry = async (id) => {
+  if(!confirm('確定刪除這筆記錄？')) return;
+  try { await deleteDoc(doc(db,'logs',id)); loadTimeline(currentDate); }
+  catch(e){alert('刪除失敗：'+e.message);}
+};
 
+// ── History ───────────────────────────────────────────────────────────────────
+window.loadHistory = async () => {
+  const list=document.getElementById('hist-list');
+  if(!db){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>';return;}
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">載入中…</div>';
+  const from=document.getElementById('hist-from').value;
+  const to=document.getElementById('hist-to').value;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('date','>=',from),where('date','<=',to)));
+    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>';return;}
+    let all=[];
+    snap.forEach(d=>all.push({id:d.id,...d.data()}));
+    all.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+
+    // Collect all tags for filter
+    const tagSet=new Set();
+    all.forEach(e=>(e.tags||[]).forEach(t=>tagSet.add(t)));
+    renderTagFilter([...tagSet]);
+
+    // Filter
+    if(activeTagFilter) all=all.filter(e=>(e.tags||[]).includes(activeTagFilter));
+
+    // Group by date
+    const byDate={};
+    all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+    list.innerHTML='';
+    Object.keys(byDate).sort().reverse().forEach(date=>{
+      const sec=document.createElement('div'); sec.style.marginBottom='14px';
+      const hdr=document.createElement('div');
+      hdr.style.cssText='font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
+      hdr.textContent=formatDateTW(date);
+      sec.appendChild(hdr);
+      byDate[date].sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).forEach(e=>sec.appendChild(buildLogCard(e.id,e)));
+      list.appendChild(sec);
+    });
+  } catch(e){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-light)">載入失敗：${e.message}</div>`;}
+};
+
+function renderTagFilter(tags) {
+  const row=document.getElementById('hist-tag-filter');
+  if(!tags.length){row.innerHTML='';return;}
+  row.innerHTML=`<span style="font-size:0.72rem;color:var(--text-light);align-self:center">篩選：</span>`
+    +tags.map(t=>`<button class="hist-tag-btn${activeTagFilter===t?' active':''}" onclick="filterByTag('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join('')
+    +(activeTagFilter?`<button class="hist-tag-btn" onclick="filterByTag('')">✕ 清除</button>`:'');
+}
+window.filterByTag = (tag) => { activeTagFilter=tag; loadHistory(); };
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
 window.openEditModal = (id, data) => {
-  editingId = id;
-  editingDate = data.date;
-  document.getElementById('edit-time').value = data.time || '';
-  document.getElementById('edit-cat').value = data.category || '其他';
-  document.getElementById('edit-content').value = data.content || '';
-  const sev = data.severity ?? 0;
-  document.getElementById('edit-sev').value = sev;
-  document.getElementById('edit-sev-val').textContent = sev;
-  document.getElementById('edit-sev-row').style.display = data.category === '症狀' ? 'block' : 'none';
-  document.getElementById('edit-cat').onchange = () => {
-    document.getElementById('edit-sev-row').style.display =
-      document.getElementById('edit-cat').value === '症狀' ? 'block' : 'none';
-  };
+  editingId=id; editingDate=data.date;
+  document.getElementById('edit-time').value=data.time||'';
+  document.getElementById('edit-cat').value=data.category||'其他';
+  document.getElementById('edit-content').value=data.content||'';
+  const sev=data.severity??0;
+  document.getElementById('edit-sev').value=sev;
+  document.getElementById('edit-sev-val').textContent=sev;
+  document.getElementById('edit-sev-row').style.display=SEV_CATS.has(data.category)?'block':'none';
+  editTags=[...(data.tags||[])]; renderEditTags();
   document.getElementById('edit-overlay').classList.add('open');
   document.getElementById('edit-sheet').classList.add('open');
 };
-
 window.closeEditModal = () => {
   document.getElementById('edit-overlay').classList.remove('open');
   document.getElementById('edit-sheet').classList.remove('open');
-  editingId = null;
+  editingId=null;
 };
-
+window.onEditCatChange = () => {
+  const cat=document.getElementById('edit-cat').value;
+  document.getElementById('edit-sev-row').style.display=SEV_CATS.has(cat)?'block':'none';
+};
 window.saveEdit = async () => {
-  if (!editingId) return;
-  const btn = document.getElementById('edit-save-btn');
-  btn.disabled = true; btn.textContent = '儲存中…';
-  const time = document.getElementById('edit-time').value;
-  const cat = document.getElementById('edit-cat').value;
-  const content = document.getElementById('edit-content').value.trim();
-  const sev = cat === '症狀' ? +document.getElementById('edit-sev').value : null;
+  if(!editingId) return;
+  const btn=document.getElementById('edit-save-btn');
+  btn.disabled=true; btn.textContent='儲存中…';
+  const time=document.getElementById('edit-time').value;
+  const cat=document.getElementById('edit-cat').value;
+  const content=document.getElementById('edit-content').value.trim();
+  const sev=SEV_CATS.has(cat)?+document.getElementById('edit-sev').value:null;
   try {
-    await updateDoc(doc(db, 'logs', editingId), {
-      time, category: cat, content,
-      timestamp: editingDate + 'T' + time + ':00',
-      severity: sev,
+    await updateDoc(doc(db,'logs',editingId),{
+      time,category:cat,content,
+      timestamp:editingDate+'T'+time+':00',
+      severity:sev,tags:[...editTags],
     });
     closeEditModal();
     loadTimeline(currentDate);
-    // Also refresh history if on history page
-    if (document.getElementById('page-history').classList.contains('active')) loadHistory();
-  } catch(e) { alert('儲存失敗：' + e.message); }
-  btn.disabled = false; btn.textContent = '儲存';
+    if(document.getElementById('page-history').classList.contains('active')) loadHistory();
+  } catch(e){alert('儲存失敗：'+e.message);}
+  btn.disabled=false; btn.textContent='儲存';
 };
 
-window.deleteEntry = async (id) => {
-  if (!confirm('確定刪除這筆記錄？')) return;
-  try {
-    await deleteDoc(doc(db, 'logs', id));
-    loadTimeline(currentDate);
-  } catch(e) { alert('刪除失敗：' + e.message); }
+// Tags in edit modal
+function renderEditTags() {
+  document.getElementById('edit-tag-list').innerHTML=editTags.map(t=>
+    `<div class="tag-chip">${escapeHtml(t)}<button onclick="removeEditTag('${escapeHtml(t)}')">×</button></div>`
+  ).join('');
+}
+window.addEditTag = () => {
+  const inp=document.getElementById('edit-tag-input');
+  const val=inp.value.trim();
+  if(val&&!editTags.includes(val)){editTags.push(val);renderEditTags();saveRecentTag(val);}
+  inp.value='';
 };
+window.removeEditTag = (t) => { editTags=editTags.filter(x=>x!==t); renderEditTags(); };
 
-// ── History ────────────────────────────────────────────────────────────────────
-window.loadHistory = async () => {
-  const list = document.getElementById('hist-list');
-  if (!db) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>'; return; }
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">載入中…</div>';
-  const from = document.getElementById('hist-from').value;
-  const to = document.getElementById('hist-to').value;
-  try {
-    const q = query(collection(db,'logs'), where('date','>=',from), where('date','<=',to));
-    const snap = await getDocs(q);
-    if (snap.empty) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>'; return; }
-    const byDate = {};
-    snap.forEach(d => { const data = d.data(); if (!byDate[data.date]) byDate[data.date] = []; byDate[data.date].push({id:d.id,...data}); });
-    Object.values(byDate).forEach(arr => arr.sort((a,b) => (a.timestamp||'').localeCompare(b.timestamp||'')));
-    list.innerHTML = '';
-    Object.keys(byDate).sort().reverse().forEach(date => {
-      const section = document.createElement('div');
-      section.style.marginBottom = '14px';
-      const header = document.createElement('div');
-      header.style.cssText = 'font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
-      header.textContent = formatDateTW(date);
-      section.appendChild(header);
-      byDate[date].forEach(d => section.appendChild(buildLogCard(d.id, d)));
-      list.appendChild(section);
-    });
-  } catch(e) { list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-light)">載入失敗：${e.message}</div>`; }
-};
-
-// ── AI Chat ────────────────────────────────────────────────────────────────────
+// ── AI Chat ───────────────────────────────────────────────────────────────────
 window.sendChat = async () => {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim(); if (!msg) return;
-  input.value = '';
-  appendChat('user', msg);
-  await doAiChat(msg);
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim(); if(!msg) return;
+  input.value=''; appendChat('user',msg); await doAiChat(msg);
 };
 window.quickAsk = (msg) => {
-  showPage('ai', document.querySelector('.nav-btn:nth-child(3)'));
-  document.getElementById('chat-input').value = msg;
-  sendChat();
+  showPage('ai',document.querySelector('.nav-btn:nth-child(3)'));
+  document.getElementById('chat-input').value=msg; sendChat();
 };
-
-function appendChat(role, text) {
-  const box = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  div.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${nowChatTime()}</div>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
+function appendChat(role,text) {
+  const box=document.getElementById('chat-box');
+  const div=document.createElement('div'); div.className='msg '+role;
+  div.innerHTML=`<div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${nowChatTime()}</div>`;
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
 }
-
 async function doAiChat(userMsg) {
-  const key = getOpenAIKey();
-  if (!key) { appendChat('ai','⚠️ 請先在「設定」填入 OpenAI API Key！'); return; }
-  const btn = document.getElementById('chat-send-btn');
-  btn.disabled = true;
-
-  // typing indicator
-  const typing = document.createElement('div');
-  typing.className = 'msg ai'; typing.id = 'typing';
-  typing.innerHTML = '<div class="msg-bubble">…</div>';
+  const key=getOpenAIKey();
+  if(!key){appendChat('ai','⚠️ 請先在「設定」填入 OpenAI API Key！');return;}
+  const btn=document.getElementById('chat-send-btn'); btn.disabled=true;
+  const typing=document.createElement('div'); typing.className='msg ai'; typing.id='typing';
+  typing.innerHTML='<div class="msg-bubble">…</div>';
   document.getElementById('chat-box').appendChild(typing);
-  document.getElementById('chat-box').scrollTop = 9999;
+  document.getElementById('chat-box').scrollTop=9999;
 
-  // fetch recent logs
-  let context = '（無法讀取記錄，Firebase 未設定）';
-  if (db) {
+  let context='（Firebase 未設定）';
+  if(db){
     try {
-      const from = new Date(); from.setDate(from.getDate()-30);
-      const fromStr = from.toISOString().split('T')[0];
-      const q = query(collection(db,'logs'), where('date','>=',fromStr));
-      const snap = await getDocs(q);
-      const entries = [];
-      snap.forEach(d => entries.push(d.data()));
-      entries.sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
-      context = entries.length ? logsToText(entries) : '過去 30 天內沒有記錄。';
-    } catch(e) { context = '（讀取失敗：'+e.message+')'; }
+      const from=new Date(); from.setDate(from.getDate()-30);
+      const fromStr=from.toISOString().split('T')[0];
+      const snap=await getDocs(query(collection(db,'logs'),where('date','>=',fromStr)));
+      const entries=[]; snap.forEach(d=>entries.push(d.data()));
+      entries.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+      context=entries.length?entries.map(e=>{
+        let line=`[${e.date} ${e.time}] ${e.category}：${e.content}`;
+        if(e.severity>0) line+=`（嚴重程度 ${e.severity}/10）`;
+        if(e.tags?.length) line+=`【標籤：${e.tags.join('、')}】`;
+        return line;
+      }).join('\n'):'過去 30 天內沒有記錄。';
+    } catch(e){context='（讀取失敗）';}
   }
 
-  const system = `你是琳琳的化療記錄 AI 助理。琳琳正在接受化療。
-根據以下記錄，用溫暖的繁體中文回答問題。簡潔清楚，若有警示症狀（高燒、嚴重疼痛、血球過低）要明確指出。
+  const system=`你是琳琳的化療記錄 AI 助理。琳琳正在接受化療（ALL，主要藥物包括 Vincristine）。
+根據以下記錄，用溫暖的繁體中文回答問題。簡潔清楚，若有警示症狀要明確指出。
 
 最近 30 天記錄：
 ${context}`;
 
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({
-        model:'gpt-4o-mini', max_tokens:1024,
-        messages:[{role:'system',content:system},{role:'user',content:userMsg}]
-      })
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1024,
+        messages:[{role:'system',content:system},{role:'user',content:userMsg}]})
     });
-    const data = await res.json();
+    const data=await res.json();
     document.getElementById('typing')?.remove();
-    if (data.choices?.[0]?.message?.content) appendChat('ai', data.choices[0].message.content);
+    if(data.choices?.[0]?.message?.content) appendChat('ai',data.choices[0].message.content);
     else appendChat('ai','❌ 錯誤：'+(data.error?.message||JSON.stringify(data.error)));
-  } catch(e) {
-    document.getElementById('typing')?.remove();
-    appendChat('ai','❌ 連線失敗：'+e.message);
-  }
-  btn.disabled = false;
+  } catch(e){document.getElementById('typing')?.remove();appendChat('ai','❌ 連線失敗：'+e.message);}
+  btn.disabled=false;
 }
 
-function logsToText(entries) {
-  return entries.map(d => {
-    let line = `[${d.date} ${d.time}] ${d.category}：${d.content}`;
-    if (d.severity > 0) line += `（嚴重程度 ${d.severity}/10）`;
-    return line;
-  }).join('\n');
-}
-
-// ── Settings ───────────────────────────────────────────────────────────────────
+// ── Settings ──────────────────────────────────────────────────────────────────
 window.saveFirebaseConfig = () => {
-  const cfg = {
-    apiKey: document.getElementById('cfg-apiKey').value.trim(),
-    authDomain: document.getElementById('cfg-authDomain').value.trim(),
-    projectId: document.getElementById('cfg-projectId').value.trim(),
-    appId: document.getElementById('cfg-appId').value.trim(),
+  const cfg={
+    apiKey:document.getElementById('cfg-apiKey').value.trim(),
+    authDomain:document.getElementById('cfg-authDomain').value.trim(),
+    projectId:document.getElementById('cfg-projectId').value.trim(),
+    appId:document.getElementById('cfg-appId').value.trim(),
   };
-  if (!cfg.apiKey || !cfg.projectId) { showAlert('firebase-alert','error','請填入 API Key 和 Project ID'); return; }
-  localStorage.setItem('fb_config', JSON.stringify(cfg));
-  showAlert('firebase-alert','success','✅ 已儲存，重新整理頁面後生效。');
+  if(!cfg.apiKey||!cfg.projectId){showAlert('firebase-alert','error','請填入 API Key 和 Project ID');return;}
+  localStorage.setItem('fb_config',JSON.stringify(cfg));
+  showAlert('firebase-alert','success','✅ 已儲存，重新整理後生效。');
 };
 window.saveClaudeConfig = () => {
-  const key = document.getElementById('cfg-claudeKey').value.trim();
-  if (!key || !key.startsWith('sk-')) { showAlert('claude-alert','error','請填入有效的 API Key（以 sk- 開頭）'); return; }
-  localStorage.setItem('openai_key', key);
+  const key=document.getElementById('cfg-claudeKey').value.trim();
+  if(!key||!key.startsWith('sk-')){showAlert('claude-alert','error','請填入有效的 API Key（sk- 開頭）');return;}
+  localStorage.setItem('openai_key',key);
   showAlert('claude-alert','success','✅ AI 設定已儲存！');
 };
 function restoreSettingsFields() {
-  const cfg = getFirebaseConfig();
-  if (cfg) {
-    const s = (id,v) => { if(v) document.getElementById(id).value=v; };
-    s('cfg-apiKey',cfg.apiKey); s('cfg-authDomain',cfg.authDomain);
-    s('cfg-projectId',cfg.projectId); s('cfg-appId',cfg.appId);
+  const cfg=getFirebaseConfig();
+  if(cfg){
+    const s=(id,v)=>{if(v)document.getElementById(id).value=v;};
+    s('cfg-apiKey',cfg.apiKey);s('cfg-authDomain',cfg.authDomain);
+    s('cfg-projectId',cfg.projectId);s('cfg-appId',cfg.appId);
   }
-  const k = getOpenAIKey();
-  if (k) document.getElementById('cfg-claudeKey').value = k;
+  const k=getOpenAIKey();
+  if(k) document.getElementById('cfg-claudeKey').value=k;
 }
 
-// ── Utils ──────────────────────────────────────────────────────────────────────
-function showAlert(id, type, msg) {
-  const el = document.getElementById(id);
-  el.className = 'alert ' + type; el.textContent = msg;
-  setTimeout(() => el.className = 'alert', 4000);
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function showAlert(id,type,msg) {
+  const el=document.getElementById(id);
+  el.className='alert '+type; el.textContent=msg;
+  setTimeout(()=>el.className='alert',4000);
 }
 </script>
 </body>
