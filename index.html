@@ -281,6 +281,33 @@
   .ai-preview-card .pc-sev { font-size: 0.72rem; color: var(--c-sym); margin-top: 3px; }
   .ai-preview-empty { text-align: center; padding: 16px; color: var(--text-light); font-size: 0.83rem; }
 
+  /* Edit modal (bottom sheet) */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35); z-index: 200;
+  }
+  .modal-overlay.open { display: block; }
+  .modal-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-radius: 20px 20px 0 0;
+    padding: 20px 16px 36px; z-index: 201;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+    transform: translateY(100%); transition: transform 0.28s cubic-bezier(.32,.72,0,1);
+  }
+  .modal-sheet.open { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 1rem; font-weight: 700; color: var(--pink-dark); margin-bottom: 14px; }
+  .modal-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .modal-row > div { flex: 1; }
+  .modal-row label { font-size: 0.75rem; color: var(--text-light); display: block; margin-bottom: 3px; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+  .modal-btns button { flex: 1; padding: 12px; border-radius: var(--radius); border: none; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .modal-btn-cancel { background: var(--pink-light); color: var(--pink-dark); }
+  .modal-btn-save { background: linear-gradient(135deg, var(--pink-dark), var(--pink)); color: white; }
+  /* Log card clickable hint */
+  .log-body { cursor: pointer; }
+  .log-body:active { opacity: 0.7; }
+
   /* Misc */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .pb12 { padding-bottom: 12px; }
@@ -441,6 +468,39 @@
   </div>
 </div>
 
+<!-- Edit modal -->
+<div class="modal-overlay" id="edit-overlay" onclick="closeEditModal()"></div>
+<div class="modal-sheet" id="edit-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title">✏️ 編輯記錄</div>
+  <div class="modal-row">
+    <div>
+      <label>時間</label>
+      <input type="time" id="edit-time" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none">
+    </div>
+    <div>
+      <label>類別</label>
+      <select id="edit-cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none">
+        <option>用藥</option><option>飲食</option><option>症狀</option>
+        <option>活動</option><option>血液</option><option>睡眠</option><option>其他</option>
+      </select>
+    </div>
+  </div>
+  <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:3px">內容</label>
+  <textarea id="edit-content" style="width:100%;min-height:80px;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none;resize:none"></textarea>
+  <div id="edit-sev-row" style="margin-top:10px;display:none">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:0.78rem;color:var(--text-light)">嚴重程度</span>
+      <span style="font-size:0.88rem;font-weight:700;color:var(--c-sym)" id="edit-sev-val">0</span>
+    </div>
+    <input type="range" min="0" max="10" value="0" id="edit-sev" oninput="document.getElementById('edit-sev-val').textContent=this.value" style="width:100%;accent-color:var(--c-sym)">
+  </div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
+    <button class="modal-btn-save" id="edit-save-btn" onclick="saveEdit()">儲存</button>
+  </div>
+</div>
+
 <!-- Bottom nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('record',this)">
@@ -463,7 +523,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let db = null;
@@ -742,10 +802,11 @@ function buildLogCard(id, d) {
   const icon = CAT_ICON[d.category] || '📝';
   let extra = '';
   if (d.severity > 0) extra = `<div class="log-meta">嚴重程度 ${d.severity}/10</div>`;
+  const dataJson = JSON.stringify(d).replace(/"/g,'&quot;');
   div.innerHTML = `
     <div class="log-time">${d.time || ''}</div>
     <div class="log-dot dot-${d.category}"></div>
-    <div class="log-body">
+    <div class="log-body" onclick="openEditModal('${id}', ${dataJson})">
       <div class="log-cat cat-${d.category}">${icon} ${d.category}</div>
       <div class="log-content">${escapeHtml(d.content)}</div>
       ${extra}
@@ -754,6 +815,56 @@ function buildLogCard(id, d) {
   `;
   return div;
 }
+
+// ── Edit modal ─────────────────────────────────────────────────────────────────
+let editingId = null;
+let editingDate = null;
+
+window.openEditModal = (id, data) => {
+  editingId = id;
+  editingDate = data.date;
+  document.getElementById('edit-time').value = data.time || '';
+  document.getElementById('edit-cat').value = data.category || '其他';
+  document.getElementById('edit-content').value = data.content || '';
+  const sev = data.severity ?? 0;
+  document.getElementById('edit-sev').value = sev;
+  document.getElementById('edit-sev-val').textContent = sev;
+  document.getElementById('edit-sev-row').style.display = data.category === '症狀' ? 'block' : 'none';
+  document.getElementById('edit-cat').onchange = () => {
+    document.getElementById('edit-sev-row').style.display =
+      document.getElementById('edit-cat').value === '症狀' ? 'block' : 'none';
+  };
+  document.getElementById('edit-overlay').classList.add('open');
+  document.getElementById('edit-sheet').classList.add('open');
+};
+
+window.closeEditModal = () => {
+  document.getElementById('edit-overlay').classList.remove('open');
+  document.getElementById('edit-sheet').classList.remove('open');
+  editingId = null;
+};
+
+window.saveEdit = async () => {
+  if (!editingId) return;
+  const btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  const time = document.getElementById('edit-time').value;
+  const cat = document.getElementById('edit-cat').value;
+  const content = document.getElementById('edit-content').value.trim();
+  const sev = cat === '症狀' ? +document.getElementById('edit-sev').value : null;
+  try {
+    await updateDoc(doc(db, 'logs', editingId), {
+      time, category: cat, content,
+      timestamp: editingDate + 'T' + time + ':00',
+      severity: sev,
+    });
+    closeEditModal();
+    loadTimeline(currentDate);
+    // Also refresh history if on history page
+    if (document.getElementById('page-history').classList.contains('active')) loadHistory();
+  } catch(e) { alert('儲存失敗：' + e.message); }
+  btn.disabled = false; btn.textContent = '儲存';
+};
 
 window.deleteEntry = async (id) => {
   if (!confirm('確定刪除這筆記錄？')) return;
