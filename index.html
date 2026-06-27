@@ -41,8 +41,15 @@
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 2px 8px rgba(180,80,100,0.18);
   }
+  .app-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
   .app-header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; }
   .app-header p { font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
+  .diag-badge {
+    background: rgba(255,255,255,0.22); border-radius: 10px;
+    padding: 4px 10px; text-align: center; flex-shrink: 0;
+  }
+  .diag-badge .day-num { font-size: 1.3rem; font-weight: 800; line-height: 1.1; }
+  .diag-badge .day-lbl { font-size: 0.62rem; opacity: 0.88; }
   /* Bottom nav */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -248,8 +255,16 @@
 <body>
 
 <div class="app-header">
-  <h1>🌸 琳琳的化療記錄</h1>
-  <p id="header-date"></p>
+  <div class="app-header-row">
+    <div>
+      <h1>🌸 琳琳的化療記錄</h1>
+      <p id="header-date"></p>
+    </div>
+    <div class="diag-badge">
+      <div class="day-num" id="diag-day">—</div>
+      <div class="day-lbl">診斷後第幾天</div>
+    </div>
+  </div>
 </div>
 
 <!-- Pages -->
@@ -678,6 +693,12 @@ function now() {
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('record-date').value = currentDate;
   document.getElementById('header-date').textContent = formatDateTW(currentDate);
+
+  // 診斷後天數（診斷日：2025-12-31）
+  const diagDate = new Date('2025-12-31T00:00:00');
+  const todayD = new Date(); todayD.setHours(0,0,0,0);
+  const daysSince = Math.floor((todayD - diagDate) / (1000 * 60 * 60 * 24));
+  document.getElementById('diag-day').textContent = 'D+' + daysSince;
 
   // Set history default range (last 30 days)
   const from = new Date(); from.setDate(from.getDate() - 30);
