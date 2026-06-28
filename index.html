@@ -188,6 +188,11 @@
   .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
   .hist-list { padding:10px 12px; }
   .hist-search-highlight { background:#fff3a0; border-radius:2px; }
+  .hist-day-hdr { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--pink-light); border-radius:10px; cursor:pointer; margin-bottom:4px; user-select:none; -webkit-user-select:none; }
+  .hist-day-hdr:active { opacity:0.75; }
+  .hist-day-hdr-date { font-size:0.82rem; font-weight:700; color:var(--pink-dark); }
+  .hist-day-hdr-meta { font-size:0.72rem; color:var(--pink-dark); display:flex; align-items:center; gap:5px; }
+  .hist-day-body { padding-bottom:4px; }
 
   /* AI chat */
   .chat-wrap { padding:10px 12px; }
@@ -913,18 +918,34 @@ function renderHistList() {
   all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
   list.innerHTML = '';
   list.appendChild(countLine);
-  Object.keys(byDate).sort().reverse().forEach(date=>{
-    const sec = document.createElement('div'); sec.style.marginBottom='14px';
+  const sortedDates = Object.keys(byDate).sort().reverse();
+  sortedDates.forEach((date, idx)=>{
+    const entries = byDate[date].sort((a,b)=>(a.timestamp||a.date||'').localeCompare(b.timestamp||b.date||''));
+    const isOpen = idx === 0; // most recent day starts open
+
+    const sec = document.createElement('div'); sec.style.marginBottom='6px';
+
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
-    hdr.textContent = formatDateTW(date);
+    hdr.className = 'hist-day-hdr';
+    hdr.innerHTML = `<span class="hist-day-hdr-date">${formatDateTW(date)}</span><span class="hist-day-hdr-meta"><span>${entries.length} 筆</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
+
+    const body = document.createElement('div');
+    body.className = 'hist-day-body';
+    body.style.display = isOpen ? 'block' : 'none';
+
+    hdr.onclick = () => {
+      const open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      hdr.querySelector('.hist-day-hdr-meta span:last-child').textContent = open ? '▶' : '▼';
+    };
+
+    entries.forEach(e=>{
+      try { body.appendChild(buildLogCard(e.id, e, histSearchQuery)); }
+      catch(err) { console.warn('render error', e.id, err); }
+    });
+
     sec.appendChild(hdr);
-    byDate[date]
-      .sort((a,b)=>(a.timestamp||a.date||'').localeCompare(b.timestamp||b.date||''))
-      .forEach(e=>{
-        try { sec.appendChild(buildLogCard(e.id, e, histSearchQuery)); }
-        catch(err) { console.warn('render error', e.id, err); }
-      });
+    sec.appendChild(body);
     list.appendChild(sec);
   });
 }
