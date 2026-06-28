@@ -426,17 +426,23 @@
   </div>
   <div class="card">
     <div class="card-title"><span>🔥</span> Firebase 設定</div>
-    <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..."></div>
-    <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com"></div>
-    <div class="settings-group"><div class="settings-label">Project ID</div><input type="text" id="cfg-projectId" placeholder="your-project-id"></div>
-    <div class="settings-group"><div class="settings-label">App ID</div><input type="text" id="cfg-appId" placeholder="1:123:web:abc"></div>
+    <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..." autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com" autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">Project ID</div><input type="text" id="cfg-projectId" placeholder="your-project-id" autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">App ID</div><input type="text" id="cfg-appId" placeholder="1:123:web:abc" autocomplete="off"></div>
     <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 儲存 Firebase 設定</button>
     <div id="firebase-alert" class="alert"></div>
   </div>
   <div class="card">
     <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
     <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
-    <div class="settings-group"><div class="settings-label">OpenAI API Key</div><input type="password" id="cfg-claudeKey" placeholder="sk-..."></div>
+    <div class="settings-group">
+      <div class="settings-label">OpenAI API Key</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="cfg-claudeKey" placeholder="sk-..." autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1;-webkit-text-security:disc;font-family:monospace">
+        <button onclick="toggleKeyVisibility()" id="key-eye-btn" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:1rem;color:var(--text-light);flex-shrink:0">👁</button>
+      </div>
+    </div>
     <button class="btn btn-primary" onclick="saveClaudeConfig()">💾 儲存 AI 設定</button>
     <div id="claude-alert" class="alert"></div>
   </div>
@@ -1233,6 +1239,13 @@ window.saveClaudeConfig = () => {
   if(!key||!key.startsWith('sk-')){showAlert('claude-alert','error','請填入有效的 API Key（sk- 開頭）');return;}
   localStorage.setItem('openai_key',key);
   showAlert('claude-alert','success','✅ AI 設定已儲存！');
+};
+window.toggleKeyVisibility = () => {
+  const inp=document.getElementById('cfg-claudeKey');
+  const btn=document.getElementById('key-eye-btn');
+  const hidden=inp.style.webkitTextSecurity==='disc';
+  inp.style.webkitTextSecurity=hidden?'none':'disc';
+  btn.textContent=hidden?'🙈':'👁';
 };
 function restoreSettingsFields() {
   const cfg=getFirebaseConfig();
