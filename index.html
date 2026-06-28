@@ -557,6 +557,7 @@
       <div class="ms-type-chip" data-type="discharge" onclick="selectMsType(this)">🏠 出院</div>
       <div class="ms-type-chip" data-type="clinic" onclick="selectMsType(this)">🩺 門診</div>
       <div class="ms-type-chip" data-type="chemo" onclick="selectMsType(this)">💉 化療日</div>
+      <div class="ms-type-chip" data-type="spine" onclick="selectMsType(this)">💉 背針</div>
     </div>
   </div>
   <div class="modal-field" id="ms-name-field">
@@ -606,8 +607,8 @@ const CAT_ICON = {
 const SUGGESTED_TAGS = ['Vincristine','嗎啡','Pregabalin','Ibuprofen','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺'];
 const SEV_CATS = new Set(['症狀','神經毒性']);
 const BLOOD_CATS = new Set(['檢查']);
-const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉' };
-const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日' };
+const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉', spine:'💉' };
+const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日', spine:'背針' };
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let db = null;
