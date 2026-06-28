@@ -331,7 +331,7 @@
         <span class="field-label">標籤（可選）</span>
         <div class="tag-list" id="tag-list"></div>
         <div class="tag-input-row">
-          <input type="text" id="tag-input" placeholder="輸入標籤後按＋" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
+          <input type="text" id="tag-input" placeholder="打幾個字就會出現建議" oninput="filterTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
           <button onclick="addTag()">＋</button>
         </div>
         <div class="tag-suggest" id="tag-suggest"></div>
@@ -482,9 +482,10 @@
     <label>標籤</label>
     <div class="tag-list" id="edit-tag-list"></div>
     <div class="tag-input-row">
-      <input type="text" id="edit-tag-input" placeholder="新增標籤" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag()}">
+      <input type="text" id="edit-tag-input" placeholder="打幾個字就會出現建議" oninput="filterEditTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag()}">
       <button onclick="addEditTag()">＋</button>
     </div>
+    <div class="tag-suggest" id="edit-tag-suggest" style="margin-top:6px"></div>
   </div>
   <div class="modal-btns">
     <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
@@ -625,21 +626,47 @@ function renderEntryTags() {
 }
 window.addTag = () => {
   const inp = document.getElementById('tag-input');
-  const val = inp.value.trim();
+  const val = normalizeTags([inp.value.trim()])[0];
   if(val && !entryTags.includes(val)) { entryTags.push(val); renderEntryTags(); saveRecentTag(val); }
   inp.value='';
+  filterTagSuggestions('');
 };
 window.removeEntryTag = (t) => { entryTags=entryTags.filter(x=>x!==t); renderEntryTags(); };
 window.addSuggestedTag = (t) => {
   if(!entryTags.includes(t)) { entryTags.push(t); renderEntryTags(); saveRecentTag(t); }
+  const inp = document.getElementById('tag-input');
+  inp.value = ''; inp.focus();
+  filterTagSuggestions('');
+};
+window.addEditTagFromSuggest = (t) => {
+  if(!editTags.includes(t)) { editTags.push(t); renderEditTags(); saveRecentTag(t); }
+  const inp = document.getElementById('edit-tag-input');
+  inp.value = ''; inp.focus();
+  filterEditTagSuggestions('');
 };
 
 function renderSuggestedTags() {
   const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
-  const combined = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0,16);
-  allTags = combined;
-  document.getElementById('tag-suggest').innerHTML = combined.map(t=>
-    `<div class="tag-sug-chip" onclick="addSuggestedTag('${escapeHtml(t)}')">${escapeHtml(t)}</div>`
+  allTags = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0, 20);
+  filterTagSuggestions(document.getElementById('tag-input')?.value||'');
+}
+
+function filterTagSuggestions(val) {
+  const q = val.trim().toLowerCase();
+  const avail = allTags.filter(t => !entryTags.includes(t));
+  const matched = q ? avail.filter(t => t.toLowerCase().includes(q)) : avail;
+  document.getElementById('tag-suggest').innerHTML = matched.map(t =>
+    `<div class="tag-sug-chip" onclick="addSuggestedTag('${escapeHtml(t).replace(/'/g,"&#39;")}')">${highlight(t, q)}</div>`
+  ).join('');
+}
+
+function filterEditTagSuggestions(val) {
+  const q = val.trim().toLowerCase();
+  const avail = allTags.filter(t => !editTags.includes(t));
+  const matched = q ? avail.filter(t => t.toLowerCase().includes(q)) : avail.slice(0, 12);
+  const el = document.getElementById('edit-tag-suggest');
+  if(el) el.innerHTML = matched.map(t =>
+    `<div class="tag-sug-chip" onclick="addEditTagFromSuggest('${escapeHtml(t).replace(/'/g,"&#39;")}')">${highlight(t, q)}</div>`
   ).join('');
 }
 function saveRecentTag(t) {
@@ -1043,6 +1070,8 @@ window.openEditModal = (id, data) => {
   document.getElementById('edit-sev-val').textContent=sev;
   document.getElementById('edit-sev-row').style.display=SEV_CATS.has(data.category)?'block':'none';
   editTags=[...(data.tags||[])]; renderEditTags();
+  document.getElementById('edit-tag-input').value='';
+  filterEditTagSuggestions('');
   document.getElementById('edit-overlay').classList.add('open');
   document.getElementById('edit-sheet').classList.add('open');
 };
@@ -1084,9 +1113,10 @@ function renderEditTags() {
 }
 window.addEditTag = () => {
   const inp=document.getElementById('edit-tag-input');
-  const val=inp.value.trim();
+  const val=normalizeTags([inp.value.trim()])[0];
   if(val&&!editTags.includes(val)){editTags.push(val);renderEditTags();saveRecentTag(val);}
   inp.value='';
+  filterEditTagSuggestions('');
 };
 window.removeEditTag = (t) => { editTags=editTags.filter(x=>x!==t); renderEditTags(); };
 
