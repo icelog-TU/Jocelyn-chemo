@@ -172,6 +172,10 @@
 
   /* History */
   .hist-filter { padding:10px 12px 0; }
+  .hist-search-wrap { position:relative; margin-bottom:8px; }
+  .hist-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-light); }
+  .hist-search-wrap input { padding:9px 36px 9px 34px; font-size:0.88rem; width:100%; }
+  .hist-search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-light); font-size:1.1rem; cursor:pointer; padding:0 4px; display:none; }
   .hist-date-row { display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; }
   .hist-date-row > div { flex:1; }
   .hist-date-row label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
@@ -181,6 +185,7 @@
   .hist-tag-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; }
   .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
   .hist-list { padding:10px 12px; }
+  .hist-search-highlight { background:#fff3a0; border-radius:2px; }
 
   /* AI chat */
   .chat-wrap { padding:10px 12px; }
@@ -329,6 +334,11 @@
 <!-- 歷史頁 -->
 <div id="page-history" class="page">
   <div class="hist-filter">
+    <div class="hist-search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="search" id="hist-search" placeholder="搜尋記錄、標籤、分類…" oninput="onHistSearch(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="hist-search-clear" id="hist-search-clear" onclick="clearHistSearch()">✕</button>
+    </div>
     <div class="hist-date-row">
       <div><label>從</label><input type="date" id="hist-from"></div>
       <div><label>到</label><input type="date" id="hist-to"></div>
@@ -468,6 +478,7 @@ let editTags = [];
 let parsedEntries = [];
 let allTags = [];
 let activeTagFilter = '';
+let histSearchQuery = '';
 let editingId = null, editingDate = null;
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
@@ -715,19 +726,20 @@ async function loadTimeline(dateStr) {
   } catch(e){wrap.innerHTML=`<div class="tl-empty">載入失敗：${e.message}</div>`;}
 }
 
-function buildLogCard(id, d) {
+function buildLogCard(id, d, searchQ) {
   const div=document.createElement('div');
   div.className='log-entry';
   const icon=CAT_ICON[d.category]||'📝';
   const dataStr=JSON.stringify(d).replace(/"/g,'&quot;');
-  const tagsHtml=d.tags?.length?`<div class="log-tags">${d.tags.map(t=>`<span class="log-tag">${escapeHtml(t)}</span>`).join('')}</div>`:'';
+  const q=searchQ||'';
+  const tagsHtml=d.tags?.length?`<div class="log-tags">${d.tags.map(t=>`<span class="log-tag">${highlight(t,q)}</span>`).join('')}</div>`:'';
   const sevHtml=d.severity>0?`<div class="log-meta">嚴重程度 ${d.severity}/10</div>`:'';
   div.innerHTML=`
     <div class="log-time">${d.time||''}</div>
     <div class="log-dot dot-${d.category}"></div>
     <div class="log-body" onclick="openEditModal('${id}',${dataStr})">
-      <div class="log-cat cat-${d.category}">${icon} ${d.category}</div>
-      <div class="log-content">${escapeHtml(d.content)}</div>
+      <div class="log-cat cat-${d.category}">${icon} ${highlight(d.category,q)}</div>
+      <div class="log-content">${highlight(d.content,q)}</div>
       ${sevHtml}${tagsHtml}
     </div>
     <button class="log-del" onclick="deleteEntry('${id}')">✕</button>`;
@@ -749,32 +761,22 @@ window.loadHistory = async () => {
   const to=document.getElementById('hist-to').value;
   try {
     const snap=await getDocs(query(collection(db,'logs'),where('date','>=',from),where('date','<=',to)));
-    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>';return;}
-    let all=[];
-    snap.forEach(d=>all.push({id:d.id,...d.data()}));
-    all.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+    if(snap.empty){
+      _histAllEntries=[];
+      renderTagFilter([]);
+      list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>';
+      return;
+    }
+    _histAllEntries=[];
+    snap.forEach(d=>_histAllEntries.push({id:d.id,...d.data()}));
+    _histAllEntries.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
 
     // Collect all tags for filter
     const tagSet=new Set();
-    all.forEach(e=>(e.tags||[]).forEach(t=>tagSet.add(t)));
+    _histAllEntries.forEach(e=>(e.tags||[]).forEach(t=>tagSet.add(t)));
     renderTagFilter([...tagSet]);
 
-    // Filter
-    if(activeTagFilter) all=all.filter(e=>(e.tags||[]).includes(activeTagFilter));
-
-    // Group by date
-    const byDate={};
-    all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
-    list.innerHTML='';
-    Object.keys(byDate).sort().reverse().forEach(date=>{
-      const sec=document.createElement('div'); sec.style.marginBottom='14px';
-      const hdr=document.createElement('div');
-      hdr.style.cssText='font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
-      hdr.textContent=formatDateTW(date);
-      sec.appendChild(hdr);
-      byDate[date].sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).forEach(e=>sec.appendChild(buildLogCard(e.id,e)));
-      list.appendChild(sec);
-    });
+    renderHistList();
   } catch(e){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-light)">載入失敗：${e.message}</div>`;}
 };
 
@@ -786,6 +788,65 @@ function renderTagFilter(tags) {
     +(activeTagFilter?`<button class="hist-tag-btn" onclick="filterByTag('')">✕ 清除</button>`:'');
 }
 window.filterByTag = (tag) => { activeTagFilter=tag; loadHistory(); };
+
+// ── History search ────────────────────────────────────────────────────────────
+window.onHistSearch = (val) => {
+  histSearchQuery = val;
+  document.getElementById('hist-search-clear').style.display = val ? 'block' : 'none';
+  renderHistList();
+};
+window.clearHistSearch = () => {
+  document.getElementById('hist-search').value = '';
+  histSearchQuery = '';
+  document.getElementById('hist-search-clear').style.display = 'none';
+  renderHistList();
+};
+
+function matchesSearch(entry, q) {
+  if (!q) return true;
+  const lower = q.toLowerCase();
+  return (entry.category||'').toLowerCase().includes(lower)
+    || (entry.content||'').toLowerCase().includes(lower)
+    || (entry.tags||[]).some(t => t.toLowerCase().includes(lower));
+}
+
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const escaped = escapeHtml(text);
+  const eq = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return escaped.replace(new RegExp(eq,'gi'), m=>`<mark class="hist-search-highlight">${m}</mark>`);
+}
+
+let _histAllEntries = [];
+
+function renderHistList() {
+  const list = document.getElementById('hist-list');
+  let all = _histAllEntries;
+
+  // Tag filter
+  if (activeTagFilter) all = all.filter(e=>(e.tags||[]).includes(activeTagFilter));
+
+  // Search filter
+  if (histSearchQuery) all = all.filter(e => matchesSearch(e, histSearchQuery));
+
+  if (!all.length) {
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-light)">${histSearchQuery?'找不到符合「'+escapeHtml(histSearchQuery)+'」的記錄':'這段期間沒有記錄'}</div>`;
+    return;
+  }
+
+  const byDate = {};
+  all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  list.innerHTML = '';
+  Object.keys(byDate).sort().reverse().forEach(date=>{
+    const sec = document.createElement('div'); sec.style.marginBottom='14px';
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
+    hdr.textContent = formatDateTW(date);
+    sec.appendChild(hdr);
+    byDate[date].sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).forEach(e=>sec.appendChild(buildLogCard(e.id, e, histSearchQuery)));
+    list.appendChild(sec);
+  });
+}
 
 // ── Edit modal ────────────────────────────────────────────────────────────────
 window.openEditModal = (id, data) => {
