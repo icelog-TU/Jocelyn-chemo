@@ -438,6 +438,17 @@
 <!-- 設定頁 -->
 <div id="page-settings" class="page">
   <div class="card" style="margin-top:12px">
+    <div class="card-title"><span>ℹ️</span> 關於</div>
+    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App 🌸<br>資料儲存於 Firebase Firestore<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>🏷️</span> 標籤管理</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">統一更名或刪除標籤，會同步套用到所有記錄。</p>
+    <button class="btn btn-secondary btn-sm" onclick="loadTagsForMgmt()" id="tag-mgmt-load-btn">載入所有標籤</button>
+    <div id="tag-mgmt-list" style="margin-top:10px"></div>
+    <div id="tag-mgmt-alert" class="alert"></div>
+  </div>
+  <div class="card">
     <div class="card-title"><span>📲</span> 跨裝置同步設定</div>
     <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px;line-height:1.6">在這台裝置匯出代碼，到新裝置貼入匯入，Firebase 和 AI 設定即可還原。</p>
     <button class="btn btn-secondary btn-sm" onclick="exportSettings()" style="margin-bottom:4px">📤 匯出設定代碼</button>
@@ -454,13 +465,6 @@
     </div>
   </div>
   <div class="card">
-    <div class="card-title"><span>🏷️</span> 標籤管理</div>
-    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">統一更名或刪除標籤，會同步套用到所有記錄。</p>
-    <button class="btn btn-secondary btn-sm" onclick="loadTagsForMgmt()" id="tag-mgmt-load-btn">載入所有標籤</button>
-    <div id="tag-mgmt-list" style="margin-top:10px"></div>
-    <div id="tag-mgmt-alert" class="alert"></div>
-  </div>
-  <div class="card">
     <div class="card-title"><span>🔥</span> Firebase 設定</div>
     <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..." autocomplete="off"></div>
     <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com" autocomplete="off"></div>
@@ -469,7 +473,7 @@
     <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 儲存 Firebase 設定</button>
     <div id="firebase-alert" class="alert"></div>
   </div>
-  <div class="card">
+  <div class="card" style="margin-bottom:12px">
     <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
     <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
     <div class="settings-group">
@@ -481,10 +485,6 @@
     </div>
     <button class="btn btn-primary" onclick="saveClaudeConfig()">💾 儲存 AI 設定</button>
     <div id="claude-alert" class="alert"></div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-title"><span>ℹ️</span> 關於</div>
-    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App 🌸<br>資料儲存於 Firebase Firestore<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
   </div>
 </div>
 
@@ -585,13 +585,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
     AI助理
   </button>
-  <button class="nav-btn" onclick="showPage('settings',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    設定
-  </button>
   <button class="nav-btn" onclick="showPage('course',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     課表
+  </button>
+  <button class="nav-btn" onclick="showPage('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    設定
   </button>
 </nav>
 
