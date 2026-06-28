@@ -183,7 +183,14 @@
   .hist-date-row label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
   .hist-date-row input { padding:8px 10px; font-size:0.82rem; }
   .hist-date-row button { padding:8px 14px; border-radius:9px; border:none; background:var(--pink-dark); color:white; font-size:0.82rem; font-weight:700; cursor:pointer; }
-  .hist-tag-row { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .hist-collapse-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:white; border:1.5px solid var(--border); border-radius:9px; cursor:pointer; margin-bottom:6px; font-size:0.82rem; color:var(--text-light); user-select:none; -webkit-user-select:none; }
+  .hist-collapse-hdr:active { opacity:0.75; }
+  .hist-collapse-hdr.active-filter { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .hist-filter-body { margin-bottom:8px; padding:4px 2px 2px; }
+  .hist-cat-row { display:flex; flex-wrap:wrap; gap:5px; }
+  .hist-cat-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; }
+  .hist-cat-btn.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .hist-tag-row { display:flex; flex-wrap:wrap; gap:5px; }
   .hist-tag-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; }
   .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
   .hist-list { padding:10px 12px; }
@@ -352,7 +359,35 @@
       <div><label>到</label><input type="date" id="hist-to"></div>
       <button onclick="loadHistory()">查詢</button>
     </div>
-    <div id="hist-tag-filter" class="hist-tag-row"></div>
+
+    <!-- 類別篩選 -->
+    <div class="hist-collapse-hdr" id="hist-cat-hdr" onclick="toggleHistSection('cat')">
+      <span id="hist-cat-hdr-text">📂 類別篩選</span>
+      <span id="hist-cat-arrow">▶</span>
+    </div>
+    <div id="hist-cat-section" class="hist-filter-body" style="display:none">
+      <div class="hist-cat-row">
+        <button class="hist-cat-btn" data-cat="用藥"    onclick="filterByCat('用藥')">💊 用藥</button>
+        <button class="hist-cat-btn" data-cat="神經毒性" onclick="filterByCat('神經毒性')">❤️ 神經毒性</button>
+        <button class="hist-cat-btn" data-cat="症狀"    onclick="filterByCat('症狀')">🤒 症狀</button>
+        <button class="hist-cat-btn" data-cat="飲食"    onclick="filterByCat('飲食')">🍚 飲食</button>
+        <button class="hist-cat-btn" data-cat="活動功能" onclick="filterByCat('活動功能')">🚶 活動功能</button>
+        <button class="hist-cat-btn" data-cat="排泄"    onclick="filterByCat('排泄')">🚽 排泄</button>
+        <button class="hist-cat-btn" data-cat="睡眠"    onclick="filterByCat('睡眠')">😴 睡眠</button>
+        <button class="hist-cat-btn" data-cat="檢查"    onclick="filterByCat('檢查')">🔬 檢查</button>
+        <button class="hist-cat-btn" data-cat="評估"    onclick="filterByCat('評估')">📈 評估</button>
+        <button class="hist-cat-btn" data-cat="醫療計畫" onclick="filterByCat('醫療計畫')">👩‍⚕️ 醫療計畫</button>
+      </div>
+    </div>
+
+    <!-- 標籤篩選 -->
+    <div class="hist-collapse-hdr" id="hist-tag-hdr" onclick="toggleHistSection('tag')">
+      <span id="hist-tag-hdr-text">🏷️ 標籤篩選</span>
+      <span id="hist-tag-arrow">▶</span>
+    </div>
+    <div id="hist-tag-section" class="hist-filter-body" style="display:none">
+      <div id="hist-tag-filter" class="hist-tag-row"></div>
+    </div>
   </div>
   <div class="hist-list" id="hist-list"></div>
 </div>
@@ -494,6 +529,7 @@ let parsedEntries = [];
 let parsedEntryTags = [];
 let allTags = [];
 let activeTagFilter = '';
+let activeCatFilter = '';
 let histSearchQuery = '';
 let editingId = null, editingDate = null;
 
@@ -849,12 +885,37 @@ window.loadHistory = async () => {
 
 function renderTagFilter(tags) {
   const row=document.getElementById('hist-tag-filter');
-  if(!tags.length){row.innerHTML='';return;}
-  row.innerHTML=`<span style="font-size:0.72rem;color:var(--text-light);align-self:center">篩選：</span>`
-    +tags.map(t=>`<button class="hist-tag-btn${activeTagFilter===t?' active':''}" onclick="filterByTag('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join('')
+  if(!tags.length){row.innerHTML='';updateFilterHeaders();return;}
+  row.innerHTML=tags.map(t=>`<button class="hist-tag-btn${activeTagFilter===t?' active':''}" onclick="filterByTag('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join('')
     +(activeTagFilter?`<button class="hist-tag-btn" onclick="filterByTag('')">✕ 清除</button>`:'');
+  updateFilterHeaders();
 }
-window.filterByTag = (tag) => { activeTagFilter=tag; loadHistory(); };
+window.filterByTag = (tag) => { activeTagFilter=tag; updateFilterHeaders(); loadHistory(); };
+window.filterByCat = (cat) => {
+  activeCatFilter = activeCatFilter===cat ? '' : cat; // tap same cat again to clear
+  document.querySelectorAll('.hist-cat-btn').forEach(b=>b.classList.toggle('active', b.dataset.cat===activeCatFilter));
+  updateFilterHeaders();
+  renderHistList();
+};
+window.toggleHistSection = (which) => {
+  const section=document.getElementById('hist-'+which+'-section');
+  const arrow=document.getElementById('hist-'+which+'-arrow');
+  const open=section.style.display!=='none';
+  section.style.display=open?'none':'block';
+  arrow.textContent=open?'▶':'▼';
+};
+function updateFilterHeaders() {
+  const catHdr=document.getElementById('hist-cat-hdr');
+  const tagHdr=document.getElementById('hist-tag-hdr');
+  if(catHdr){
+    document.getElementById('hist-cat-hdr-text').textContent=activeCatFilter?`📂 類別：${activeCatFilter}`:'📂 類別篩選';
+    catHdr.classList.toggle('active-filter',!!activeCatFilter);
+  }
+  if(tagHdr){
+    document.getElementById('hist-tag-hdr-text').textContent=activeTagFilter?`🏷️ 標籤：${activeTagFilter}`:'🏷️ 標籤篩選';
+    tagHdr.classList.toggle('active-filter',!!activeTagFilter);
+  }
+}
 
 // ── History search ────────────────────────────────────────────────────────────
 window.onHistSearch = (val) => {
@@ -891,6 +952,9 @@ function renderHistList() {
   const total = _histAllEntries.length;
   let all = [..._histAllEntries];
 
+  // Category filter
+  if (activeCatFilter) all = all.filter(e => e.category === activeCatFilter);
+
   // Tag filter
   if (activeTagFilter) all = all.filter(e=>(e.tags||[]).includes(activeTagFilter));
 
@@ -900,7 +964,7 @@ function renderHistList() {
   const shown = all.length;
   const countLine = document.createElement('div');
   countLine.style.cssText = 'font-size:0.72rem;color:var(--text-light);padding:4px 2px 8px;display:flex;justify-content:space-between;align-items:center';
-  const isFiltered = (activeTagFilter || histSearchQuery) && shown < total;
+  const isFiltered = (activeCatFilter || activeTagFilter || histSearchQuery) && shown < total;
   countLine.innerHTML = isFiltered
     ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆</span><button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除所有篩選</button>`
     : `<span>共 <b>${total}</b> 筆記錄</span>`;
@@ -953,9 +1017,12 @@ function renderHistList() {
 
 window.clearAllHistFilters = () => {
   activeTagFilter = '';
+  activeCatFilter = '';
   histSearchQuery = '';
   document.getElementById('hist-search').value = '';
   document.getElementById('hist-search-clear').style.display = 'none';
+  document.querySelectorAll('.hist-cat-btn').forEach(b=>b.classList.remove('active'));
+  updateFilterHeaders();
   loadHistory();
 };
 
