@@ -195,7 +195,7 @@
   .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
   .hist-list { padding:10px 12px; }
   .hist-search-highlight { background:#fff3a0; border-radius:2px; }
-  .hist-day-hdr { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--pink-light); border-radius:10px; cursor:pointer; margin-bottom:4px; user-select:none; -webkit-user-select:none; }
+  .hist-day-hdr { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 12px; background:var(--pink-light); border-radius:10px; cursor:pointer; margin-bottom:4px; user-select:none; -webkit-user-select:none; }
   .hist-day-hdr:active { opacity:0.75; }
   .hist-day-hdr-date { font-size:0.82rem; font-weight:700; color:var(--pink-dark); }
   .hist-day-hdr-meta { font-size:0.72rem; color:var(--pink-dark); display:flex; align-items:center; gap:5px; }
@@ -221,6 +221,25 @@
   /* Settings */
   .settings-group { margin-bottom:10px; }
   .settings-label { font-size:0.78rem; color:var(--text-light); margin-bottom:4px; }
+
+  /* Course / Milestones */
+  .course-wrap { padding:10px 12px; }
+  .course-section-hdr { font-size:0.72rem; font-weight:700; color:var(--text-light); padding:10px 0 5px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .milestone-item { display:flex; gap:10px; align-items:flex-start; background:white; border-radius:12px; padding:10px 12px; margin-bottom:7px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .milestone-item.future { border-left:3px solid var(--pink-dark); }
+  .milestone-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+  .milestone-body { flex:1; min-width:0; }
+  .milestone-type-lbl { font-size:0.68rem; font-weight:700; color:var(--text-light); margin-bottom:1px; }
+  .milestone-name { font-size:0.9rem; font-weight:700; color:var(--text); word-break:break-word; }
+  .milestone-date { font-size:0.73rem; color:var(--text-light); margin-top:2px; }
+  .milestone-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; flex-shrink:0; align-self:flex-start; padding:0 2px; }
+  .milestone-del:hover { color:var(--c-exam); }
+  .phase-badge { display:inline-block; font-size:0.68rem; padding:1px 7px; border-radius:10px; background:rgba(217,112,147,0.14); color:var(--pink-dark); font-weight:700; margin-top:3px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ms-event-icons { font-size:0.95rem; letter-spacing:1px; }
+  .ms-type-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .ms-type-chip { padding:6px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; }
+  .ms-type-chip.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .record-phase-bar { font-size:0.78rem; color:var(--pink-dark); padding:5px 14px 0; font-weight:600; }
 
   /* Edit modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
@@ -262,6 +281,7 @@
     <input type="date" id="record-date" onchange="onDateChange()">
     <button onclick="changeDate(1)">▶</button>
   </div>
+  <div id="record-phase" class="record-phase-bar" style="display:none"></div>
 
   <!-- 新增記錄表單 -->
   <div class="entry-form">
@@ -452,6 +472,16 @@
   </div>
 </div>
 
+<!-- 課表頁 -->
+<div id="page-course" class="page">
+  <div class="course-wrap">
+    <button class="btn btn-primary" onclick="openMilestoneForm()" style="margin-bottom:10px;display:flex;align-items:center;gap:5px;justify-content:center">
+      <span style="font-size:1.1rem">＋</span> 新增課程事件
+    </button>
+    <div id="course-list"></div>
+  </div>
+</div>
+
 <!-- 編輯 Modal -->
 <div class="modal-overlay" id="edit-overlay" onclick="closeEditModal()"></div>
 <div class="modal-sheet" id="edit-sheet">
@@ -493,6 +523,37 @@
   </div>
 </div>
 
+<!-- Milestone Modal -->
+<div class="modal-overlay" id="ms-overlay" onclick="closeMilestoneForm()"></div>
+<div class="modal-sheet" id="ms-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title">📋 新增課程事件</div>
+  <div class="modal-field">
+    <label>日期（可選未來日期預先安排）</label>
+    <input type="date" id="ms-date">
+  </div>
+  <div class="modal-field">
+    <label>類型</label>
+    <div class="ms-type-chips" id="ms-type-chips">
+      <div class="ms-type-chip active" data-type="phase" onclick="selectMsType(this)">📋 療程階段</div>
+      <div class="ms-type-chip" data-type="pause" onclick="selectMsType(this)">⏸️ 治療暫停</div>
+      <div class="ms-type-chip" data-type="admit" onclick="selectMsType(this)">🏥 入院</div>
+      <div class="ms-type-chip" data-type="discharge" onclick="selectMsType(this)">🏠 出院</div>
+      <div class="ms-type-chip" data-type="clinic" onclick="selectMsType(this)">🩺 門診</div>
+      <div class="ms-type-chip" data-type="chemo" onclick="selectMsType(this)">💉 化療日</div>
+    </div>
+  </div>
+  <div class="modal-field" id="ms-name-field">
+    <label id="ms-name-label">階段名稱（如：維持期第一週）</label>
+    <input type="text" id="ms-name" placeholder="維持期第一週" autocomplete="off">
+  </div>
+  <div id="ms-form-alert" class="alert"></div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeMilestoneForm()">取消</button>
+    <button class="modal-btn-save" onclick="saveMilestone()">儲存</button>
+  </div>
+</div>
+
 <!-- Bottom Nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('record',this)">
@@ -511,6 +572,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     設定
   </button>
+  <button class="nav-btn" onclick="showPage('course',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    課表
+  </button>
 </nav>
 
 <script type="module">
@@ -525,6 +590,8 @@ const CAT_ICON = {
 const SUGGESTED_TAGS = ['Vincristine','嗎啡','Pregabalin','Ibuprofen','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺'];
 const SEV_CATS = new Set(['症狀','神經毒性']);
 const BLOOD_CATS = new Set(['檢查']);
+const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉' };
+const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日' };
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let db = null;
@@ -539,6 +606,8 @@ let activeTagFilter = '';
 let activeCatFilter = '';
 let histSearchQuery = '';
 let editingId = null, editingDate = null;
+let milestones = [];
+let selectedMsType = 'phase';
 
 function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -564,6 +633,7 @@ window.addEventListener('DOMContentLoaded', () => {
   restoreSettingsFields();
   loadTimeline(currentDate);
   renderSuggestedTags();
+  loadMilestones().then(() => updateRecordPhase());
 });
 
 function tryInitFirebase() {
@@ -582,21 +652,27 @@ window.showPage = (page, btn) => {
   document.getElementById('page-'+page).classList.add('active');
   if(btn) btn.classList.add('active');
   if(page==='history') loadHistory();
+  if(page==='course') loadMilestones().then(() => renderCourseList());
+  if(page==='record') updateRecordPhase();
 };
 
 window.changeDate = (d) => {
   const [y,m,day] = currentDate.split('-').map(Number);
   const s = localDateStr(new Date(Date.UTC(y, m-1, day+d)));
-  if(s>todayStr()) return;
+  const [ty,tm,td] = todayStr().split('-').map(Number);
+  const maxFuture = localDateStr(new Date(Date.UTC(ty, tm-1, td+60)));
+  if(s > maxFuture) return;
   currentDate=s;
   document.getElementById('record-date').value=s;
   document.getElementById('header-date').textContent=formatDateTW(s);
   loadTimeline(s);
+  updateRecordPhase();
 };
 window.onDateChange = () => {
   currentDate=document.getElementById('record-date').value;
   document.getElementById('header-date').textContent=formatDateTW(currentDate);
   loadTimeline(currentDate);
+  updateRecordPhase();
 };
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
@@ -891,6 +967,7 @@ window.deleteEntry = async (id) => {
 
 // ── History ───────────────────────────────────────────────────────────────────
 window.loadHistory = async () => {
+  await loadMilestones();
   const list=document.getElementById('hist-list');
   if(!db){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>';return;}
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">載入中…</div>';
@@ -1026,7 +1103,11 @@ function renderHistList() {
 
     const hdr = document.createElement('div');
     hdr.className = 'hist-day-hdr';
-    hdr.innerHTML = `<span class="hist-day-hdr-date">${formatDateTW(date)}</span><span class="hist-day-hdr-meta"><span>${entries.length} 筆</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
+    const phaseMilestone = getPhaseForDate(date);
+    const dayMilestones = getMilestonesOnDate(date);
+    const phaseHtml = phaseMilestone ? `<div class="phase-badge">${MS_ICON[phaseMilestone.type]||''} ${escapeHtml(phaseMilestone.name||MS_LABEL[phaseMilestone.type])}</div>` : '';
+    const msEventsHtml = dayMilestones.length ? `<span class="ms-event-icons" title="${dayMilestones.map(m=>MS_LABEL[m.type]).join('、')}">${dayMilestones.map(m=>MS_ICON[m.type]||'').join('')}</span>` : '';
+    hdr.innerHTML = `<div style="flex:1;min-width:0"><div class="hist-day-hdr-date">${formatDateTW(date)}</div>${phaseHtml}</div><span class="hist-day-hdr-meta">${msEventsHtml}<span>${entries.length} 筆</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
 
     const body = document.createElement('div');
     body.className = 'hist-day-body';
@@ -1251,6 +1332,147 @@ window.confirmDeleteTag = async (tag) => {
     showAlert('tag-mgmt-alert','success',`✅ 已從 ${count} 筆記錄移除「${tag}」`);
     loadTagsForMgmt();
   } catch(e){showAlert('tag-mgmt-alert','error','刪除失敗：'+e.message);btn.disabled=false;}
+};
+
+// ── Milestones / Course ───────────────────────────────────────────────────────
+async function loadMilestones() {
+  if (!db) { milestones = []; return; }
+  try {
+    const snap = await getDocs(collection(db, 'milestones'));
+    milestones = [];
+    snap.forEach(d => milestones.push({ id: d.id, ...d.data() }));
+    milestones.sort((a, b) => a.date.localeCompare(b.date));
+  } catch(e) { console.warn('loadMilestones:', e); }
+}
+
+function getPhaseForDate(date) {
+  // Most recent phase or pause milestone on or before this date
+  const relevant = milestones.filter(m => (m.type === 'phase' || m.type === 'pause') && m.date <= date);
+  return relevant.length ? relevant[relevant.length - 1] : null;
+}
+
+function getMilestonesOnDate(date) {
+  return milestones.filter(m => m.date === date);
+}
+
+function updateRecordPhase() {
+  const el = document.getElementById('record-phase');
+  if (!el) return;
+  const m = getPhaseForDate(currentDate);
+  const dayMs = getMilestonesOnDate(currentDate).filter(ms => ms.type !== 'phase' && ms.type !== 'pause');
+  const eventsHtml = dayMs.map(ms => `<span style="margin-left:7px">${MS_ICON[ms.type]} ${MS_LABEL[ms.type]}</span>`).join('');
+  if (m || dayMs.length) {
+    const icon = m ? (MS_ICON[m.type]||'') : '';
+    const label = m ? escapeHtml(m.name || MS_LABEL[m.type]) : '';
+    el.innerHTML = (m ? `${icon} ${label}` : '') + eventsHtml;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function renderCourseList() {
+  const list = document.getElementById('course-list');
+  if (!list) return;
+  if (!db) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>'; return; }
+  if (!milestones.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-light);font-size:0.85rem;line-height:1.7">還沒有課程記錄<br>點上方按鈕新增第一個事件</div>';
+    return;
+  }
+  const today = todayStr();
+  const future = milestones.filter(m => m.date > today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = milestones.filter(m => m.date <= today).sort((a,b) => b.date.localeCompare(a.date));
+  let html = '';
+  if (future.length) {
+    html += '<div class="course-section-hdr">📅 即將到來</div>';
+    html += future.map(m => milestoneCard(m, true)).join('');
+  }
+  if (past.length) {
+    html += `<div class="course-section-hdr"${future.length?' style="margin-top:14px"':''}>📖 過去記錄</div>`;
+    html += past.map(m => milestoneCard(m, false)).join('');
+  }
+  list.innerHTML = html;
+}
+
+function milestoneCard(m, isFuture) {
+  const icon = MS_ICON[m.type] || '📌';
+  const label = MS_LABEL[m.type] || m.type;
+  const nameHtml = m.name ? `<div class="milestone-name">${escapeHtml(m.name)}</div>` : '';
+  const futureTag = isFuture ? ' <span style="color:var(--pink-dark);font-size:0.68rem;font-weight:700">（預定）</span>' : '';
+  return `<div class="milestone-item${isFuture?' future':''}">
+  <div class="milestone-icon">${icon}</div>
+  <div class="milestone-body">
+    <div class="milestone-type-lbl">${label}</div>
+    ${nameHtml}
+    <div class="milestone-date">${formatDateTW(m.date)}${futureTag}</div>
+  </div>
+  <button class="milestone-del" onclick="deleteMilestone('${m.id}')">✕</button>
+</div>`;
+}
+
+window.openMilestoneForm = () => {
+  document.getElementById('ms-date').value = todayStr();
+  selectedMsType = 'phase';
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === 'phase'));
+  document.getElementById('ms-name').value = '';
+  updateMsNameField();
+  document.getElementById('ms-form-alert').className = 'alert';
+  document.getElementById('ms-overlay').classList.add('open');
+  document.getElementById('ms-sheet').classList.add('open');
+};
+
+window.closeMilestoneForm = () => {
+  document.getElementById('ms-overlay').classList.remove('open');
+  document.getElementById('ms-sheet').classList.remove('open');
+};
+
+window.selectMsType = (chip) => {
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedMsType = chip.dataset.type;
+  updateMsNameField();
+};
+
+function updateMsNameField() {
+  const label = document.getElementById('ms-name-label');
+  const inp = document.getElementById('ms-name');
+  if (selectedMsType === 'phase') {
+    label.textContent = '階段名稱（如：維持期第一週）';
+    inp.placeholder = '維持期第一週';
+  } else if (selectedMsType === 'pause') {
+    label.textContent = '暫停原因/說明';
+    inp.placeholder = '發燒暫停 5 天';
+  } else {
+    label.textContent = '備注（可空白）';
+    inp.placeholder = '';
+  }
+}
+
+window.saveMilestone = async () => {
+  if (!db) { showAlert('ms-form-alert', 'error', '請先設定 Firebase'); return; }
+  const date = document.getElementById('ms-date').value;
+  const name = document.getElementById('ms-name').value.trim();
+  if (!date) { showAlert('ms-form-alert', 'error', '請選擇日期'); return; }
+  if (selectedMsType === 'phase' && !name) { showAlert('ms-form-alert', 'error', '請填入階段名稱'); return; }
+  try {
+    await addDoc(collection(db, 'milestones'), { date, type: selectedMsType, name, createdAt: new Date().toISOString() });
+    closeMilestoneForm();
+    await loadMilestones();
+    renderCourseList();
+    updateRecordPhase();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistList();
+  } catch(e) { showAlert('ms-form-alert', 'error', '儲存失敗：' + e.message); }
+};
+
+window.deleteMilestone = async (id) => {
+  if (!confirm('確定刪除這個課程記錄？')) return;
+  try {
+    await deleteDoc(doc(db, 'milestones', id));
+    await loadMilestones();
+    renderCourseList();
+    updateRecordPhase();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistList();
+  } catch(e) { alert('刪除失敗：' + e.message); }
 };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
