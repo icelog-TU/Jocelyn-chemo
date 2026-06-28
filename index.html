@@ -625,6 +625,7 @@ let histSearchQuery = '';
 let editingId = null, editingDate = null;
 let milestones = [];
 let selectedMsType = 'phase';
+let editingMilestoneId = null;
 
 function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -1423,11 +1424,14 @@ function milestoneCard(m, isFuture) {
     ${nameHtml}
     <div class="milestone-date">${formatDateTW(m.date)}${futureTag}</div>
   </div>
+  <button class="milestone-del" onclick="openMilestoneEdit('${m.id}')" style="color:#aaa;font-size:0.9rem;margin-right:2px" title="編輯">✏️</button>
   <button class="milestone-del" onclick="deleteMilestone('${m.id}')">✕</button>
 </div>`;
 }
 
 window.openMilestoneForm = () => {
+  editingMilestoneId = null;
+  document.getElementById('ms-sheet').querySelector('.modal-title').textContent = '📋 新增課程事件';
   document.getElementById('ms-date').value = todayStr();
   selectedMsType = 'phase';
   document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === 'phase'));
@@ -1438,7 +1442,23 @@ window.openMilestoneForm = () => {
   document.getElementById('ms-sheet').classList.add('open');
 };
 
+window.openMilestoneEdit = (id) => {
+  const m = milestones.find(x => x.id === id);
+  if (!m) return;
+  editingMilestoneId = id;
+  document.getElementById('ms-sheet').querySelector('.modal-title').textContent = '✏️ 編輯課程事件';
+  document.getElementById('ms-date').value = m.date;
+  selectedMsType = m.type || 'phase';
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === selectedMsType));
+  document.getElementById('ms-name').value = m.name || '';
+  updateMsNameField();
+  document.getElementById('ms-form-alert').className = 'alert';
+  document.getElementById('ms-overlay').classList.add('open');
+  document.getElementById('ms-sheet').classList.add('open');
+};
+
 window.closeMilestoneForm = () => {
+  editingMilestoneId = null;
   document.getElementById('ms-overlay').classList.remove('open');
   document.getElementById('ms-sheet').classList.remove('open');
 };
@@ -1472,7 +1492,11 @@ window.saveMilestone = async () => {
   if (!date) { showAlert('ms-form-alert', 'error', '請選擇日期'); return; }
   if (selectedMsType === 'phase' && !name) { showAlert('ms-form-alert', 'error', '請填入階段名稱'); return; }
   try {
-    await addDoc(collection(db, 'milestones'), { date, type: selectedMsType, name, createdAt: new Date().toISOString() });
+    if (editingMilestoneId) {
+      await updateDoc(doc(db, 'milestones', editingMilestoneId), { date, type: selectedMsType, name });
+    } else {
+      await addDoc(collection(db, 'milestones'), { date, type: selectedMsType, name, createdAt: new Date().toISOString() });
+    }
     closeMilestoneForm();
     await loadMilestones();
     renderCourseList();
