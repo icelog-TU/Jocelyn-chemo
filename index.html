@@ -438,6 +438,22 @@
 <!-- 設定頁 -->
 <div id="page-settings" class="page">
   <div class="card" style="margin-top:12px">
+    <div class="card-title"><span>📲</span> 跨裝置同步設定</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px;line-height:1.6">在這台裝置匯出代碼，到新裝置貼入匯入，Firebase 和 AI 設定即可還原。</p>
+    <button class="btn btn-secondary btn-sm" onclick="exportSettings()" style="margin-bottom:4px">📤 匯出設定代碼</button>
+    <div id="export-code-wrap" style="display:none;margin-top:8px">
+      <textarea id="export-code" autocomplete="off" autocorrect="off" spellcheck="false" style="min-height:72px;font-family:monospace;font-size:0.68rem;word-break:break-all;resize:none" readonly></textarea>
+      <button class="btn btn-primary btn-sm" onclick="copySettingsCode()" style="margin-top:4px">📋 複製代碼</button>
+      <div id="copy-alert" class="alert"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="settings-label">貼上設定代碼（在新裝置匯入）</div>
+      <textarea id="import-code" placeholder="貼上從舊裝置複製的代碼…" autocomplete="off" autocorrect="off" spellcheck="false" style="min-height:72px;font-family:monospace;font-size:0.68rem;word-break:break-all;resize:none;margin-top:4px"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="importSettings()" style="margin-top:4px">📥 匯入設定</button>
+      <div id="import-alert" class="alert"></div>
+    </div>
+  </div>
+  <div class="card">
     <div class="card-title"><span>🏷️</span> 標籤管理</div>
     <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">統一更名或刪除標籤，會同步套用到所有記錄。</p>
     <button class="btn btn-secondary btn-sm" onclick="loadTagsForMgmt()" id="tag-mgmt-load-btn">載入所有標籤</button>
@@ -1510,6 +1526,60 @@ function restoreSettingsFields() {
   const k=getOpenAIKey();
   if(k) document.getElementById('cfg-claudeKey').value=k;
 }
+
+// ── Settings sync (export / import) ──────────────────────────────────────────
+window.exportSettings = () => {
+  const cfg = getFirebaseConfig();
+  const key = getOpenAIKey();
+  if (!cfg?.projectId && !key) {
+    document.getElementById('export-code-wrap').style.display = 'block';
+    showAlert('copy-alert', 'error', '沒有設定可以匯出，請先填入 Firebase 設定');
+    return;
+  }
+  const data = {};
+  if (cfg) data.fb = cfg;
+  if (key) data.ai = key;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  document.getElementById('export-code').value = encoded;
+  document.getElementById('export-code-wrap').style.display = 'block';
+};
+
+window.copySettingsCode = () => {
+  const code = document.getElementById('export-code').value;
+  if (!code) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(code)
+      .then(() => showAlert('copy-alert', 'success', '✅ 已複製！請妥善保管此代碼。'))
+      .catch(() => { document.getElementById('export-code').select(); document.execCommand('copy'); showAlert('copy-alert', 'success', '✅ 已複製！'); });
+  } else {
+    document.getElementById('export-code').select();
+    document.execCommand('copy');
+    showAlert('copy-alert', 'success', '✅ 已複製！');
+  }
+};
+
+window.importSettings = () => {
+  const code = document.getElementById('import-code').value.trim();
+  if (!code) { showAlert('import-alert', 'error', '請貼上設定代碼'); return; }
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (data.fb) {
+      localStorage.setItem('fb_config', JSON.stringify(data.fb));
+      restoreSettingsFields();
+      tryInitFirebase();
+    }
+    if (data.ai) {
+      localStorage.setItem('openai_key', data.ai);
+      document.getElementById('cfg-claudeKey').value = data.ai;
+    }
+    document.getElementById('import-code').value = '';
+    const what = [data.fb && 'Firebase', data.ai && 'OpenAI API Key'].filter(Boolean).join(' 和 ');
+    showAlert('import-alert', 'success', `✅ ${what} 設定已匯入！`);
+    if (data.fb) loadTimeline(currentDate);
+  } catch(e) {
+    showAlert('import-alert', 'error', '❌ 代碼無效，請重新從舊裝置複製');
+  }
+};
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 function showAlert(id,type,msg) {
