@@ -1076,6 +1076,30 @@ function highlight(text, q) {
 
 let _histAllEntries = [];
 
+function milestoneMatchesSearch(m, q) {
+  if (!q) return true;
+  const lower = q.toLowerCase();
+  return (m.name||'').toLowerCase().includes(lower)
+    || (MS_LABEL[m.type]||'').toLowerCase().includes(lower);
+}
+
+function buildMilestoneHistCard(m) {
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.style.borderLeft = '3px solid var(--pink-dark)';
+  const icon = MS_ICON[m.type] || '📌';
+  const label = MS_LABEL[m.type] || m.type;
+  const q = histSearchQuery;
+  div.innerHTML = `
+    <div class="log-dot" style="background:var(--pink-dark);margin-top:4px"></div>
+    <div class="log-body" onclick="openMilestoneEdit('${m.id}')">
+      <div class="log-cat" style="color:var(--pink-dark)">${icon} ${highlight(label, q)}</div>
+      ${m.name ? `<div class="log-content" style="font-weight:600">${highlight(m.name, q)}</div>` : ''}
+    </div>
+    <button class="log-del" onclick="event.stopPropagation();deleteMilestone('${m.id}')">✕</button>`;
+  return div;
+}
+
 function renderHistList() {
   const list = document.getElementById('hist-list');
   const total = _histAllEntries.length;
@@ -1087,8 +1111,23 @@ function renderHistList() {
   // Tag filter
   if (activeTagFilter) all = all.filter(e=>(e.tags||[]).includes(activeTagFilter));
 
-  // Search filter
+  // Search filter on logs
   if (histSearchQuery) all = all.filter(e => matchesSearch(e, histSearchQuery));
+
+  // Build milestone map for the date range, filtered by search and cat/tag (milestones have no cat/tag)
+  const histFrom = document.getElementById('hist-from').value;
+  const histTo = document.getElementById('hist-to').value;
+  const dayMsMap = {};
+  if (!activeCatFilter && !activeTagFilter) { // milestones have no category/tag, skip if those filters active
+    milestones.forEach(m => {
+      if (m.date >= histFrom && m.date <= histTo) {
+        if (!histSearchQuery || milestoneMatchesSearch(m, histSearchQuery)) {
+          if (!dayMsMap[m.date]) dayMsMap[m.date] = [];
+          dayMsMap[m.date].push(m);
+        }
+      }
+    });
+  }
 
   const shown = all.length;
   const countLine = document.createElement('div');
@@ -1098,7 +1137,12 @@ function renderHistList() {
     ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆</span><button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除所有篩選</button>`
     : `<span>共 <b>${total}</b> 筆記錄</span>`;
 
-  if (!all.length) {
+  const byDate = {};
+  all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  // Add milestone-only dates
+  Object.keys(dayMsMap).forEach(date => { if(!byDate[date]) byDate[date]=[]; });
+
+  if (!Object.keys(byDate).length) {
     list.innerHTML = '';
     list.appendChild(countLine);
     const empty = document.createElement('div');
@@ -1108,24 +1152,24 @@ function renderHistList() {
     return;
   }
 
-  const byDate = {};
-  all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
   list.innerHTML = '';
   list.appendChild(countLine);
   const sortedDates = Object.keys(byDate).sort().reverse();
   sortedDates.forEach((date, idx)=>{
     const entries = byDate[date].sort((a,b)=>(a.timestamp||a.date||'').localeCompare(b.timestamp||b.date||''));
-    const isOpen = idx === 0; // most recent day starts open
+    const dayMs = dayMsMap[date] || [];
+    const isOpen = idx === 0;
 
     const sec = document.createElement('div'); sec.style.marginBottom='6px';
 
     const hdr = document.createElement('div');
     hdr.className = 'hist-day-hdr';
     const phaseMilestone = getPhaseForDate(date);
-    const dayMilestones = getMilestonesOnDate(date);
+    const allDayMs = getMilestonesOnDate(date);
     const phaseHtml = phaseMilestone ? `<div class="phase-badge">${MS_ICON[phaseMilestone.type]||''} ${escapeHtml(phaseMilestone.name||MS_LABEL[phaseMilestone.type])}</div>` : '';
-    const msEventsHtml = dayMilestones.length ? `<span class="ms-event-icons" title="${dayMilestones.map(m=>MS_LABEL[m.type]).join('、')}">${dayMilestones.map(m=>MS_ICON[m.type]||'').join('')}</span>` : '';
-    hdr.innerHTML = `<div style="flex:1;min-width:0"><div class="hist-day-hdr-date">${formatDateTW(date)}</div>${phaseHtml}</div><span class="hist-day-hdr-meta">${msEventsHtml}<span>${entries.length} 筆</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
+    const msEventsHtml = allDayMs.length ? `<span class="ms-event-icons" title="${allDayMs.map(m=>MS_LABEL[m.type]).join('、')}">${allDayMs.map(m=>MS_ICON[m.type]||'').join('')}</span>` : '';
+    const countLabel = [entries.length && `${entries.length} 筆`, dayMs.length && `${dayMs.length} 課表`].filter(Boolean).join('・');
+    hdr.innerHTML = `<div style="flex:1;min-width:0"><div class="hist-day-hdr-date">${formatDateTW(date)}</div>${phaseHtml}</div><span class="hist-day-hdr-meta">${msEventsHtml}<span>${countLabel}</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
 
     const body = document.createElement('div');
     body.className = 'hist-day-body';
@@ -1137,6 +1181,7 @@ function renderHistList() {
       hdr.querySelector('.hist-day-hdr-meta span:last-child').textContent = open ? '▶' : '▼';
     };
 
+    dayMs.forEach(m => body.appendChild(buildMilestoneHistCard(m)));
     entries.forEach(e=>{
       try { body.appendChild(buildLogCard(e.id, e, histSearchQuery)); }
       catch(err) { console.warn('render error', e.id, err); }
