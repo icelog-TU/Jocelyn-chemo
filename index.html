@@ -139,7 +139,9 @@
   .tag-list { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; min-height:0; }
   .tag-chip { display:flex; align-items:center; gap:4px; font-size:0.72rem; padding:3px 9px; border-radius:10px; background:#f0ecfb; color:#6a4caf; font-weight:600; }
   .tag-chip button { background:none; border:none; color:#9c6fcf; cursor:pointer; font-size:0.85rem; padding:0; line-height:1; }
-  .tag-suggest { display:flex; flex-wrap:wrap; gap:5px; }
+  .tag-suggest { display:flex; flex-wrap:nowrap; gap:5px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .tag-suggest::-webkit-scrollbar { display:none; }
+  .tag-sug-chip { flex-shrink:0; }
   .tag-sug-chip { font-size:0.72rem; padding:3px 9px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; white-space:nowrap; }
   .tag-sug-chip:hover { background:#f0ecfb; }
 
