@@ -769,7 +769,7 @@ window.loadHistory = async () => {
     }
     _histAllEntries=[];
     snap.forEach(d=>_histAllEntries.push({id:d.id,...d.data()}));
-    _histAllEntries.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+    _histAllEntries.sort((a,b)=>(b.timestamp||b.date||'').localeCompare(a.timestamp||a.date||''));
 
     // Collect all tags for filter
     const tagSet=new Set();
@@ -821,7 +821,8 @@ let _histAllEntries = [];
 
 function renderHistList() {
   const list = document.getElementById('hist-list');
-  let all = _histAllEntries;
+  const total = _histAllEntries.length;
+  let all = [..._histAllEntries];
 
   // Tag filter
   if (activeTagFilter) all = all.filter(e=>(e.tags||[]).includes(activeTagFilter));
@@ -829,24 +830,51 @@ function renderHistList() {
   // Search filter
   if (histSearchQuery) all = all.filter(e => matchesSearch(e, histSearchQuery));
 
+  const shown = all.length;
+  const countLine = document.createElement('div');
+  countLine.style.cssText = 'font-size:0.72rem;color:var(--text-light);padding:4px 2px 8px;display:flex;justify-content:space-between;align-items:center';
+  const isFiltered = (activeTagFilter || histSearchQuery) && shown < total;
+  countLine.innerHTML = isFiltered
+    ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆</span><button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除所有篩選</button>`
+    : `<span>共 <b>${total}</b> 筆記錄</span>`;
+
   if (!all.length) {
-    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-light)">${histSearchQuery?'找不到符合「'+escapeHtml(histSearchQuery)+'」的記錄':'這段期間沒有記錄'}</div>`;
+    list.innerHTML = '';
+    list.appendChild(countLine);
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;padding:20px;color:var(--text-light)';
+    empty.textContent = histSearchQuery ? `找不到符合「${histSearchQuery}」的記錄` : '這段期間沒有記錄';
+    list.appendChild(empty);
     return;
   }
 
   const byDate = {};
   all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
   list.innerHTML = '';
+  list.appendChild(countLine);
   Object.keys(byDate).sort().reverse().forEach(date=>{
     const sec = document.createElement('div'); sec.style.marginBottom='14px';
     const hdr = document.createElement('div');
     hdr.style.cssText = 'font-size:.8rem;font-weight:700;color:var(--pink-dark);padding:6px 2px 4px';
     hdr.textContent = formatDateTW(date);
     sec.appendChild(hdr);
-    byDate[date].sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).forEach(e=>sec.appendChild(buildLogCard(e.id, e, histSearchQuery)));
+    byDate[date]
+      .sort((a,b)=>(a.timestamp||a.date||'').localeCompare(b.timestamp||b.date||''))
+      .forEach(e=>{
+        try { sec.appendChild(buildLogCard(e.id, e, histSearchQuery)); }
+        catch(err) { console.warn('render error', e.id, err); }
+      });
     list.appendChild(sec);
   });
 }
+
+window.clearAllHistFilters = () => {
+  activeTagFilter = '';
+  histSearchQuery = '';
+  document.getElementById('hist-search').value = '';
+  document.getElementById('hist-search-clear').style.display = 'none';
+  loadHistory();
+};
 
 // ── Edit modal ────────────────────────────────────────────────────────────────
 window.openEditModal = (id, data) => {
