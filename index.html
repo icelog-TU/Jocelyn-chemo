@@ -353,7 +353,7 @@
         <span class="field-label">標籤（可選）</span>
         <div class="tag-list" id="tag-list"></div>
         <div class="tag-input-row">
-          <input type="text" id="tag-input" placeholder="打幾個字就會出現建議" oninput="filterTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
+          <input type="text" id="tag-input" placeholder="打幾個字就會出現建議" autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
           <button onclick="addTag()">＋</button>
         </div>
         <div class="tag-suggest" id="tag-suggest"></div>
@@ -606,7 +606,7 @@ const CAT_ICON = {
   '用藥':'💊','神經毒性':'❤️','症狀':'🤒','飲食':'🍚',
   '活動功能':'🚶','排泄':'🚽','睡眠':'😴','檢查':'🔬','評估':'📈','醫療計畫':'👩‍⚕️'
 };
-const SUGGESTED_TAGS = ['Vincristine','嗎啡','Pregabalin','Ibuprofen','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺'];
+const SUGGESTED_TAGS = ['Vincristine','Morphine','嗎啡','Pregabalin','Ibuprofen','MgO','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺','噁吐'];
 const SEV_CATS = new Set(['症狀','神經毒性']);
 const BLOOD_CATS = new Set(['檢查']);
 const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉', spine:'💉' };
@@ -744,7 +744,7 @@ window.addEditTagFromSuggest = (t) => {
 
 function renderSuggestedTags() {
   const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
-  allTags = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0, 20);
+  allTags = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0, 40);
   filterTagSuggestions(document.getElementById('tag-input')?.value||'');
 }
 
