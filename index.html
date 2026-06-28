@@ -375,6 +375,13 @@
 <!-- 設定頁 -->
 <div id="page-settings" class="page">
   <div class="card" style="margin-top:12px">
+    <div class="card-title"><span>🏷️</span> 標籤管理</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">統一更名或刪除標籤，會同步套用到所有記錄。</p>
+    <button class="btn btn-secondary btn-sm" onclick="loadTagsForMgmt()" id="tag-mgmt-load-btn">載入所有標籤</button>
+    <div id="tag-mgmt-list" style="margin-top:10px"></div>
+    <div id="tag-mgmt-alert" class="alert"></div>
+  </div>
+  <div class="card">
     <div class="card-title"><span>🔥</span> Firebase 設定</div>
     <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..."></div>
     <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com"></div>
@@ -996,6 +1003,75 @@ ${context}`;
   } catch(e){document.getElementById('typing')?.remove();appendChat('ai','❌ 連線失敗：'+e.message);}
   btn.disabled=false;
 }
+
+// ── Tag management ────────────────────────────────────────────────────────────
+window.loadTagsForMgmt = async () => {
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  const listEl=document.getElementById('tag-mgmt-list');
+  if(!db){showAlert('tag-mgmt-alert','error','請先設定 Firebase');return;}
+  btn.disabled=true; btn.textContent='載入中…';
+  try {
+    const snap=await getDocs(collection(db,'logs'));
+    const tagCount={};
+    snap.forEach(d=>(d.data().tags||[]).forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;}));
+    const tags=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]);
+    if(!tags.length){listEl.innerHTML='<div style="color:var(--text-light);font-size:0.82rem;padding:6px 0">沒有標籤</div>';btn.disabled=false;btn.textContent='重新載入';return;}
+    listEl.innerHTML=tags.map(([tag,count])=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;padding:8px 10px;background:var(--cream);border-radius:10px">
+        <span style="flex:1;font-size:0.82rem;font-weight:600;color:#6a4caf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(tag)}</span>
+        <span style="font-size:0.72rem;color:var(--text-light);white-space:nowrap;flex-shrink:0">${count} 筆</span>
+        <button onclick="startRenameTag('${escapeHtml(tag).replace(/'/g,'&#39;')}')" style="font-size:0.75rem;padding:5px 10px;border-radius:8px;border:1.5px solid var(--pink);background:white;color:var(--pink-dark);cursor:pointer;flex-shrink:0;white-space:nowrap">✏️ 更名</button>
+        <button onclick="confirmDeleteTag('${escapeHtml(tag).replace(/'/g,'&#39;')}')" style="font-size:0.75rem;padding:5px 8px;border-radius:8px;border:1.5px solid #ecc;background:white;color:var(--c-exam);cursor:pointer;flex-shrink:0">🗑️</button>
+      </div>`).join('');
+  } catch(e){showAlert('tag-mgmt-alert','error','載入失敗：'+e.message);}
+  btn.disabled=false; btn.textContent='重新載入';
+};
+
+window.startRenameTag = (oldTag) => {
+  const newTag=(prompt(`將「${oldTag}」改名為：`,oldTag)||'').trim();
+  if(!newTag||newTag===oldTag) return;
+  applyRenameTag(oldTag,newTag);
+};
+
+async function applyRenameTag(oldTag,newTag) {
+  if(!db) return;
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  btn.disabled=true;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('tags','array-contains',oldTag)));
+    let count=0;
+    for(const d of snap.docs){
+      const tags=[...new Set((d.data().tags||[]).map(t=>t===oldTag?newTag:t))];
+      await updateDoc(doc(db,'logs',d.id),{tags});
+      count++;
+    }
+    const recent=JSON.parse(localStorage.getItem('recent_tags')||'[]');
+    localStorage.setItem('recent_tags',JSON.stringify([...new Set(recent.map(t=>t===oldTag?newTag:t))]));
+    renderSuggestedTags();
+    showAlert('tag-mgmt-alert','success',`✅ 已將「${oldTag}」→「${newTag}」，更新 ${count} 筆`);
+    loadTagsForMgmt();
+  } catch(e){showAlert('tag-mgmt-alert','error','更新失敗：'+e.message);btn.disabled=false;}
+}
+
+window.confirmDeleteTag = async (tag) => {
+  if(!confirm(`確定要從所有記錄中移除標籤「${tag}」？`)) return;
+  if(!db) return;
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  btn.disabled=true;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('tags','array-contains',tag)));
+    let count=0;
+    for(const d of snap.docs){
+      await updateDoc(doc(db,'logs',d.id),{tags:(d.data().tags||[]).filter(t=>t!==tag)});
+      count++;
+    }
+    const recent=JSON.parse(localStorage.getItem('recent_tags')||'[]');
+    localStorage.setItem('recent_tags',JSON.stringify(recent.filter(t=>t!==tag)));
+    renderSuggestedTags();
+    showAlert('tag-mgmt-alert','success',`✅ 已從 ${count} 筆記錄移除「${tag}」`);
+    loadTagsForMgmt();
+  } catch(e){showAlert('tag-mgmt-alert','error','刪除失敗：'+e.message);btn.disabled=false;}
+};
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 window.saveFirebaseConfig = () => {
