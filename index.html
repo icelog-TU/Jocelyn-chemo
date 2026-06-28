@@ -540,7 +540,8 @@ let activeCatFilter = '';
 let histSearchQuery = '';
 let editingId = null, editingDate = null;
 
-function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function nowTime() { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
 function formatDateTW(s) { const[y,m,d]=s.split('-'); return `${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日`; }
 function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
@@ -557,7 +558,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('diag-day').textContent = 'D' + Math.floor((todayD-diagDate)/86400000);
   document.getElementById('entry-time').value = nowTime();
   const from=new Date(); from.setDate(from.getDate()-30);
-  document.getElementById('hist-from').value = from.toISOString().split('T')[0];
+  document.getElementById('hist-from').value = localDateStr(from);
   document.getElementById('hist-to').value = todayStr();
   tryInitFirebase();
   restoreSettingsFields();
@@ -584,8 +585,8 @@ window.showPage = (page, btn) => {
 };
 
 window.changeDate = (d) => {
-  const dt = new Date(currentDate+'T00:00:00'); dt.setDate(dt.getDate()+d);
-  const s = dt.toISOString().split('T')[0];
+  const [y,m,day] = currentDate.split('-').map(Number);
+  const s = localDateStr(new Date(Date.UTC(y, m-1, day+d)));
   if(s>todayStr()) return;
   currentDate=s;
   document.getElementById('record-date').value=s;
