@@ -143,14 +143,16 @@
   .tag-sug-chip { font-size:0.72rem; padding:3px 9px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; white-space:nowrap; }
   .tag-sug-chip:hover { background:#f0ecfb; }
 
-  /* AI input */
-  .ai-preview-card { background:var(--cream); border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
-  .ai-preview-card .pc-header { display:flex; justify-content:space-between; margin-bottom:4px; }
-  .ai-preview-card .pc-cat { font-size:0.78rem; font-weight:700; }
-  .ai-preview-card .pc-time { font-size:0.75rem; color:var(--text-light); }
-  .ai-preview-card .pc-content { font-size:0.85rem; line-height:1.5; }
-  .ai-preview-card .pc-sev { font-size:0.72rem; color:var(--c-sym); margin-top:3px; }
-  .ai-preview-card .pc-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  /* AI editable preview cards */
+  .ai-edit-card { background:white; border:1.5px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; }
+  .ai-edit-header { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .ai-edit-header input[type=time] { width:105px; padding:6px 8px; font-size:0.82rem; flex-shrink:0; }
+  .ai-edit-header select { flex:1; padding:6px 8px; font-size:0.82rem; min-width:0; }
+  .ai-content-ta { min-height:60px; font-size:0.85rem; margin-bottom:0; padding:7px 10px; }
+  .ai-tag-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; min-height:0; }
+  .ai-tag-add-row { display:flex; gap:6px; margin-top:6px; }
+  .ai-tag-add-row input { flex:1; padding:5px 8px; font-size:0.78rem; }
+  .ai-tag-add-row button { background:var(--pink-dark); color:white; border:none; border-radius:8px; padding:5px 10px; font-size:0.8rem; cursor:pointer; }
 
   /* Buttons */
   .btn { display:block; width:100%; padding:12px; border-radius:var(--radius); border:none; cursor:pointer; font-size:0.92rem; font-weight:700; font-family:inherit; transition:opacity 0.18s,transform 0.1s; margin-top:10px; }
@@ -483,6 +485,7 @@ let selectedCat = '';
 let entryTags = [];
 let editTags = [];
 let parsedEntries = [];
+let parsedEntryTags = [];
 let allTags = [];
 let activeTagFilter = '';
 let histSearchQuery = '';
@@ -669,6 +672,7 @@ window.parseWithAI = async () => {
     const data=await res.json();
     const text=data.choices?.[0]?.message?.content||'';
     parsedEntries=JSON.parse(text.replace(/```json|```/g,'').trim());
+    parsedEntries=parsedEntries.map(e=>({...e,tags:normalizeTags(e.tags||[])}));
     renderAIPreview(parsedEntries);
   } catch(e){
     document.getElementById('ai-preview').innerHTML=`<div style="text-align:center;padding:12px;color:var(--c-exam)">❌ 解析失敗：${e.message}</div>`;
@@ -676,42 +680,92 @@ window.parseWithAI = async () => {
   btn.disabled=false; btn.textContent='✨ AI 解析';
 };
 
+// Normalize tag capitalization against known tags (most-recently-used wins)
+function normalizeTags(tags) {
+  return tags.map(tag => {
+    const lower = tag.toLowerCase();
+    const known = allTags.find(t => t.toLowerCase() === lower);
+    return known || tag;
+  });
+}
+
 function renderAIPreview(entries) {
-  const box=document.getElementById('ai-preview');
+  parsedEntryTags = entries.map(e => normalizeTags([...(e.tags||[])]));
+  const box = document.getElementById('ai-preview');
   if(!entries.length){box.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-light)">無法解析</div>';return;}
-  box.innerHTML=entries.map(e=>`
-    <div class="ai-preview-card">
-      <div class="pc-header">
-        <span class="pc-cat cat-${e.category}">${CAT_ICON[e.category]||'📝'} ${e.category}</span>
-        <span class="pc-time">${e.time||nowTime()}</span>
+  const catOptions = Object.keys(CAT_ICON).map(c=>`<option>${c}</option>`).join('');
+  box.innerHTML = entries.map((e,i)=>{
+    const cat = e.category||'症狀';
+    const sev = e.severity??0;
+    return `<div class="ai-edit-card">
+      <div class="ai-edit-header">
+        <input type="time" id="ai-time-${i}" value="${e.time||nowTime()}">
+        <select id="ai-cat-${i}" onchange="onAICardCatChange(${i})">
+          ${Object.keys(CAT_ICON).map(c=>`<option${c===cat?' selected':''}>${c}</option>`).join('')}
+        </select>
       </div>
-      <div class="pc-content">${escapeHtml(e.content)}</div>
-      ${e.severity!=null&&e.severity>0?`<div class="pc-sev">嚴重程度 ${e.severity}/10</div>`:''}
-      ${e.tags?.length?`<div class="pc-tags">${e.tags.map(t=>`<span class="log-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
-    </div>
-  `).join('');
+      <textarea id="ai-content-${i}" class="ai-content-ta">${escapeHtml(e.content)}</textarea>
+      <div id="ai-sev-row-${i}" style="display:${SEV_CATS.has(cat)?'block':'none'};margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-light);margin-bottom:2px">
+          <span>嚴重程度</span><span id="ai-sev-val-${i}">${sev}</span>
+        </div>
+        <input type="range" min="0" max="10" value="${sev}" id="ai-sev-${i}" oninput="document.getElementById('ai-sev-val-${i}').textContent=this.value" style="width:100%;accent-color:var(--c-sym)">
+      </div>
+      <div class="ai-tag-row" id="ai-tags-${i}"></div>
+      <div class="ai-tag-add-row">
+        <input type="text" id="ai-tag-input-${i}" placeholder="加標籤…" onkeydown="if(event.key==='Enter'){event.preventDefault();addAITag(${i})}">
+        <button onclick="addAITag(${i})">＋</button>
+      </div>
+    </div>`;
+  }).join('');
+  entries.forEach((_,i) => renderAICardTags(i));
   document.getElementById('ai-save-all-btn').style.display='block';
 }
 
+function renderAICardTags(i) {
+  const tags = parsedEntryTags[i]||[];
+  document.getElementById('ai-tags-'+i).innerHTML = tags.map(t=>
+    `<div class="tag-chip">${escapeHtml(t)}<button onclick="removeAITag(${i},'${escapeHtml(t).replace(/'/g,'&#39;')}')">×</button></div>`
+  ).join('');
+}
+window.addAITag = (i) => {
+  const inp = document.getElementById('ai-tag-input-'+i);
+  const val = normalizeTags([inp.value.trim()])[0];
+  if(val && !(parsedEntryTags[i]||[]).includes(val)){
+    if(!parsedEntryTags[i]) parsedEntryTags[i]=[];
+    parsedEntryTags[i].push(val); renderAICardTags(i); saveRecentTag(val);
+  }
+  inp.value='';
+};
+window.removeAITag = (i,t) => { parsedEntryTags[i]=(parsedEntryTags[i]||[]).filter(x=>x!==t); renderAICardTags(i); };
+window.onAICardCatChange = (i) => {
+  const cat = document.getElementById('ai-cat-'+i).value;
+  document.getElementById('ai-sev-row-'+i).style.display = SEV_CATS.has(cat)?'block':'none';
+};
+
 window.saveAllParsed = async () => {
   if(!db){showAlert('form-alert','error','⚠️ 請先設定 Firebase！');return;}
-  if(!parsedEntries.length) return;
+  const count = parsedEntries.length;
+  if(!count) return;
   const btn=document.getElementById('ai-save-all-btn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>儲存中…';
   try {
-    for(const e of parsedEntries){
-      const t=e.time||nowTime();
+    for(let i=0; i<count; i++){
+      const t = document.getElementById('ai-time-'+i)?.value || nowTime();
+      const cat = document.getElementById('ai-cat-'+i)?.value || parsedEntries[i].category;
+      const content = (document.getElementById('ai-content-'+i)?.value||'').trim() || parsedEntries[i].content;
+      const sev = SEV_CATS.has(cat) ? +(document.getElementById('ai-sev-'+i)?.value||0) : null;
+      const tags = parsedEntryTags[i]||[];
       await addDoc(collection(db,'logs'),{
-        date:currentDate,time:t,timestamp:currentDate+'T'+t+':00',
-        category:e.category,content:e.content,
-        severity:e.severity??null,blood:null,tags:e.tags||[],
+        date:currentDate, time:t, timestamp:currentDate+'T'+t+':00',
+        category:cat, content, severity:sev, blood:null, tags,
         createdAt:new Date().toISOString(),
       });
     }
-    showAlert('form-alert','success',`✅ 已儲存 ${parsedEntries.length} 筆！`);
+    showAlert('form-alert','success',`✅ 已儲存 ${count} 筆！`);
     document.getElementById('ai-raw').value='';
     document.getElementById('ai-preview').innerHTML='';
-    parsedEntries=[]; btn.style.display='none';
+    parsedEntries=[]; parsedEntryTags=[]; btn.style.display='none';
     loadTimeline(currentDate);
   } catch(e){showAlert('form-alert','error','❌ 儲存失敗：'+e.message);}
   btn.disabled=false; btn.innerHTML='💾 全部儲存';
