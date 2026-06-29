@@ -243,6 +243,22 @@
   .ms-type-chip.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
   .record-phase-bar { font-size:0.78rem; color:var(--pink-dark); padding:5px 14px 0; font-weight:600; }
 
+  /* Medications */
+  .today-meds-wrap { margin:6px 12px 0; }
+  .today-meds-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f3ecfb; border-radius:10px; cursor:pointer; border:1px solid #d9cff0; user-select:none; -webkit-user-select:none; }
+  .today-meds-hdr.expanded { border-radius:10px 10px 0 0; border-bottom:none; }
+  .today-meds-title { font-size:0.85rem; font-weight:700; color:#7c5cbf; }
+  .today-meds-body { background:white; border:1px solid #d9cff0; border-top:none; border-radius:0 0 10px 10px; padding:8px 10px 10px; }
+  .med-card { background:var(--cream); border-radius:10px; padding:10px 12px; margin-bottom:7px; border:1px solid #e0d4f5; }
+  .med-name { font-size:0.88rem; font-weight:700; color:#6a3caf; word-break:break-word; }
+  .med-meta { font-size:0.72rem; color:var(--text-light); margin-top:1px; }
+  .med-times-row { display:flex; gap:5px; flex-wrap:wrap; margin-top:7px; }
+  .med-time-chip { padding:5px 13px; border-radius:20px; font-size:0.78rem; font-weight:600; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; white-space:nowrap; transition:all 0.18s; }
+  .med-time-chip.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; opacity:0.65; cursor:default; }
+  .med-card-actions { display:flex; justify-content:flex-end; gap:4px; margin-top:6px; }
+  .med-act-btn { background:none; border:none; color:#ccc; font-size:0.88rem; cursor:pointer; padding:1px 4px; }
+  .med-act-btn:hover { color:var(--pink-dark); }
+
   /* Edit modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
   .modal-overlay.open { display:block; }
@@ -284,6 +300,21 @@
     <button onclick="changeDate(1)">▶</button>
   </div>
   <div id="record-phase" class="record-phase-bar" style="display:none"></div>
+
+  <!-- 今日用藥 -->
+  <div class="today-meds-wrap" id="today-meds-wrap" style="display:none">
+    <div class="today-meds-hdr expanded" id="today-meds-hdr" onclick="toggleTodayMeds()">
+      <span class="today-meds-title">💊 今日用藥</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <span id="today-meds-count" style="font-size:0.72rem;color:#9c6fcf"></span>
+        <span id="today-meds-arrow" style="font-size:0.75rem;color:#9c6fcf">▼</span>
+      </span>
+    </div>
+    <div class="today-meds-body" id="today-meds-body">
+      <div id="today-meds-list"></div>
+      <button onclick="openMedForm()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 14px;cursor:pointer;margin-top:2px;font-family:inherit">＋ 新增用藥</button>
+    </div>
+  </div>
 
   <!-- 新增記錄表單 -->
   <div class="entry-form">
@@ -573,6 +604,59 @@
   </div>
 </div>
 
+<!-- Medication Modal -->
+<div class="modal-overlay" id="med-overlay" onclick="closeMedForm()"></div>
+<div class="modal-sheet" id="med-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="med-modal-title">💊 新增用藥提醒</div>
+  <div class="modal-field">
+    <label>藥袋照片（讓 AI 自動判讀）</label>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
+      <label for="med-photo" style="flex:1;padding:9px;border:1.5px dashed #c5aaf0;border-radius:9px;text-align:center;cursor:pointer;font-size:0.82rem;color:#9c6fcf;font-weight:600">📷 選擇藥袋照片</label>
+      <input type="file" id="med-photo" accept="image/*" capture="environment" style="display:none" onchange="onMedPhotoSelected(this)">
+      <button id="med-ai-btn" onclick="parseMedFromPhoto()" style="background:#7c5cbf;color:white;border:none;border-radius:9px;padding:9px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit" disabled>✨ AI 判讀</button>
+    </div>
+    <div id="med-photo-preview" style="margin-top:6px;display:none;text-align:center">
+      <img id="med-photo-img" style="max-width:100%;max-height:110px;border-radius:8px;object-fit:contain">
+    </div>
+    <div id="med-ai-result" style="font-size:0.75rem;color:var(--text-light);margin-top:4px;display:none"></div>
+  </div>
+  <div class="modal-field">
+    <label>藥品名稱 *</label>
+    <input type="text" id="med-name" placeholder="Morphine Sulfate" autocomplete="off">
+  </div>
+  <div class="modal-row">
+    <div><label>劑量</label><input type="text" id="med-dosage" placeholder="2cc" autocomplete="off"></div>
+    <div>
+      <label>每日次數</label>
+      <select id="med-freq" onchange="onMedFreqChange()">
+        <option value="1">每天 1 次</option>
+        <option value="2">每天 2 次</option>
+        <option value="3">每天 3 次</option>
+        <option value="4">每天 4 次（q6h）</option>
+        <option value="6">每天 6 次</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-field">
+    <label>服藥時間（可調整）</label>
+    <div id="med-times-editor" style="margin-top:5px"></div>
+  </div>
+  <div class="modal-row">
+    <div><label>開始日期 *</label><input type="date" id="med-start"></div>
+    <div><label>結束日期 *</label><input type="date" id="med-end"></div>
+  </div>
+  <div class="modal-field">
+    <label>備注</label>
+    <input type="text" id="med-notes" placeholder="飯後服用" autocomplete="off">
+  </div>
+  <div id="med-form-alert" class="alert"></div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeMedForm()">取消</button>
+    <button class="modal-btn-save" onclick="saveMed()">儲存</button>
+  </div>
+</div>
+
 <!-- Bottom Nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('record',this)">
@@ -628,6 +712,11 @@ let editingId = null, editingDate = null;
 let milestones = [];
 let selectedMsType = 'phase';
 let editingMilestoneId = null;
+let meds = [];
+let medEditId = null;
+const takenMedDoses = new Set();
+let _medNotifTimers = [];
+let _medPhotoDataUrl = null;
 
 function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -654,6 +743,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadTimeline(currentDate);
   renderSuggestedTags();
   loadMilestones().then(() => updateRecordPhase());
+  loadMeds().then(() => { renderTodayMeds(); scheduleMedNotifications(); requestNotifPermission(); });
 });
 
 function tryInitFirebase() {
@@ -673,7 +763,7 @@ window.showPage = (page, btn) => {
   if(btn) btn.classList.add('active');
   if(page==='history') loadHistory();
   if(page==='course') loadMilestones().then(() => renderCourseList());
-  if(page==='record') updateRecordPhase();
+  if(page==='record') { updateRecordPhase(); renderTodayMeds(); }
 };
 
 window.changeDate = (d) => {
@@ -687,12 +777,14 @@ window.changeDate = (d) => {
   document.getElementById('header-date').textContent=formatDateTW(s);
   loadTimeline(s);
   updateRecordPhase();
+  renderTodayMeds();
 };
 window.onDateChange = () => {
   currentDate=document.getElementById('record-date').value;
   document.getElementById('header-date').textContent=formatDateTW(currentDate);
   loadTimeline(currentDate);
   updateRecordPhase();
+  renderTodayMeds();
 };
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
@@ -1652,6 +1744,333 @@ window.importSettings = () => {
     showAlert('import-alert', 'error', '❌ 代碼無效，請重新從舊裝置複製');
   }
 };
+
+// ── Medications ───────────────────────────────────────────────────────────────
+function suggestMedTimes(n) {
+  const map = {
+    1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','20:00'],
+    4:['08:00','14:00','20:00','02:00'], 6:['06:00','10:00','14:00','18:00','22:00','02:00'],
+  };
+  return map[n] || Array.from({length:n},(_,i)=>`${String(Math.floor(24/n*i)).padStart(2,'0')}:00`);
+}
+
+async function loadMeds() {
+  if (!db) { meds = []; return; }
+  try {
+    const snap = await getDocs(collection(db, 'meds'));
+    meds = [];
+    snap.forEach(d => meds.push({ id: d.id, ...d.data() }));
+  } catch(e) { console.warn('loadMeds:', e); }
+}
+
+function getMedsForDate(date) {
+  return meds.filter(m => m.startDate <= date && m.endDate >= date);
+}
+
+function renderTodayMeds() {
+  const wrap = document.getElementById('today-meds-wrap');
+  const list = document.getElementById('today-meds-list');
+  if (!wrap || !list) return;
+  const todayMeds = getMedsForDate(currentDate);
+  wrap.style.display = (db || todayMeds.length) ? 'block' : 'none';
+  if (!todayMeds.length) {
+    list.innerHTML = '<div style="font-size:0.82rem;color:var(--text-light);padding:4px 0 2px">今天沒有用藥計畫</div>';
+    const countEl = document.getElementById('today-meds-count');
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  const countEl = document.getElementById('today-meds-count');
+  if (countEl) {
+    const taken = todayMeds.reduce((s,m)=>s+(m.times||[]).filter(t=>takenMedDoses.has(`${currentDate}|${m.id}|${t}`)).length, 0);
+    const total = todayMeds.reduce((s,m)=>s+(m.times||[]).length, 0);
+    countEl.textContent = `${taken}/${total} 次`;
+  }
+  list.innerHTML = '';
+  todayMeds.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'med-card';
+    const timesHtml = (m.times||[]).map(t => {
+      const key = `${currentDate}|${m.id}|${t}`;
+      const taken = takenMedDoses.has(key);
+      return `<div class="med-time-chip${taken?' taken':''}" onclick="${taken?'':''  }markMedTaken('${m.id}','${t}')">${t}${taken?' ✓':''}</div>`;
+    }).join('');
+    div.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:6px">
+        <div style="flex:1;min-width:0">
+          <div class="med-name">${escapeHtml(m.name)}</div>
+          <div class="med-meta">${[m.dosage,m.notes].filter(Boolean).map(escapeHtml).join('・')}</div>
+        </div>
+        <button class="med-act-btn" onclick="openMedEdit('${m.id}')" title="編輯">✏️</button>
+        <button class="med-act-btn" onclick="deleteMed('${m.id}')" title="刪除">✕</button>
+      </div>
+      <div class="med-times-row">${timesHtml}</div>`;
+    list.appendChild(div);
+  });
+}
+
+window.markMedTaken = async (medId, time) => {
+  const key = `${currentDate}|${medId}|${time}`;
+  if (takenMedDoses.has(key)) return;
+  takenMedDoses.add(key);
+  renderTodayMeds();
+  if (db) {
+    const med = meds.find(m => m.id === medId);
+    if (med) {
+      try {
+        await addDoc(collection(db, 'logs'), {
+          date: currentDate, time, timestamp: currentDate+'T'+time+':00',
+          category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''}`,
+          severity: null, blood: null, tags: [med.name],
+          createdAt: new Date().toISOString(),
+        });
+        loadTimeline(currentDate);
+      } catch(e) { console.warn('markMedTaken:', e); }
+    }
+  }
+};
+
+window.toggleTodayMeds = () => {
+  const body = document.getElementById('today-meds-body');
+  const arrow = document.getElementById('today-meds-arrow');
+  const hdr = document.getElementById('today-meds-hdr');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '▶' : '▼';
+  hdr.classList.toggle('expanded', !open);
+};
+
+window.openMedForm = () => {
+  medEditId = null;
+  document.getElementById('med-modal-title').textContent = '💊 新增用藥提醒';
+  document.getElementById('med-name').value = '';
+  document.getElementById('med-dosage').value = '';
+  document.getElementById('med-freq').value = '1';
+  document.getElementById('med-start').value = currentDate;
+  document.getElementById('med-end').value = currentDate;
+  document.getElementById('med-notes').value = '';
+  document.getElementById('med-form-alert').className = 'alert';
+  document.getElementById('med-photo-preview').style.display = 'none';
+  document.getElementById('med-ai-result').style.display = 'none';
+  document.getElementById('med-ai-btn').disabled = true;
+  document.getElementById('med-photo').value = '';
+  _medPhotoDataUrl = null;
+  renderMedTimesEditor(suggestMedTimes(1));
+  document.getElementById('med-overlay').classList.add('open');
+  document.getElementById('med-sheet').classList.add('open');
+};
+
+window.openMedEdit = (id) => {
+  const m = meds.find(x => x.id === id);
+  if (!m) return;
+  medEditId = id;
+  document.getElementById('med-modal-title').textContent = '✏️ 編輯用藥提醒';
+  document.getElementById('med-name').value = m.name || '';
+  document.getElementById('med-dosage').value = m.dosage || '';
+  const n = m.times?.length || 1;
+  document.getElementById('med-freq').value = String(n <= 6 ? n : 1);
+  document.getElementById('med-start').value = m.startDate || '';
+  document.getElementById('med-end').value = m.endDate || '';
+  document.getElementById('med-notes').value = m.notes || '';
+  document.getElementById('med-form-alert').className = 'alert';
+  document.getElementById('med-photo-preview').style.display = 'none';
+  document.getElementById('med-ai-result').style.display = 'none';
+  document.getElementById('med-ai-btn').disabled = true;
+  document.getElementById('med-photo').value = '';
+  _medPhotoDataUrl = null;
+  renderMedTimesEditor(m.times || suggestMedTimes(1));
+  document.getElementById('med-overlay').classList.add('open');
+  document.getElementById('med-sheet').classList.add('open');
+};
+
+window.closeMedForm = () => {
+  medEditId = null;
+  document.getElementById('med-overlay').classList.remove('open');
+  document.getElementById('med-sheet').classList.remove('open');
+};
+
+window.onMedFreqChange = () => {
+  renderMedTimesEditor(suggestMedTimes(parseInt(document.getElementById('med-freq').value)));
+};
+
+function renderMedTimesEditor(times) {
+  const el = document.getElementById('med-times-editor');
+  el.innerHTML = times.map((t,i) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
+      <input type="time" value="${t}" id="med-time-${i}" style="flex:1;padding:7px 10px;font-size:0.85rem;border:1.5px solid var(--border);border-radius:9px;background:var(--cream);outline:none;font-family:inherit">
+      <button onclick="removeMedTimeRow(${i})" style="background:none;border:none;color:#ccc;font-size:1.1rem;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    </div>`).join('') +
+    `<button onclick="addMedTimeRow()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 12px;cursor:pointer;margin-top:2px;font-family:inherit">＋ 新增時間</button>`;
+}
+
+function getMedTimesFromEditor() {
+  const times = [];
+  let i = 0;
+  while (document.getElementById(`med-time-${i}`)) {
+    const v = document.getElementById(`med-time-${i}`).value;
+    if (v) times.push(v);
+    i++;
+  }
+  return times;
+}
+
+window.removeMedTimeRow = (i) => {
+  const cur = getMedTimesFromEditor();
+  if (cur.length <= 1) return;
+  cur.splice(i, 1);
+  renderMedTimesEditor(cur);
+};
+
+window.addMedTimeRow = () => {
+  const cur = getMedTimesFromEditor();
+  cur.push('12:00');
+  renderMedTimesEditor(cur);
+};
+
+window.onMedPhotoSelected = (input) => {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _medPhotoDataUrl = e.target.result;
+    document.getElementById('med-photo-img').src = _medPhotoDataUrl;
+    document.getElementById('med-photo-preview').style.display = 'block';
+    document.getElementById('med-ai-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.parseMedFromPhoto = async () => {
+  const key = getOpenAIKey();
+  if (!key) { showAlert('med-form-alert','error','請先設定 OpenAI API Key'); return; }
+  if (!_medPhotoDataUrl) { showAlert('med-form-alert','error','請先選擇照片'); return; }
+  const btn = document.getElementById('med-ai-btn');
+  btn.disabled = true; btn.textContent = '判讀中…';
+  const resultEl = document.getElementById('med-ai-result');
+  resultEl.style.display = 'block'; resultEl.textContent = 'AI 分析藥袋中…';
+  let imageDataUrl = _medPhotoDataUrl;
+  try { imageDataUrl = await resizeImage(_medPhotoDataUrl, 1200); } catch(e) {}
+  const base64 = imageDataUrl.split(',')[1];
+  const mimeType = imageDataUrl.split(';')[0].split(':')[1];
+  const prompt = `這是一張藥袋或藥品包裝照片。請判讀並以 JSON 格式回傳（只回傳 JSON）：
+{"name":"藥品名稱","dosage":"每次劑量如2cc","timesPerDay":幾次數字,"startDate":"YYYY-MM-DD，若無用今天${currentDate}","durationDays":天數數字若無用7,"endDate":"YYYY-MM-DD","notes":"備注如飯後服用若無填空字串"}`;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:400,messages:[
+        {role:'system',content:'只回傳 JSON，不含 markdown。'},
+        {role:'user',content:[
+          {type:'image_url',image_url:{url:`data:${mimeType};base64,${base64}`,detail:'low'}},
+          {type:'text',text:prompt}
+        ]}
+      ]})
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if (parsed.name) document.getElementById('med-name').value = parsed.name;
+    if (parsed.dosage) document.getElementById('med-dosage').value = parsed.dosage;
+    if (parsed.timesPerDay) {
+      const n = Math.min(parseInt(parsed.timesPerDay)||1, 6);
+      document.getElementById('med-freq').value = String(n);
+      renderMedTimesEditor(suggestMedTimes(n));
+    }
+    if (parsed.startDate) document.getElementById('med-start').value = parsed.startDate;
+    if (parsed.endDate) document.getElementById('med-end').value = parsed.endDate;
+    else if (parsed.startDate && parsed.durationDays) {
+      const [y,mo,d] = parsed.startDate.split('-').map(Number);
+      document.getElementById('med-end').value = localDateStr(new Date(Date.UTC(y,mo-1,d+parsed.durationDays-1)));
+    }
+    if (parsed.notes) document.getElementById('med-notes').value = parsed.notes;
+    resultEl.textContent = '✅ AI 判讀完成，請確認後儲存';
+  } catch(e) {
+    resultEl.textContent = '❌ 判讀失敗：' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '✨ AI 判讀';
+};
+
+async function resizeImage(dataUrl, maxPx) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let {width:w, height:h} = img;
+      if (w <= maxPx && h <= maxPx) { resolve(dataUrl); return; }
+      const scale = maxPx / Math.max(w, h);
+      w = Math.round(w*scale); h = Math.round(h*scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+window.saveMed = async () => {
+  if (!db) { showAlert('med-form-alert','error','請先設定 Firebase'); return; }
+  const name = document.getElementById('med-name').value.trim();
+  const dosage = document.getElementById('med-dosage').value.trim();
+  const startDate = document.getElementById('med-start').value;
+  const endDate = document.getElementById('med-end').value;
+  const notes = document.getElementById('med-notes').value.trim();
+  const times = getMedTimesFromEditor().sort();
+  if (!name) { showAlert('med-form-alert','error','請填入藥品名稱'); return; }
+  if (!startDate || !endDate) { showAlert('med-form-alert','error','請填入開始和結束日期'); return; }
+  if (!times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
+  try {
+    const data = { name, dosage, startDate, endDate, times, notes, createdAt: new Date().toISOString() };
+    if (medEditId) {
+      await updateDoc(doc(db,'meds',medEditId), data);
+    } else {
+      await addDoc(collection(db,'meds'), data);
+    }
+    closeMedForm();
+    await loadMeds();
+    renderTodayMeds();
+    scheduleMedNotifications();
+  } catch(e) { showAlert('med-form-alert','error','儲存失敗：'+e.message); }
+};
+
+window.deleteMed = async (id) => {
+  if (!confirm('確定刪除這個用藥提醒？')) return;
+  try {
+    await deleteDoc(doc(db,'meds',id));
+    await loadMeds();
+    renderTodayMeds();
+    scheduleMedNotifications();
+  } catch(e) { alert('刪除失敗：'+e.message); }
+};
+
+async function requestNotifPermission() {
+  if (!('Notification' in window) || Notification.permission !== 'default') return;
+  await Notification.requestPermission();
+}
+
+function scheduleMedNotifications() {
+  _medNotifTimers.forEach(t => clearTimeout(t));
+  _medNotifTimers = [];
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const today = todayStr();
+  const now = new Date();
+  getMedsForDate(today).forEach(med => {
+    (med.times||[]).forEach(timeStr => {
+      const [h,m] = timeStr.split(':').map(Number);
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+      const delay = target - now;
+      if (delay > 0 && delay < 86400000) {
+        _medNotifTimers.push(setTimeout(() => {
+          if (!takenMedDoses.has(`${today}|${med.id}|${timeStr}`)) {
+            new Notification('💊 用藥提醒', {
+              body: `${timeStr} 該服 ${med.name}${med.dosage?' '+med.dosage:''}`,
+              tag: `${today}|${med.id}|${timeStr}`,
+            });
+          }
+        }, delay));
+      }
+    });
+  });
+}
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 function showAlert(id,type,msg) {
