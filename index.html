@@ -260,6 +260,10 @@
   .med-taken-btn.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; }
   .med-act-btn { background:none; border:none; color:#ccc; font-size:0.88rem; cursor:pointer; padding:1px 4px; }
   .med-act-btn:hover { color:var(--pink-dark); }
+  .med-sched-chip { padding:6px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; font-family:inherit; }
+  .med-sched-chip.active { background:#f3ecfb; border-color:#9c6fcf; color:#6a3caf; font-weight:700; }
+  .med-dow-chip { padding:6px 10px; border-radius:50%; min-width:34px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; text-align:center; }
+  .med-dow-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
 
   /* Edit modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
@@ -630,14 +634,42 @@
   <div class="modal-row">
     <div><label>劑量</label><input type="text" id="med-dosage" placeholder="2cc" autocomplete="off"></div>
     <div>
-      <label>每日次數</label>
+      <label>每次服用幾次</label>
       <select id="med-freq" onchange="onMedFreqChange()">
-        <option value="1">每天 1 次</option>
-        <option value="2">每天 2 次</option>
-        <option value="3">每天 3 次</option>
-        <option value="4">每天 4 次（q6h）</option>
-        <option value="6">每天 6 次</option>
+        <option value="1">1 次</option>
+        <option value="2">2 次</option>
+        <option value="3">3 次</option>
+        <option value="4">4 次（q6h）</option>
+        <option value="6">6 次</option>
       </select>
+    </div>
+  </div>
+  <div class="modal-field">
+    <label>服藥週期</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-sched-chip active" data-sched="daily" onclick="selectMedSched(this)">每天</button>
+      <button class="med-sched-chip" data-sched="weekdays" onclick="selectMedSched(this)">每週指定日</button>
+      <button class="med-sched-chip" data-sched="interval" onclick="selectMedSched(this)">每隔幾天</button>
+    </div>
+  </div>
+  <div id="med-weekdays-picker" class="modal-field" style="display:none">
+    <label>選擇星期（可複選）</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-dow-chip" data-dow="0" onclick="toggleMedDow(this)">日</button>
+      <button class="med-dow-chip" data-dow="1" onclick="toggleMedDow(this)">一</button>
+      <button class="med-dow-chip" data-dow="2" onclick="toggleMedDow(this)">二</button>
+      <button class="med-dow-chip" data-dow="3" onclick="toggleMedDow(this)">三</button>
+      <button class="med-dow-chip" data-dow="4" onclick="toggleMedDow(this)">四</button>
+      <button class="med-dow-chip" data-dow="5" onclick="toggleMedDow(this)">五</button>
+      <button class="med-dow-chip" data-dow="6" onclick="toggleMedDow(this)">六</button>
+    </div>
+  </div>
+  <div id="med-interval-picker" class="modal-field" style="display:none">
+    <label>間隔天數</label>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+      <span style="font-size:0.85rem;color:var(--text-light)">每隔</span>
+      <input type="number" id="med-interval-days" value="2" min="1" max="30" style="width:72px;padding:7px 10px;font-size:0.9rem;border:1.5px solid var(--border);border-radius:9px;background:var(--cream);outline:none;font-family:inherit">
+      <span style="font-size:0.85rem;color:var(--text-light)">天（從開始日算起）</span>
     </div>
   </div>
   <div class="modal-field">
@@ -716,6 +748,7 @@ let selectedMsType = 'phase';
 let editingMilestoneId = null;
 let meds = [];
 let medEditId = null;
+let selectedMedSched = 'daily';
 const takenMedDoses = new Map(); // key → Firestore log doc ID (null while saving)
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
@@ -1766,7 +1799,31 @@ async function loadMeds() {
 }
 
 function getMedsForDate(date) {
-  return meds.filter(m => m.startDate <= date && m.endDate >= date);
+  return meds.filter(m => {
+    if (m.startDate > date || m.endDate < date) return false;
+    const sched = m.scheduleType || 'daily';
+    if (sched === 'weekdays') {
+      const dow = new Date(date + 'T00:00:00').getDay(); // 0=Sun
+      return (m.weekdays || []).includes(dow);
+    }
+    if (sched === 'interval') {
+      const [y1,mo1,d1] = m.startDate.split('-').map(Number);
+      const [y2,mo2,d2] = date.split('-').map(Number);
+      const diff = Math.round((Date.UTC(y2,mo2-1,d2) - Date.UTC(y1,mo1-1,d1)) / 86400000);
+      return diff >= 0 && diff % (m.intervalDays || 2) === 0;
+    }
+    return true;
+  });
+}
+
+function formatMedSchedule(m) {
+  const sched = m.scheduleType || 'daily';
+  if (sched === 'weekdays') {
+    const DOW = ['日','一','二','三','四','五','六'];
+    return '週' + (m.weekdays||[]).sort().map(d => DOW[d]).join('');
+  }
+  if (sched === 'interval') return (m.intervalDays||2) === 2 ? '隔天' : `每${m.intervalDays}天`;
+  return '';
 }
 
 function renderTodayMeds() {
@@ -1800,13 +1857,14 @@ function renderTodayMeds() {
   }
 
   // Edit/delete buttons at top (one per med, not per time)
-  const mgmtHtml = todayMeds.map(m =>
-    `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
-      ${escapeHtml(m.name)}
+  const mgmtHtml = todayMeds.map(m => {
+    const sl = formatMedSchedule(m);
+    return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
+      ${escapeHtml(m.name)}${sl?`<span style="font-size:0.68rem;color:#9c6fcf">(${sl})</span>`:''}
       <button class="med-act-btn" onclick="openMedEdit('${m.id}')">✏️</button>
       <button class="med-act-btn" onclick="deleteMed('${m.id}')">✕</button>
-    </span>`
-  ).join('');
+    </span>`;
+  }).join('');
 
   list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
 
@@ -1884,6 +1942,15 @@ window.toggleTodayMeds = () => {
   hdr.classList.toggle('expanded', !open);
 };
 
+function resetMedSchedUI(sched, weekdays, intervalDays) {
+  selectedMedSched = sched || 'daily';
+  document.querySelectorAll('.med-sched-chip').forEach(b => b.classList.toggle('active', b.dataset.sched === selectedMedSched));
+  document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
+  document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
+  document.querySelectorAll('.med-dow-chip').forEach(b => b.classList.toggle('active', (weekdays||[]).includes(parseInt(b.dataset.dow))));
+  document.getElementById('med-interval-days').value = String(intervalDays || 2);
+}
+
 window.openMedForm = () => {
   medEditId = null;
   document.getElementById('med-modal-title').textContent = '💊 新增用藥提醒';
@@ -1899,6 +1966,7 @@ window.openMedForm = () => {
   document.getElementById('med-ai-btn').disabled = true;
   document.getElementById('med-photo').value = '';
   _medPhotoDataUrl = null;
+  resetMedSchedUI('daily', [], 2);
   renderMedTimesEditor(suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
   document.getElementById('med-sheet').classList.add('open');
@@ -1922,6 +1990,7 @@ window.openMedEdit = (id) => {
   document.getElementById('med-ai-btn').disabled = true;
   document.getElementById('med-photo').value = '';
   _medPhotoDataUrl = null;
+  resetMedSchedUI(m.scheduleType, m.weekdays, m.intervalDays);
   renderMedTimesEditor(m.times || suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
   document.getElementById('med-sheet').classList.add('open');
@@ -1932,6 +2001,20 @@ window.closeMedForm = () => {
   document.getElementById('med-overlay').classList.remove('open');
   document.getElementById('med-sheet').classList.remove('open');
 };
+
+window.selectMedSched = (btn) => {
+  document.querySelectorAll('.med-sched-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMedSched = btn.dataset.sched;
+  document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
+  document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
+};
+
+window.toggleMedDow = (btn) => { btn.classList.toggle('active'); };
+
+function getMedWeekdays() {
+  return [...document.querySelectorAll('.med-dow-chip.active')].map(b => parseInt(b.dataset.dow));
+}
 
 window.onMedFreqChange = () => {
   renderMedTimesEditor(suggestMedTimes(parseInt(document.getElementById('med-freq').value)));
@@ -2060,11 +2143,15 @@ window.saveMed = async () => {
   const endDate = document.getElementById('med-end').value;
   const notes = document.getElementById('med-notes').value.trim();
   const times = getMedTimesFromEditor().sort();
+  const scheduleType = selectedMedSched;
+  const weekdays = scheduleType === 'weekdays' ? getMedWeekdays() : [];
+  const intervalDays = scheduleType === 'interval' ? (parseInt(document.getElementById('med-interval-days').value) || 2) : null;
   if (!name) { showAlert('med-form-alert','error','請填入藥品名稱'); return; }
   if (!startDate || !endDate) { showAlert('med-form-alert','error','請填入開始和結束日期'); return; }
   if (!times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
+  if (scheduleType === 'weekdays' && !weekdays.length) { showAlert('med-form-alert','error','請至少選擇一個星期幾'); return; }
   try {
-    const data = { name, dosage, startDate, endDate, times, notes, createdAt: new Date().toISOString() };
+    const data = { name, dosage, scheduleType, weekdays, intervalDays, startDate, endDate, times, notes, createdAt: new Date().toISOString() };
     if (medEditId) {
       await updateDoc(doc(db,'meds',medEditId), data);
     } else {
