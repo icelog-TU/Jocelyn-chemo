@@ -716,7 +716,7 @@ let selectedMsType = 'phase';
 let editingMilestoneId = null;
 let meds = [];
 let medEditId = null;
-const takenMedDoses = new Set();
+const takenMedDoses = new Map(); // key → Firestore log doc ID (null while saving)
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
 
@@ -1834,25 +1834,42 @@ function renderTodayMeds() {
 
 window.markMedTaken = async (medId, time) => {
   const key = `${currentDate}|${medId}|${time}`;
+
   if (takenMedDoses.has(key)) {
+    // Uncheck: remove visual state immediately, then delete Firestore log
+    const logId = takenMedDoses.get(key);
     takenMedDoses.delete(key);
     renderTodayMeds();
+    if (db && logId) {
+      try {
+        await deleteDoc(doc(db, 'logs', logId));
+        loadTimeline(currentDate);
+      } catch(e) { console.warn('deleteMedLog:', e); }
+    }
     return;
   }
-  takenMedDoses.add(key);
+
+  // Check: update visual state immediately (optimistic), then write to Firestore
+  takenMedDoses.set(key, null);
   renderTodayMeds();
+
   if (db) {
     const med = meds.find(m => m.id === medId);
     if (med) {
       try {
-        await addDoc(collection(db, 'logs'), {
+        const ref = await addDoc(collection(db, 'logs'), {
           date: currentDate, time, timestamp: currentDate+'T'+time+':00',
           category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''}`,
           severity: null, blood: null, tags: [med.name],
           createdAt: new Date().toISOString(),
         });
+        takenMedDoses.set(key, ref.id); // store doc ID for possible deletion later
         loadTimeline(currentDate);
-      } catch(e) { console.warn('markMedTaken:', e); }
+      } catch(e) {
+        console.warn('markMedTaken:', e);
+        takenMedDoses.delete(key); // rollback on error
+        renderTodayMeds();
+      }
     }
   }
 };
