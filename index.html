@@ -249,13 +249,15 @@
   .today-meds-hdr.expanded { border-radius:10px 10px 0 0; border-bottom:none; }
   .today-meds-title { font-size:0.85rem; font-weight:700; color:#7c5cbf; }
   .today-meds-body { background:white; border:1px solid #d9cff0; border-top:none; border-radius:0 0 10px 10px; padding:8px 10px 10px; }
-  .med-card { background:var(--cream); border-radius:10px; padding:10px 12px; margin-bottom:7px; border:1px solid #e0d4f5; }
-  .med-name { font-size:0.88rem; font-weight:700; color:#6a3caf; word-break:break-word; }
-  .med-meta { font-size:0.72rem; color:var(--text-light); margin-top:1px; }
-  .med-times-row { display:flex; gap:5px; flex-wrap:wrap; margin-top:7px; }
-  .med-time-chip { padding:5px 13px; border-radius:20px; font-size:0.78rem; font-weight:600; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; white-space:nowrap; transition:all 0.18s; }
-  .med-time-chip.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; opacity:0.65; cursor:default; }
-  .med-card-actions { display:flex; justify-content:flex-end; gap:4px; margin-top:6px; }
+  .med-time-slot { background:white; border-radius:10px; padding:10px 13px; margin-bottom:7px; border:1px solid #e0d4f5; }
+  .med-slot-time { font-size:1.05rem; font-weight:800; color:#6a3caf; margin-bottom:7px; letter-spacing:0.3px; }
+  .med-slot-drug { display:flex; align-items:center; gap:8px; padding:5px 0; }
+  .med-slot-drug + .med-slot-drug { border-top:1px solid #f3eeff; }
+  .med-slot-drug-info { flex:1; min-width:0; }
+  .med-slot-drug-name { font-size:0.85rem; font-weight:600; color:var(--text); word-break:break-word; }
+  .med-slot-drug-dose { font-size:0.72rem; color:var(--text-light); margin-top:1px; }
+  .med-taken-btn { padding:5px 13px; border-radius:20px; font-size:0.75rem; font-weight:700; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; white-space:nowrap; transition:all 0.15s; flex-shrink:0; font-family:inherit; }
+  .med-taken-btn.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; }
   .med-act-btn { background:none; border:none; color:#ccc; font-size:0.88rem; cursor:pointer; padding:1px 4px; }
   .med-act-btn:hover { color:var(--pink-dark); }
 
@@ -1779,38 +1781,64 @@ function renderTodayMeds() {
     if (countEl) countEl.textContent = '';
     return;
   }
+
+  // Build time → [med, ...] map (time-first view)
+  const timeMap = {};
+  todayMeds.forEach(med => {
+    (med.times || []).forEach(t => {
+      if (!timeMap[t]) timeMap[t] = [];
+      timeMap[t].push(med);
+    });
+  });
+  const sortedTimes = Object.keys(timeMap).sort();
+
   const countEl = document.getElementById('today-meds-count');
   if (countEl) {
-    const taken = todayMeds.reduce((s,m)=>s+(m.times||[]).filter(t=>takenMedDoses.has(`${currentDate}|${m.id}|${t}`)).length, 0);
-    const total = todayMeds.reduce((s,m)=>s+(m.times||[]).length, 0);
+    const taken = sortedTimes.reduce((s,t) => s + timeMap[t].filter(m => takenMedDoses.has(`${currentDate}|${m.id}|${t}`)).length, 0);
+    const total = sortedTimes.reduce((s,t) => s + timeMap[t].length, 0);
     countEl.textContent = `${taken}/${total} 次`;
   }
-  list.innerHTML = '';
-  todayMeds.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'med-card';
-    const timesHtml = (m.times||[]).map(t => {
-      const key = `${currentDate}|${m.id}|${t}`;
+
+  // Edit/delete buttons at top (one per med, not per time)
+  const mgmtHtml = todayMeds.map(m =>
+    `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
+      ${escapeHtml(m.name)}
+      <button class="med-act-btn" onclick="openMedEdit('${m.id}')">✏️</button>
+      <button class="med-act-btn" onclick="deleteMed('${m.id}')">✕</button>
+    </span>`
+  ).join('');
+
+  list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
+
+  sortedTimes.forEach(t => {
+    const slot = document.createElement('div');
+    slot.className = 'med-time-slot';
+    const drugsHtml = timeMap[t].map(med => {
+      const key = `${currentDate}|${med.id}|${t}`;
       const taken = takenMedDoses.has(key);
-      return `<div class="med-time-chip${taken?' taken':''}" onclick="${taken?'':''  }markMedTaken('${m.id}','${t}')">${t}${taken?' ✓':''}</div>`;
-    }).join('');
-    div.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:6px">
-        <div style="flex:1;min-width:0">
-          <div class="med-name">${escapeHtml(m.name)}</div>
-          <div class="med-meta">${[m.dosage,m.notes].filter(Boolean).map(escapeHtml).join('・')}</div>
+      const meta = [med.dosage, med.notes].filter(Boolean).map(escapeHtml).join('・');
+      return `<div class="med-slot-drug">
+        <div class="med-slot-drug-info">
+          <div class="med-slot-drug-name">${escapeHtml(med.name)}</div>
+          ${meta ? `<div class="med-slot-drug-dose">${meta}</div>` : ''}
         </div>
-        <button class="med-act-btn" onclick="openMedEdit('${m.id}')" title="編輯">✏️</button>
-        <button class="med-act-btn" onclick="deleteMed('${m.id}')" title="刪除">✕</button>
-      </div>
-      <div class="med-times-row">${timesHtml}</div>`;
-    list.appendChild(div);
+        <button class="med-taken-btn${taken?' taken':''}" onclick="markMedTaken('${med.id}','${t}')">
+          ${taken ? '✓ 已服' : '服用'}
+        </button>
+      </div>`;
+    }).join('');
+    slot.innerHTML = `<div class="med-slot-time">${t}</div>${drugsHtml}`;
+    list.appendChild(slot);
   });
 }
 
 window.markMedTaken = async (medId, time) => {
   const key = `${currentDate}|${medId}|${time}`;
-  if (takenMedDoses.has(key)) return;
+  if (takenMedDoses.has(key)) {
+    takenMedDoses.delete(key);
+    renderTodayMeds();
+    return;
+  }
   takenMedDoses.add(key);
   renderTodayMeds();
   if (db) {
