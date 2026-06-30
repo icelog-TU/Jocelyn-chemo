@@ -270,6 +270,8 @@
   .med-dow-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
   .med-meal-chip { padding:6px 12px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; }
   .med-meal-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
+  .hist-selected { background:#f0e8ff !important; outline:2px solid #9c6fcf; }
+  .hist-select-bar { position:fixed; bottom:57px; left:0; right:0; background:#7c5cbf; color:white; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; z-index:200; box-shadow:0 -2px 12px rgba(100,50,150,0.25); }
 
   /* Edit modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
@@ -455,6 +457,13 @@
     </div>
   </div>
   <div class="hist-list" id="hist-list"></div>
+  <div class="hist-select-bar" id="hist-select-bar" style="display:none">
+    <span id="hist-select-count" style="font-size:0.9rem;font-weight:600">已選 0 筆</span>
+    <div style="display:flex;gap:10px">
+      <button onclick="cancelHistSelect()" style="padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.6);background:transparent;color:white;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit">取消</button>
+      <button onclick="deleteHistSelected()" style="padding:6px 14px;border-radius:20px;border:none;background:white;color:#7c5cbf;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">刪除</button>
+    </div>
+  </div>
 </div>
 
 <!-- AI 頁 -->
@@ -776,6 +785,8 @@ let allTags = [];
 let activeTagFilter = '';
 let activeCatFilter = '';
 let histSearchQuery = '';
+let histSelectMode = false;
+const histSelectedIds = new Set();
 let editingId = null, editingDate = null;
 let milestones = [];
 let selectedMsType = 'phase';
@@ -1301,9 +1312,10 @@ function renderHistList() {
   const countLine = document.createElement('div');
   countLine.style.cssText = 'font-size:0.72rem;color:var(--text-light);padding:4px 2px 8px;display:flex;justify-content:space-between;align-items:center';
   const isFiltered = (activeCatFilter || activeTagFilter || histSearchQuery) && shown < total;
+  const selectBtnHtml = `<button onclick="toggleHistSelectMode()" style="font-size:0.72rem;color:${histSelectMode?'#7c5cbf':'var(--text-light)'};background:none;border:1px solid ${histSelectMode?'#c5aaf0':'var(--border)'};border-radius:12px;padding:2px 9px;cursor:pointer;font-family:inherit;font-weight:${histSelectMode?'700':'400'}">${histSelectMode?'✓ 選擇中':'選擇'}</button>`;
   countLine.innerHTML = isFiltered
-    ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆</span><button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除所有篩選</button>`
-    : `<span>共 <b>${total}</b> 筆記錄</span>`;
+    ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆 <button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除</button></span>${selectBtnHtml}`
+    : `<span>共 <b>${total}</b> 筆記錄</span>${selectBtnHtml}`;
 
   const byDate = {};
   all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
@@ -1351,8 +1363,23 @@ function renderHistList() {
 
     dayMs.forEach(m => body.appendChild(buildMilestoneHistCard(m)));
     entries.forEach(e=>{
-      try { body.appendChild(buildLogCard(e.id, e, histSearchQuery)); }
-      catch(err) { console.warn('render error', e.id, err); }
+      try {
+        const card = buildLogCard(e.id, e, histSearchQuery);
+        if (histSelectMode) {
+          card.classList.toggle('hist-selected', histSelectedIds.has(e.id));
+          card.style.position = 'relative';
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:absolute;inset:0;z-index:5;cursor:pointer;border-radius:inherit';
+          const eId = e.id;
+          overlay.onclick = () => {
+            histSelectedIds.has(eId) ? histSelectedIds.delete(eId) : histSelectedIds.add(eId);
+            card.classList.toggle('hist-selected', histSelectedIds.has(eId));
+            updateHistSelectBar();
+          };
+          card.appendChild(overlay);
+        }
+        body.appendChild(card);
+      } catch(err) { console.warn('render error', e.id, err); }
     });
 
     sec.appendChild(hdr);
@@ -1360,6 +1387,39 @@ function renderHistList() {
     list.appendChild(sec);
   });
 }
+
+window.toggleHistSelectMode = () => {
+  histSelectMode = !histSelectMode;
+  if (!histSelectMode) histSelectedIds.clear();
+  updateHistSelectBar();
+  renderHistList();
+};
+window.cancelHistSelect = () => {
+  histSelectMode = false;
+  histSelectedIds.clear();
+  updateHistSelectBar();
+  renderHistList();
+};
+function updateHistSelectBar() {
+  const bar = document.getElementById('hist-select-bar');
+  if (!bar) return;
+  bar.style.display = histSelectMode ? 'flex' : 'none';
+  const cnt = document.getElementById('hist-select-count');
+  if (cnt) cnt.textContent = `已選 ${histSelectedIds.size} 筆`;
+}
+window.deleteHistSelected = async () => {
+  if (!histSelectedIds.size) return;
+  if (!confirm(`確定刪除選取的 ${histSelectedIds.size} 筆記錄？`)) return;
+  const ids = [...histSelectedIds];
+  histSelectMode = false;
+  histSelectedIds.clear();
+  updateHistSelectBar();
+  try {
+    await Promise.all(ids.map(id => deleteDoc(doc(db,'logs',id))));
+    loadTimeline(currentDate);
+    loadHistory();
+  } catch(e) { alert('刪除失敗：' + e.message); }
+};
 
 window.clearAllHistFilters = () => {
   activeTagFilter = '';
@@ -1869,10 +1929,12 @@ function formatMedSchedule(m) {
 async function syncTakenMeds(date) {
   if (!db) return;
   try {
-    const snap = await getDocs(query(collection(db,'logs'), where('date','==',date), where('category','==','用藥')));
+    // Single where clause to avoid composite index requirement; filter category client-side
+    const snap = await getDocs(query(collection(db,'logs'), where('date','==',date)));
     const dayMeds = getMedsForDate(date);
     snap.forEach(d => {
       const log = d.data();
+      if (log.category !== '用藥') return;
       if (log._medId && log._medTime) {
         // Precise match via stored medId
         const key = `${date}|${log._medId}|${log._medTime}`;
