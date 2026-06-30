@@ -699,6 +699,8 @@
       <button class="med-meal-chip" data-meal="晚餐前" onclick="toggleMedMeal(this)">晚餐前</button>
       <button class="med-meal-chip" data-meal="晚餐後" onclick="toggleMedMeal(this)">晚餐後</button>
       <button class="med-meal-chip" data-meal="睡前" onclick="toggleMedMeal(this)">睡前</button>
+      <button class="med-meal-chip" data-meal="入睡前" onclick="toggleMedMeal(this)">入睡前</button>
+      <button class="med-meal-chip" data-meal="睡眠中" onclick="toggleMedMeal(this)">睡眠中</button>
     </div>
   </div>
   <div class="modal-row">
@@ -760,7 +762,7 @@ const SEV_CATS = new Set(['症狀','神經毒性']);
 const BLOOD_CATS = new Set(['檢查']);
 const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉', spine:'💉' };
 const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日', spine:'背針' };
-const MEAL_ORDER = ['早餐前','早餐後','午餐前','午餐後','晚餐前','晚餐後','睡前'];
+const MEAL_ORDER = ['早餐前','早餐後','午餐前','午餐後','晚餐前','晚餐後','睡前','入睡前','睡眠中'];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let db = null;
