@@ -689,9 +689,10 @@
   </div>
   <div class="modal-field">
     <label>時間類型</label>
-    <div style="display:flex;gap:6px;margin-top:5px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
       <button class="med-sched-chip active" data-timing="fixed" onclick="selectMedTimingType(this)">固定時間</button>
       <button class="med-sched-chip" data-timing="meal" onclick="selectMedTimingType(this)">依餐次</button>
+      <button class="med-sched-chip" data-timing="prn" onclick="selectMedTimingType(this)">PRN 按需</button>
     </div>
   </div>
   <div id="med-fixed-time-section" class="modal-field">
@@ -710,6 +711,11 @@
       <button class="med-meal-chip" data-meal="睡前" onclick="toggleMedMeal(this)">睡前</button>
       <button class="med-meal-chip" data-meal="入睡前" onclick="toggleMedMeal(this)">入睡前</button>
       <button class="med-meal-chip" data-meal="睡眠中" onclick="toggleMedMeal(this)">睡眠中</button>
+    </div>
+  </div>
+  <div id="med-prn-note" class="modal-field" style="display:none">
+    <div style="background:#f3eeff;border-radius:9px;padding:9px 12px;font-size:0.8rem;color:#6a3caf;line-height:1.6">
+      按需用藥（PRN）：不設固定時間，有需要時手動按「喂藥」即可記錄當下時間。今天可多次喂藥，每次都會分別記錄。
     </div>
   </div>
   <div class="modal-row">
@@ -796,7 +802,8 @@ let medEditId = null;
 let selectedMedSched = 'daily';
 let selectedMedTimingType = 'fixed';
 let medNoEnd = false;
-const takenMedDoses = new Map(); // key → Firestore log doc ID (null while saving)
+const takenMedDoses = new Map(); // key: "date|medId|slotKey" → Firestore log doc ID
+const prnDoses = new Map();     // key: "date|medId" → [{time, logId}, ...]
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
 
@@ -1935,12 +1942,18 @@ async function syncTakenMeds(date) {
     snap.forEach(d => {
       const log = d.data();
       if (log.category !== '用藥') return;
-      if (log._medId && log._medTime) {
-        // Precise match via stored medId
+      if (log._medId && log._medTime === 'prn') {
+        // PRN dose — can have multiple per med per day
+        const key = `${date}|${log._medId}`;
+        if (!prnDoses.has(key)) prnDoses.set(key, []);
+        const arr = prnDoses.get(key);
+        if (!arr.find(x => x.logId === d.id)) arr.push({ time: log.time, logId: d.id });
+      } else if (log._medId && log._medTime) {
+        // Scheduled dose
         const key = `${date}|${log._medId}|${log._medTime}`;
         if (!takenMedDoses.has(key)) takenMedDoses.set(key, d.id);
       } else {
-        // Fallback: match by med name prefix + time (for entries created before this field was added)
+        // Fallback for old entries without _medId/_medTime
         const med = dayMeds.find(m => (log.content||'').startsWith(m.name) && (m.times||[]).includes(log.time));
         if (med) {
           const key = `${date}|${med.id}|${log.time}`;
@@ -1948,6 +1961,8 @@ async function syncTakenMeds(date) {
         }
       }
     });
+    // Sort PRN doses chronologically
+    prnDoses.forEach(arr => arr.sort((a,b) => a.time.localeCompare(b.time)));
   } catch(e) { console.warn('syncTakenMeds:', e); }
 }
 
@@ -1964,16 +1979,19 @@ function renderTodayMeds() {
     return;
   }
 
+  // Separate PRN meds from scheduled meds
+  const prnMeds = todayMeds.filter(m => (m.timingType||'fixed') === 'prn');
+  const schedMeds = todayMeds.filter(m => (m.timingType||'fixed') !== 'prn');
+
   // Build slotKey → [med, ...] map (meal slots or clock times)
   const slotMap = {};
-  todayMeds.forEach(med => {
+  schedMeds.forEach(med => {
     const keys = (med.timingType||'fixed') === 'meal' ? (med.mealSlots||[]) : (med.times||[]);
     keys.forEach(k => {
       if (!slotMap[k]) slotMap[k] = [];
       slotMap[k].push(med);
     });
   });
-  // Meal slots in canonical order first, then clock times sorted
   const mealKeys = MEAL_ORDER.filter(k => slotMap[k]);
   const timeKeys = Object.keys(slotMap).filter(k => !MEAL_ORDER.includes(k)).sort();
   const sortedKeys = [...mealKeys, ...timeKeys];
@@ -1982,14 +2000,16 @@ function renderTodayMeds() {
   if (countEl) {
     const taken = sortedKeys.reduce((s,k) => s + slotMap[k].filter(m => takenMedDoses.has(`${currentDate}|${m.id}|${k}`)).length, 0);
     const total = sortedKeys.reduce((s,k) => s + slotMap[k].length, 0);
-    countEl.textContent = `${taken}/${total} 次`;
+    const prnTotal = prnMeds.reduce((s,m) => s + (prnDoses.get(`${currentDate}|${m.id}`) || []).length, 0);
+    countEl.textContent = prnTotal ? `${taken}/${total} 次・PRN ${prnTotal} 次` : `${taken}/${total} 次`;
   }
 
-  // Edit/delete buttons at top (one per med, not per slot)
+  // Edit/delete management row
   const mgmtHtml = todayMeds.map(m => {
     const sl = formatMedSchedule(m);
+    const prnBadge = (m.timingType||'fixed') === 'prn' ? '<span style="font-size:0.65rem;background:#f3eeff;color:#7c5cbf;border-radius:8px;padding:1px 5px;margin-left:2px">PRN</span>' : '';
     return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
-      ${escapeHtml(m.name)}${sl?`<span style="font-size:0.68rem;color:#9c6fcf">(${sl})</span>`:''}
+      ${escapeHtml(m.name)}${prnBadge}${sl?`<span style="font-size:0.68rem;color:#9c6fcf">(${sl})</span>`:''}
       <button class="med-act-btn" onclick="openMedEdit('${m.id}')">✏️</button>
       <button class="med-act-btn" onclick="deleteMed('${m.id}')">✕</button>
     </span>`;
@@ -1997,6 +2017,7 @@ function renderTodayMeds() {
 
   list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
 
+  // Scheduled med rows
   const rowsHtml = sortedKeys.map(slotKey => {
     const chipsHtml = slotMap[slotKey].map(med => {
       const key = `${currentDate}|${med.id}|${slotKey}`;
@@ -2006,6 +2027,33 @@ function renderTodayMeds() {
     return `<div class="med-row"><span class="med-row-time">${slotKey}</span><div class="med-row-drugs">${chipsHtml}</div></div>`;
   }).join('');
   list.innerHTML += rowsHtml;
+
+  // PRN section
+  if (prnMeds.length) {
+    const prnDiv = document.createElement('div');
+    prnDiv.style.cssText = 'margin-top:8px;padding-top:7px;border-top:1px dashed #e0d4f5';
+    prnDiv.innerHTML = '<div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.5px;margin-bottom:5px">PRN 按需用藥</div>';
+    prnMeds.forEach(med => {
+      const key = `${currentDate}|${med.id}`;
+      const doses = prnDoses.get(key) || [];
+      const doseTagsHtml = doses.map((d, i) =>
+        `<span style="font-size:0.72rem;color:#6a3caf;background:#f3eeff;border-radius:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px">
+          ${d.time}
+          <button onclick="deletePrnDose('${med.id}',${i})" style="background:none;border:none;color:#bbb;font-size:0.7rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
+        </span>`
+      ).join('');
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #f3eeff';
+      row.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text)">${escapeHtml(med.name)}${med.dosage?`<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:5px">${escapeHtml(med.dosage)}</span>`:''}</div>
+          ${doses.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${doseTagsHtml}</div>` : ''}
+        </div>
+        <button onclick="markPrnTaken('${med.id}')" style="padding:4px 11px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1.5px solid #c5aaf0;background:white;color:#7c5cbf;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">喂藥</button>`;
+      prnDiv.appendChild(row);
+    });
+    list.appendChild(prnDiv);
+  }
 }
 
 window.markMedTaken = async (medId, slotKey) => {
@@ -2048,6 +2096,52 @@ window.markMedTaken = async (medId, slotKey) => {
         renderTodayMeds();
       }
     }
+  }
+};
+
+window.markPrnTaken = async (medId) => {
+  const med = meds.find(m => m.id === medId);
+  if (!med) return;
+  const now = new Date();
+  const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const key = `${currentDate}|${medId}`;
+  if (!prnDoses.has(key)) prnDoses.set(key, []);
+  const arr = prnDoses.get(key);
+  const idx = arr.length;
+  arr.push({ time: actualTime, logId: null });
+  renderTodayMeds();
+  if (db) {
+    try {
+      const ref = await addDoc(collection(db, 'logs'), {
+        date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
+        category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''} (PRN)`,
+        severity: null, blood: null, tags: [med.name],
+        _medId: medId, _medTime: 'prn',
+        createdAt: new Date().toISOString(),
+      });
+      arr[idx].logId = ref.id;
+      loadTimeline(currentDate);
+    } catch(e) {
+      console.warn('markPrnTaken:', e);
+      arr.splice(idx, 1);
+      renderTodayMeds();
+    }
+  }
+};
+
+window.deletePrnDose = async (medId, idx) => {
+  const key = `${currentDate}|${medId}`;
+  const arr = prnDoses.get(key);
+  if (!arr || idx < 0 || idx >= arr.length) return;
+  const { logId } = arr[idx];
+  arr.splice(idx, 1);
+  if (arr.length === 0) prnDoses.delete(key);
+  renderTodayMeds();
+  if (db && logId) {
+    try {
+      await deleteDoc(doc(db, 'logs', logId));
+      loadTimeline(currentDate);
+    } catch(e) { console.warn('deletePrnDose:', e); }
   }
 };
 
@@ -2149,18 +2243,22 @@ window.selectMedTimingType = (btn) => {
   document.querySelectorAll('[data-timing]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedMedTimingType = btn.dataset.timing;
-  document.getElementById('med-fixed-time-section').style.display = selectedMedTimingType === 'fixed' ? 'block' : 'none';
-  document.getElementById('med-meal-section').style.display = selectedMedTimingType === 'meal' ? 'block' : 'none';
-  document.getElementById('med-freq-wrap').style.display = selectedMedTimingType === 'fixed' ? '' : 'none';
+  _applyTimingTypeUI();
 };
 
 function applyMedTimingType(type, mealSlots) {
   selectedMedTimingType = type || 'fixed';
   document.querySelectorAll('[data-timing]').forEach(b => b.classList.toggle('active', b.dataset.timing === selectedMedTimingType));
-  document.getElementById('med-fixed-time-section').style.display = selectedMedTimingType === 'fixed' ? 'block' : 'none';
-  document.getElementById('med-meal-section').style.display = selectedMedTimingType === 'meal' ? 'block' : 'none';
-  document.getElementById('med-freq-wrap').style.display = selectedMedTimingType === 'fixed' ? '' : 'none';
+  _applyTimingTypeUI();
   document.querySelectorAll('.med-meal-chip').forEach(b => b.classList.toggle('active', (mealSlots||[]).includes(b.dataset.meal)));
+}
+
+function _applyTimingTypeUI() {
+  const t = selectedMedTimingType;
+  document.getElementById('med-fixed-time-section').style.display = t === 'fixed' ? 'block' : 'none';
+  document.getElementById('med-meal-section').style.display = t === 'meal' ? 'block' : 'none';
+  document.getElementById('med-prn-note').style.display = t === 'prn' ? 'block' : 'none';
+  document.getElementById('med-freq-wrap').style.display = t === 'fixed' ? '' : 'none';
 }
 
 window.toggleMedMeal = (btn) => { btn.classList.toggle('active'); };
@@ -2312,6 +2410,7 @@ window.saveMed = async () => {
   if (!medNoEnd && !endDate) { showAlert('med-form-alert','error','請填入結束日期，或點「無期限」'); return; }
   if (timingType === 'fixed' && !times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
   if (timingType === 'meal' && !mealSlots.length) { showAlert('med-form-alert','error','請至少選擇一個餐次'); return; }
+  // PRN: no time/slot validation needed
   if (scheduleType === 'weekdays' && !weekdays.length) { showAlert('med-form-alert','error','請至少選擇一個星期幾'); return; }
   try {
     const data = { name, dosage, timingType, times, mealSlots, scheduleType, weekdays, intervalDays, startDate, endDate, notes, createdAt: new Date().toISOString() };
