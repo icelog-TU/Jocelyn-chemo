@@ -256,15 +256,12 @@
   .today-meds-hdr.expanded { border-radius:10px 10px 0 0; border-bottom:none; }
   .today-meds-title { font-size:0.85rem; font-weight:700; color:#7c5cbf; }
   .today-meds-body { background:white; border:1px solid #d9cff0; border-top:none; border-radius:0 0 10px 10px; padding:8px 10px 10px; }
-  .med-time-slot { background:white; border-radius:10px; padding:10px 13px; margin-bottom:7px; border:1px solid #e0d4f5; }
-  .med-slot-time { font-size:1.05rem; font-weight:800; color:#6a3caf; margin-bottom:7px; letter-spacing:0.3px; }
-  .med-slot-drug { display:flex; align-items:center; gap:8px; padding:5px 0; }
-  .med-slot-drug + .med-slot-drug { border-top:1px solid #f3eeff; }
-  .med-slot-drug-info { flex:1; min-width:0; }
-  .med-slot-drug-name { font-size:0.85rem; font-weight:600; color:var(--text); word-break:break-word; }
-  .med-slot-drug-dose { font-size:0.72rem; color:var(--text-light); margin-top:1px; }
-  .med-taken-btn { padding:5px 13px; border-radius:20px; font-size:0.75rem; font-weight:700; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; white-space:nowrap; transition:all 0.15s; flex-shrink:0; font-family:inherit; }
-  .med-taken-btn.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; }
+  .med-row { display:flex; align-items:flex-start; gap:8px; padding:5px 0; border-bottom:1px solid #f3eeff; }
+  .med-row:last-child { border-bottom:none; }
+  .med-row-time { font-size:0.8rem; font-weight:700; color:#6a3caf; min-width:48px; flex-shrink:0; padding-top:4px; white-space:nowrap; }
+  .med-row-drugs { display:flex; flex-wrap:wrap; gap:5px; }
+  .med-chip { padding:4px 11px; border-radius:20px; font-size:0.78rem; font-weight:600; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+  .med-chip.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; }
   .med-act-btn { background:none; border:none; color:#ccc; font-size:0.88rem; cursor:pointer; padding:1px 4px; }
   .med-act-btn:hover { color:var(--pink-dark); }
   .med-sched-chip { padding:6px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; font-family:inherit; }
@@ -1936,26 +1933,15 @@ function renderTodayMeds() {
 
   list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
 
-  sortedKeys.forEach(slotKey => {
-    const slot = document.createElement('div');
-    slot.className = 'med-time-slot';
-    const drugsHtml = slotMap[slotKey].map(med => {
+  const rowsHtml = sortedKeys.map(slotKey => {
+    const chipsHtml = slotMap[slotKey].map(med => {
       const key = `${currentDate}|${med.id}|${slotKey}`;
       const taken = takenMedDoses.has(key);
-      const meta = [med.dosage, med.notes].filter(Boolean).map(escapeHtml).join('・');
-      return `<div class="med-slot-drug">
-        <div class="med-slot-drug-info">
-          <div class="med-slot-drug-name">${escapeHtml(med.name)}</div>
-          ${meta ? `<div class="med-slot-drug-dose">${meta}</div>` : ''}
-        </div>
-        <button class="med-taken-btn${taken?' taken':''}" onclick="markMedTaken('${med.id}','${slotKey}')">
-          ${taken ? '✓ 已服' : '服用'}
-        </button>
-      </div>`;
+      return `<button class="med-chip${taken?' taken':''}" onclick="markMedTaken('${med.id}','${slotKey}')">${taken?'✓ ':''}${escapeHtml(med.name)}</button>`;
     }).join('');
-    slot.innerHTML = `<div class="med-slot-time">${slotKey}</div>${drugsHtml}`;
-    list.appendChild(slot);
-  });
+    return `<div class="med-row"><span class="med-row-time">${slotKey}</span><div class="med-row-drugs">${chipsHtml}</div></div>`;
+  }).join('');
+  list.innerHTML += rowsHtml;
 }
 
 window.markMedTaken = async (medId, slotKey) => {
