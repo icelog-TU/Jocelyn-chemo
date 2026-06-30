@@ -264,6 +264,8 @@
   .med-sched-chip.active { background:#f3ecfb; border-color:#9c6fcf; color:#6a3caf; font-weight:700; }
   .med-dow-chip { padding:6px 10px; border-radius:50%; min-width:34px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; text-align:center; }
   .med-dow-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
+  .med-meal-chip { padding:6px 12px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; }
+  .med-meal-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
 
   /* Edit modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
@@ -633,8 +635,8 @@
   </div>
   <div class="modal-row">
     <div><label>劑量</label><input type="text" id="med-dosage" placeholder="2cc" autocomplete="off"></div>
-    <div>
-      <label>每次服用幾次</label>
+    <div id="med-freq-wrap">
+      <label>每天幾次</label>
       <select id="med-freq" onchange="onMedFreqChange()">
         <option value="1">1 次</option>
         <option value="2">2 次</option>
@@ -673,8 +675,27 @@
     </div>
   </div>
   <div class="modal-field">
+    <label>時間類型</label>
+    <div style="display:flex;gap:6px;margin-top:5px">
+      <button class="med-sched-chip active" data-timing="fixed" onclick="selectMedTimingType(this)">固定時間</button>
+      <button class="med-sched-chip" data-timing="meal" onclick="selectMedTimingType(this)">依餐次</button>
+    </div>
+  </div>
+  <div id="med-fixed-time-section" class="modal-field">
     <label>服藥時間（可調整）</label>
     <div id="med-times-editor" style="margin-top:5px"></div>
+  </div>
+  <div id="med-meal-section" class="modal-field" style="display:none">
+    <label>餐次（可複選）</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-meal-chip" data-meal="早餐前" onclick="toggleMedMeal(this)">早餐前</button>
+      <button class="med-meal-chip" data-meal="早餐後" onclick="toggleMedMeal(this)">早餐後</button>
+      <button class="med-meal-chip" data-meal="午餐前" onclick="toggleMedMeal(this)">午餐前</button>
+      <button class="med-meal-chip" data-meal="午餐後" onclick="toggleMedMeal(this)">午餐後</button>
+      <button class="med-meal-chip" data-meal="晚餐前" onclick="toggleMedMeal(this)">晚餐前</button>
+      <button class="med-meal-chip" data-meal="晚餐後" onclick="toggleMedMeal(this)">晚餐後</button>
+      <button class="med-meal-chip" data-meal="睡前" onclick="toggleMedMeal(this)">睡前</button>
+    </div>
   </div>
   <div class="modal-row">
     <div><label>開始日期 *</label><input type="date" id="med-start"></div>
@@ -735,6 +756,7 @@ const SEV_CATS = new Set(['症狀','神經毒性']);
 const BLOOD_CATS = new Set(['檢查']);
 const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉', spine:'💉' };
 const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日', spine:'背針' };
+const MEAL_ORDER = ['早餐前','早餐後','午餐前','午餐後','晚餐前','晚餐後','睡前'];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let db = null;
@@ -755,6 +777,7 @@ let editingMilestoneId = null;
 let meds = [];
 let medEditId = null;
 let selectedMedSched = 'daily';
+let selectedMedTimingType = 'fixed';
 let medNoEnd = false;
 const takenMedDoses = new Map(); // key → Firestore log doc ID (null while saving)
 let _medNotifTimers = [];
@@ -1870,24 +1893,28 @@ function renderTodayMeds() {
     return;
   }
 
-  // Build time → [med, ...] map (time-first view)
-  const timeMap = {};
+  // Build slotKey → [med, ...] map (meal slots or clock times)
+  const slotMap = {};
   todayMeds.forEach(med => {
-    (med.times || []).forEach(t => {
-      if (!timeMap[t]) timeMap[t] = [];
-      timeMap[t].push(med);
+    const keys = (med.timingType||'fixed') === 'meal' ? (med.mealSlots||[]) : (med.times||[]);
+    keys.forEach(k => {
+      if (!slotMap[k]) slotMap[k] = [];
+      slotMap[k].push(med);
     });
   });
-  const sortedTimes = Object.keys(timeMap).sort();
+  // Meal slots in canonical order first, then clock times sorted
+  const mealKeys = MEAL_ORDER.filter(k => slotMap[k]);
+  const timeKeys = Object.keys(slotMap).filter(k => !MEAL_ORDER.includes(k)).sort();
+  const sortedKeys = [...mealKeys, ...timeKeys];
 
   const countEl = document.getElementById('today-meds-count');
   if (countEl) {
-    const taken = sortedTimes.reduce((s,t) => s + timeMap[t].filter(m => takenMedDoses.has(`${currentDate}|${m.id}|${t}`)).length, 0);
-    const total = sortedTimes.reduce((s,t) => s + timeMap[t].length, 0);
+    const taken = sortedKeys.reduce((s,k) => s + slotMap[k].filter(m => takenMedDoses.has(`${currentDate}|${m.id}|${k}`)).length, 0);
+    const total = sortedKeys.reduce((s,k) => s + slotMap[k].length, 0);
     countEl.textContent = `${taken}/${total} 次`;
   }
 
-  // Edit/delete buttons at top (one per med, not per time)
+  // Edit/delete buttons at top (one per med, not per slot)
   const mgmtHtml = todayMeds.map(m => {
     const sl = formatMedSchedule(m);
     return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
@@ -1899,11 +1926,11 @@ function renderTodayMeds() {
 
   list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
 
-  sortedTimes.forEach(t => {
+  sortedKeys.forEach(slotKey => {
     const slot = document.createElement('div');
     slot.className = 'med-time-slot';
-    const drugsHtml = timeMap[t].map(med => {
-      const key = `${currentDate}|${med.id}|${t}`;
+    const drugsHtml = slotMap[slotKey].map(med => {
+      const key = `${currentDate}|${med.id}|${slotKey}`;
       const taken = takenMedDoses.has(key);
       const meta = [med.dosage, med.notes].filter(Boolean).map(escapeHtml).join('・');
       return `<div class="med-slot-drug">
@@ -1911,21 +1938,20 @@ function renderTodayMeds() {
           <div class="med-slot-drug-name">${escapeHtml(med.name)}</div>
           ${meta ? `<div class="med-slot-drug-dose">${meta}</div>` : ''}
         </div>
-        <button class="med-taken-btn${taken?' taken':''}" onclick="markMedTaken('${med.id}','${t}')">
+        <button class="med-taken-btn${taken?' taken':''}" onclick="markMedTaken('${med.id}','${slotKey}')">
           ${taken ? '✓ 已服' : '服用'}
         </button>
       </div>`;
     }).join('');
-    slot.innerHTML = `<div class="med-slot-time">${t}</div>${drugsHtml}`;
+    slot.innerHTML = `<div class="med-slot-time">${slotKey}</div>${drugsHtml}`;
     list.appendChild(slot);
   });
 }
 
-window.markMedTaken = async (medId, time) => {
-  const key = `${currentDate}|${medId}|${time}`;
+window.markMedTaken = async (medId, slotKey) => {
+  const key = `${currentDate}|${medId}|${slotKey}`;
 
   if (takenMedDoses.has(key)) {
-    // Uncheck: remove visual state immediately, then delete Firestore log
     const logId = takenMedDoses.get(key);
     takenMedDoses.delete(key);
     renderTodayMeds();
@@ -1938,7 +1964,6 @@ window.markMedTaken = async (medId, time) => {
     return;
   }
 
-  // Check: update visual state immediately (optimistic), then write to Firestore
   takenMedDoses.set(key, null);
   renderTodayMeds();
 
@@ -1946,18 +1971,20 @@ window.markMedTaken = async (medId, time) => {
     const med = meds.find(m => m.id === medId);
     if (med) {
       try {
+        const now = new Date();
+        const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         const ref = await addDoc(collection(db, 'logs'), {
-          date: currentDate, time, timestamp: currentDate+'T'+time+':00',
+          date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
           category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''}`,
           severity: null, blood: null, tags: [med.name],
-          _medId: medId, _medTime: time,
+          _medId: medId, _medTime: slotKey,
           createdAt: new Date().toISOString(),
         });
-        takenMedDoses.set(key, ref.id); // store doc ID for possible deletion later
+        takenMedDoses.set(key, ref.id);
         loadTimeline(currentDate);
       } catch(e) {
         console.warn('markMedTaken:', e);
-        takenMedDoses.delete(key); // rollback on error
+        takenMedDoses.delete(key);
         renderTodayMeds();
       }
     }
@@ -1988,7 +2015,7 @@ window.toggleMedNoEnd = () => applyMedNoEnd(!medNoEnd);
 
 function resetMedSchedUI(sched, weekdays, intervalDays) {
   selectedMedSched = sched || 'daily';
-  document.querySelectorAll('.med-sched-chip').forEach(b => b.classList.toggle('active', b.dataset.sched === selectedMedSched));
+  document.querySelectorAll('[data-sched]').forEach(b => b.classList.toggle('active', b.dataset.sched === selectedMedSched));
   document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
   document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
   document.querySelectorAll('.med-dow-chip').forEach(b => b.classList.toggle('active', (weekdays||[]).includes(parseInt(b.dataset.dow))));
@@ -2012,6 +2039,7 @@ window.openMedForm = () => {
   _medPhotoDataUrl = null;
   applyMedNoEnd(false);
   resetMedSchedUI('daily', [], 2);
+  applyMedTimingType('fixed', []);
   renderMedTimesEditor(suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
   document.getElementById('med-sheet').classList.add('open');
@@ -2024,7 +2052,7 @@ window.openMedEdit = (id) => {
   document.getElementById('med-modal-title').textContent = '✏️ 編輯用藥提醒';
   document.getElementById('med-name').value = m.name || '';
   document.getElementById('med-dosage').value = m.dosage || '';
-  const n = m.times?.length || 1;
+  const n = (m.times?.length || 1);
   document.getElementById('med-freq').value = String(n <= 6 ? n : 1);
   document.getElementById('med-start').value = m.startDate || '';
   document.getElementById('med-end').value = m.endDate || '';
@@ -2037,6 +2065,7 @@ window.openMedEdit = (id) => {
   _medPhotoDataUrl = null;
   applyMedNoEnd(!m.endDate);
   resetMedSchedUI(m.scheduleType, m.weekdays, m.intervalDays);
+  applyMedTimingType(m.timingType || 'fixed', m.mealSlots || []);
   renderMedTimesEditor(m.times || suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
   document.getElementById('med-sheet').classList.add('open');
@@ -2049,12 +2078,36 @@ window.closeMedForm = () => {
 };
 
 window.selectMedSched = (btn) => {
-  document.querySelectorAll('.med-sched-chip').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-sched]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedMedSched = btn.dataset.sched;
   document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
   document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
 };
+
+window.selectMedTimingType = (btn) => {
+  document.querySelectorAll('[data-timing]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMedTimingType = btn.dataset.timing;
+  document.getElementById('med-fixed-time-section').style.display = selectedMedTimingType === 'fixed' ? 'block' : 'none';
+  document.getElementById('med-meal-section').style.display = selectedMedTimingType === 'meal' ? 'block' : 'none';
+  document.getElementById('med-freq-wrap').style.display = selectedMedTimingType === 'fixed' ? '' : 'none';
+};
+
+function applyMedTimingType(type, mealSlots) {
+  selectedMedTimingType = type || 'fixed';
+  document.querySelectorAll('[data-timing]').forEach(b => b.classList.toggle('active', b.dataset.timing === selectedMedTimingType));
+  document.getElementById('med-fixed-time-section').style.display = selectedMedTimingType === 'fixed' ? 'block' : 'none';
+  document.getElementById('med-meal-section').style.display = selectedMedTimingType === 'meal' ? 'block' : 'none';
+  document.getElementById('med-freq-wrap').style.display = selectedMedTimingType === 'fixed' ? '' : 'none';
+  document.querySelectorAll('.med-meal-chip').forEach(b => b.classList.toggle('active', (mealSlots||[]).includes(b.dataset.meal)));
+}
+
+window.toggleMedMeal = (btn) => { btn.classList.toggle('active'); };
+
+function getMedMealSlots() {
+  return [...document.querySelectorAll('.med-meal-chip.active')].map(b => b.dataset.meal);
+}
 
 window.toggleMedDow = (btn) => { btn.classList.toggle('active'); };
 
@@ -2188,17 +2241,20 @@ window.saveMed = async () => {
   const startDate = document.getElementById('med-start').value;
   const endDate = medNoEnd ? null : (document.getElementById('med-end').value || null);
   const notes = document.getElementById('med-notes').value.trim();
-  const times = getMedTimesFromEditor().sort();
+  const timingType = selectedMedTimingType;
+  const times = timingType === 'fixed' ? getMedTimesFromEditor().sort() : [];
+  const mealSlots = timingType === 'meal' ? getMedMealSlots() : [];
   const scheduleType = selectedMedSched;
   const weekdays = scheduleType === 'weekdays' ? getMedWeekdays() : [];
   const intervalDays = scheduleType === 'interval' ? (parseInt(document.getElementById('med-interval-days').value) || 2) : null;
   if (!name) { showAlert('med-form-alert','error','請填入藥品名稱'); return; }
   if (!startDate) { showAlert('med-form-alert','error','請填入開始日期'); return; }
   if (!medNoEnd && !endDate) { showAlert('med-form-alert','error','請填入結束日期，或點「無期限」'); return; }
-  if (!times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
+  if (timingType === 'fixed' && !times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
+  if (timingType === 'meal' && !mealSlots.length) { showAlert('med-form-alert','error','請至少選擇一個餐次'); return; }
   if (scheduleType === 'weekdays' && !weekdays.length) { showAlert('med-form-alert','error','請至少選擇一個星期幾'); return; }
   try {
-    const data = { name, dosage, scheduleType, weekdays, intervalDays, startDate, endDate, times, notes, createdAt: new Date().toISOString() };
+    const data = { name, dosage, timingType, times, mealSlots, scheduleType, weekdays, intervalDays, startDate, endDate, notes, createdAt: new Date().toISOString() };
     if (medEditId) {
       await updateDoc(doc(db,'meds',medEditId), data);
     } else {
