@@ -785,7 +785,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadTimeline(currentDate);
   renderSuggestedTags();
   loadMilestones().then(() => updateRecordPhase());
-  loadMeds().then(() => { renderTodayMeds(); scheduleMedNotifications(); requestNotifPermission(); });
+  loadMeds().then(async () => { await syncTakenMeds(currentDate); renderTodayMeds(); scheduleMedNotifications(); requestNotifPermission(); });
 });
 
 function tryInitFirebase() {
@@ -805,7 +805,7 @@ window.showPage = (page, btn) => {
   if(btn) btn.classList.add('active');
   if(page==='history') loadHistory();
   if(page==='course') loadMilestones().then(() => renderCourseList());
-  if(page==='record') { updateRecordPhase(); renderTodayMeds(); }
+  if(page==='record') { updateRecordPhase(); syncTakenMeds(currentDate).then(() => renderTodayMeds()); }
 };
 
 window.changeDate = (d) => {
@@ -819,14 +819,14 @@ window.changeDate = (d) => {
   document.getElementById('header-date').textContent=formatDateTW(s);
   loadTimeline(s);
   updateRecordPhase();
-  renderTodayMeds();
+  syncTakenMeds(s).then(() => renderTodayMeds());
 };
 window.onDateChange = () => {
   currentDate=document.getElementById('record-date').value;
   document.getElementById('header-date').textContent=formatDateTW(currentDate);
   loadTimeline(currentDate);
   updateRecordPhase();
-  renderTodayMeds();
+  syncTakenMeds(currentDate).then(() => renderTodayMeds());
 };
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
@@ -1834,6 +1834,29 @@ function formatMedSchedule(m) {
   return '';
 }
 
+async function syncTakenMeds(date) {
+  if (!db) return;
+  try {
+    const snap = await getDocs(query(collection(db,'logs'), where('date','==',date), where('category','==','用藥')));
+    const dayMeds = getMedsForDate(date);
+    snap.forEach(d => {
+      const log = d.data();
+      if (log._medId && log._medTime) {
+        // Precise match via stored medId
+        const key = `${date}|${log._medId}|${log._medTime}`;
+        if (!takenMedDoses.has(key)) takenMedDoses.set(key, d.id);
+      } else {
+        // Fallback: match by med name prefix + time (for entries created before this field was added)
+        const med = dayMeds.find(m => (log.content||'').startsWith(m.name) && (m.times||[]).includes(log.time));
+        if (med) {
+          const key = `${date}|${med.id}|${log.time}`;
+          if (!takenMedDoses.has(key)) takenMedDoses.set(key, d.id);
+        }
+      }
+    });
+  } catch(e) { console.warn('syncTakenMeds:', e); }
+}
+
 function renderTodayMeds() {
   const wrap = document.getElementById('today-meds-wrap');
   const list = document.getElementById('today-meds-list');
@@ -1927,6 +1950,7 @@ window.markMedTaken = async (medId, time) => {
           date: currentDate, time, timestamp: currentDate+'T'+time+':00',
           category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''}`,
           severity: null, blood: null, tags: [med.name],
+          _medId: medId, _medTime: time,
           createdAt: new Date().toISOString(),
         });
         takenMedDoses.set(key, ref.id); // store doc ID for possible deletion later
