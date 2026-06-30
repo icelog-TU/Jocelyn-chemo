@@ -678,7 +678,13 @@
   </div>
   <div class="modal-row">
     <div><label>開始日期 *</label><input type="date" id="med-start"></div>
-    <div><label>結束日期 *</label><input type="date" id="med-end"></div>
+    <div>
+      <label>結束日期</label>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:3px">
+        <input type="date" id="med-end" style="flex:1">
+        <button id="med-noend-btn" onclick="toggleMedNoEnd()" style="padding:8px 10px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--text-light);font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit">無期限</button>
+      </div>
+    </div>
   </div>
   <div class="modal-field">
     <label>備注</label>
@@ -749,6 +755,7 @@ let editingMilestoneId = null;
 let meds = [];
 let medEditId = null;
 let selectedMedSched = 'daily';
+let medNoEnd = false;
 const takenMedDoses = new Map(); // key → Firestore log doc ID (null while saving)
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
@@ -1800,7 +1807,8 @@ async function loadMeds() {
 
 function getMedsForDate(date) {
   return meds.filter(m => {
-    if (m.startDate > date || m.endDate < date) return false;
+    if (m.startDate > date) return false;
+    if (m.endDate && m.endDate < date) return false; // null/absent endDate = no end
     const sched = m.scheduleType || 'daily';
     if (sched === 'weekdays') {
       const dow = new Date(date + 'T00:00:00').getDay(); // 0=Sun
@@ -1942,6 +1950,18 @@ window.toggleTodayMeds = () => {
   hdr.classList.toggle('expanded', !open);
 };
 
+function applyMedNoEnd(noEnd) {
+  medNoEnd = noEnd;
+  const btn = document.getElementById('med-noend-btn');
+  const inp = document.getElementById('med-end');
+  if (!btn || !inp) return;
+  btn.style.background = noEnd ? '#7c5cbf' : 'white';
+  btn.style.color = noEnd ? 'white' : 'var(--text-light)';
+  btn.style.borderColor = noEnd ? '#7c5cbf' : 'var(--border)';
+  inp.style.display = noEnd ? 'none' : '';
+}
+window.toggleMedNoEnd = () => applyMedNoEnd(!medNoEnd);
+
 function resetMedSchedUI(sched, weekdays, intervalDays) {
   selectedMedSched = sched || 'daily';
   document.querySelectorAll('.med-sched-chip').forEach(b => b.classList.toggle('active', b.dataset.sched === selectedMedSched));
@@ -1958,7 +1978,7 @@ window.openMedForm = () => {
   document.getElementById('med-dosage').value = '';
   document.getElementById('med-freq').value = '1';
   document.getElementById('med-start').value = currentDate;
-  document.getElementById('med-end').value = currentDate;
+  document.getElementById('med-end').value = '';
   document.getElementById('med-notes').value = '';
   document.getElementById('med-form-alert').className = 'alert';
   document.getElementById('med-photo-preview').style.display = 'none';
@@ -1966,6 +1986,7 @@ window.openMedForm = () => {
   document.getElementById('med-ai-btn').disabled = true;
   document.getElementById('med-photo').value = '';
   _medPhotoDataUrl = null;
+  applyMedNoEnd(false);
   resetMedSchedUI('daily', [], 2);
   renderMedTimesEditor(suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
@@ -1990,6 +2011,7 @@ window.openMedEdit = (id) => {
   document.getElementById('med-ai-btn').disabled = true;
   document.getElementById('med-photo').value = '';
   _medPhotoDataUrl = null;
+  applyMedNoEnd(!m.endDate);
   resetMedSchedUI(m.scheduleType, m.weekdays, m.intervalDays);
   renderMedTimesEditor(m.times || suggestMedTimes(1));
   document.getElementById('med-overlay').classList.add('open');
@@ -2140,14 +2162,15 @@ window.saveMed = async () => {
   const name = document.getElementById('med-name').value.trim();
   const dosage = document.getElementById('med-dosage').value.trim();
   const startDate = document.getElementById('med-start').value;
-  const endDate = document.getElementById('med-end').value;
+  const endDate = medNoEnd ? null : (document.getElementById('med-end').value || null);
   const notes = document.getElementById('med-notes').value.trim();
   const times = getMedTimesFromEditor().sort();
   const scheduleType = selectedMedSched;
   const weekdays = scheduleType === 'weekdays' ? getMedWeekdays() : [];
   const intervalDays = scheduleType === 'interval' ? (parseInt(document.getElementById('med-interval-days').value) || 2) : null;
   if (!name) { showAlert('med-form-alert','error','請填入藥品名稱'); return; }
-  if (!startDate || !endDate) { showAlert('med-form-alert','error','請填入開始和結束日期'); return; }
+  if (!startDate) { showAlert('med-form-alert','error','請填入開始日期'); return; }
+  if (!medNoEnd && !endDate) { showAlert('med-form-alert','error','請填入結束日期，或點「無期限」'); return; }
   if (!times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
   if (scheduleType === 'weekdays' && !weekdays.length) { showAlert('med-form-alert','error','請至少選擇一個星期幾'); return; }
   try {
