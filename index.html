@@ -1138,8 +1138,11 @@ function buildLogCard(id, d, searchQ) {
 
 window.deleteEntry = async (id) => {
   if(!confirm('確定刪除這筆記錄？')) return;
-  try { await deleteDoc(doc(db,'logs',id)); loadTimeline(currentDate); }
-  catch(e){alert('刪除失敗：'+e.message);}
+  try {
+    await deleteDoc(doc(db,'logs',id));
+    loadTimeline(currentDate);
+    if(document.getElementById('page-history').classList.contains('active')) loadHistory();
+  } catch(e){alert('刪除失敗：'+e.message);}
 };
 
 // ── History ───────────────────────────────────────────────────────────────────
