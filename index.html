@@ -26,6 +26,7 @@
     --c-exam:   #b03030;
     --c-assess: #c07800;
     --c-plan:   #16a085;
+    --c-temp:   #d97030;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system,'PingFang TC','Noto Sans TC',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; padding-bottom:72px; }
@@ -86,6 +87,7 @@
   .cat-檢查    { color:var(--c-exam); }   .dot-檢查    { background:var(--c-exam); }
   .cat-評估    { color:var(--c-assess); } .dot-評估    { background:var(--c-assess); }
   .cat-醫療計畫 { color:var(--c-plan); }   .dot-醫療計畫 { background:var(--c-plan); }
+  .cat-體溫    { color:var(--c-temp); }   .dot-體溫    { background:var(--c-temp); }
 
   /* Entry form */
   .entry-form { background:white; border-radius:var(--radius); padding:14px; margin:10px 12px 12px; box-shadow:var(--shadow); border:1.5px solid var(--pink-light); }
@@ -137,6 +139,20 @@
   .blood-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
   .blood-item label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
   .blood-item input { padding:7px 10px; font-size:0.85rem; }
+
+  /* Temperature card */
+  .today-temp-wrap { margin:8px 12px 0; background:white; border:1.5px solid #f0d0a8; border-radius:12px; padding:10px 14px; }
+  .today-temp-title { font-size:0.82rem; font-weight:700; color:#c06820; margin-bottom:8px; }
+  .temp-row { display:flex; align-items:center; gap:8px; padding:3px 0; }
+  .temp-label { font-size:0.82rem; font-weight:700; color:var(--text-light); width:18px; flex-shrink:0; }
+  .temp-saved { display:flex; align-items:center; gap:6px; }
+  .temp-val { font-size:1rem; font-weight:700; color:var(--c-temp); }
+  .temp-val.fever { color:#c62828; }
+  .temp-edit { display:flex; align-items:center; gap:6px; }
+  .temp-input { width:72px !important; padding:5px 8px !important; font-size:0.9rem; text-align:center; }
+  .temp-unit { font-size:0.78rem; color:var(--text-light); }
+  .temp-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; padding:0 2px; }
+  .temp-save-btn { padding:5px 12px; border-radius:18px; font-size:0.78rem; font-weight:600; border:1.5px solid #f0c090; background:white; color:#c06820; cursor:pointer; font-family:inherit; flex-shrink:0; }
 
   /* Tags */
   .tag-section { margin-top:10px; }
@@ -330,6 +346,35 @@
     </div>
   </div>
 
+  <!-- 今日體溫 -->
+  <div class="today-temp-wrap" id="today-temp-wrap">
+    <div class="today-temp-title">🌡️ 今日體溫</div>
+    <div class="temp-row">
+      <span class="temp-label">早</span>
+      <span class="temp-saved" id="temp-saved-早" style="display:none">
+        <span class="temp-val" id="temp-display-早"></span>
+        <button class="temp-del" onclick="deleteTempReading('早')">✕</button>
+      </span>
+      <span class="temp-edit" id="temp-edit-早">
+        <input type="number" id="temp-input-早" class="temp-input" step="0.1" min="35" max="42" placeholder="—">
+        <span class="temp-unit">°C</span>
+        <button class="temp-save-btn" onclick="saveTempReading('早')">記錄</button>
+      </span>
+    </div>
+    <div class="temp-row">
+      <span class="temp-label">晚</span>
+      <span class="temp-saved" id="temp-saved-晚" style="display:none">
+        <span class="temp-val" id="temp-display-晚"></span>
+        <button class="temp-del" onclick="deleteTempReading('晚')">✕</button>
+      </span>
+      <span class="temp-edit" id="temp-edit-晚">
+        <input type="number" id="temp-input-晚" class="temp-input" step="0.1" min="35" max="42" placeholder="—">
+        <span class="temp-unit">°C</span>
+        <button class="temp-save-btn" onclick="saveTempReading('晚')">記錄</button>
+      </span>
+    </div>
+  </div>
+
   <!-- 新增記錄表單 -->
   <div class="entry-form">
     <div class="form-title">＋ 新增記錄</div>
@@ -444,6 +489,7 @@
         <button class="hist-cat-btn" data-cat="檢查"    onclick="filterByCat('檢查')">🔬 檢查</button>
         <button class="hist-cat-btn" data-cat="評估"    onclick="filterByCat('評估')">📈 評估</button>
         <button class="hist-cat-btn" data-cat="醫療計畫" onclick="filterByCat('醫療計畫')">👩‍⚕️ 醫療計畫</button>
+        <button class="hist-cat-btn" data-cat="體溫" onclick="filterByCat('體溫')">🌡️ 體溫</button>
       </div>
     </div>
 
@@ -770,7 +816,7 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, q
 // ── Constants ─────────────────────────────────────────────────────────────────
 const CAT_ICON = {
   '用藥':'💊','神經毒性':'❤️','症狀':'🤒','飲食':'🍚',
-  '活動功能':'🚶','排泄':'🚽','睡眠':'😴','檢查':'🔬','評估':'📈','醫療計畫':'👩‍⚕️'
+  '活動功能':'🚶','排泄':'🚽','睡眠':'😴','檢查':'🔬','評估':'📈','醫療計畫':'👩‍⚕️','體溫':'🌡️'
 };
 const SUGGESTED_TAGS = ['Vincristine','Morphine','嗎啡','Pregabalin','Ibuprofen','MgO','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺','噁吐'];
 const SEV_CATS = new Set(['症狀','神經毒性']);
@@ -804,6 +850,7 @@ let selectedMedTimingType = 'fixed';
 let medNoEnd = false;
 const takenMedDoses = new Map(); // key: "date|medId|slotKey" → Firestore log doc ID
 const prnDoses = new Map();     // key: "date|medId" → [{time, logId}, ...]
+let tempReadings = { 早: null, 晚: null }; // { value, logId, time }
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
 
@@ -1935,12 +1982,17 @@ function formatMedSchedule(m) {
 
 async function syncTakenMeds(date) {
   if (!db) return;
+  tempReadings = { 早: null, 晚: null };
   try {
     // Single where clause to avoid composite index requirement; filter category client-side
     const snap = await getDocs(query(collection(db,'logs'), where('date','==',date)));
     const dayMeds = getMedsForDate(date);
     snap.forEach(d => {
       const log = d.data();
+      if (log.category === '體溫' && (log._tempSlot === '早' || log._tempSlot === '晚')) {
+        tempReadings[log._tempSlot] = { value: log._tempValue, logId: d.id, time: log.time };
+        return;
+      }
       if (log.category !== '用藥') return;
       if (log._medId && log._medTime === 'prn') {
         // PRN dose — can have multiple per med per day
@@ -1963,8 +2015,76 @@ async function syncTakenMeds(date) {
     });
     // Sort PRN doses chronologically
     prnDoses.forEach(arr => arr.sort((a,b) => a.time.localeCompare(b.time)));
+    renderTempCard();
   } catch(e) { console.warn('syncTakenMeds:', e); }
 }
+
+function renderTempCard() {
+  ['早', '晚'].forEach(slot => {
+    const r = tempReadings[slot];
+    const saved = document.getElementById(`temp-saved-${slot}`);
+    const edit  = document.getElementById(`temp-edit-${slot}`);
+    const disp  = document.getElementById(`temp-display-${slot}`);
+    const inp   = document.getElementById(`temp-input-${slot}`);
+    if (!saved || !edit || !disp || !inp) return;
+    if (r) {
+      const t = parseFloat(r.value);
+      disp.textContent = `${t.toFixed(1)}°C`;
+      disp.className = `temp-val${t >= 38 ? ' fever' : ''}`;
+      saved.style.display = 'flex';
+      edit.style.display = 'none';
+    } else {
+      inp.value = '';
+      saved.style.display = 'none';
+      edit.style.display = 'flex';
+    }
+  });
+}
+
+window.saveTempReading = async (slot) => {
+  const inp = document.getElementById(`temp-input-${slot}`);
+  const val = parseFloat(inp.value);
+  if (isNaN(val) || val < 35 || val > 42) { alert('請輸入合理的體溫（35～42°C）'); return; }
+  if (tempReadings[slot]?.logId) {
+    try { await deleteDoc(doc(db, 'logs', tempReadings[slot].logId)); } catch(e) {}
+  }
+  const now = new Date();
+  const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  tempReadings[slot] = { value: val, logId: null, time: actualTime };
+  renderTempCard();
+  if (db) {
+    try {
+      const ref = await addDoc(collection(db, 'logs'), {
+        date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
+        category: '體溫', content: `體溫 ${val.toFixed(1)}°C（${slot}）`,
+        severity: null, blood: null, tags: ['體溫'],
+        _tempSlot: slot, _tempValue: val,
+        createdAt: new Date().toISOString(),
+      });
+      tempReadings[slot].logId = ref.id;
+      loadTimeline(currentDate);
+    } catch(e) {
+      console.warn('saveTempReading:', e);
+      tempReadings[slot] = null;
+      renderTempCard();
+      alert('儲存失敗：' + e.message);
+    }
+  }
+};
+
+window.deleteTempReading = async (slot) => {
+  const r = tempReadings[slot];
+  if (!r) return;
+  const logId = r.logId;
+  tempReadings[slot] = null;
+  renderTempCard();
+  if (db && logId) {
+    try {
+      await deleteDoc(doc(db, 'logs', logId));
+      loadTimeline(currentDate);
+    } catch(e) { console.warn('deleteTempReading:', e); }
+  }
+};
 
 function renderTodayMeds() {
   const wrap = document.getElementById('today-meds-wrap');
