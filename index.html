@@ -156,7 +156,10 @@
   .fluid-entry-del { background:none; border:none; color:#ccc; cursor:pointer; padding:0 2px; font-size:0.9rem; flex-shrink:0; }
   .fluid-add-row { display:flex; gap:5px; margin-top:8px; align-items:center; }
   .fluid-time-input { width:86px !important; padding:5px 7px !important; font-size:0.82rem; flex-shrink:0; }
-  .fluid-name-input { flex:1; min-width:0; padding:5px 8px !important; font-size:0.82rem; }
+  .fluid-name-select { flex:1; min-width:0; padding:5px 8px; font-size:0.82rem; border:1px solid #c8dff0; border-radius:8px; background:white; color:var(--text); font-family:inherit; height:32px; }
+  .fluid-custom-row { display:none; margin-top:4px; }
+  .fluid-custom-row.visible { display:block; }
+  .fluid-name-input { width:100%; padding:5px 8px !important; font-size:0.82rem; box-sizing:border-box; }
   .fluid-amount-input { width:60px !important; padding:5px 6px !important; font-size:0.82rem; text-align:center; flex-shrink:0; }
   .fluid-add-btn { padding:5px 10px; border-radius:18px; font-size:0.78rem; font-weight:600; border:1.5px solid #8ac4e8; background:white; color:var(--c-fluid); cursor:pointer; font-family:inherit; flex-shrink:0; white-space:nowrap; }
 
@@ -404,9 +407,17 @@
     <div class="fluid-list" id="fluid-list"></div>
     <div class="fluid-add-row">
       <input type="time" id="fluid-time" class="fluid-time-input">
-      <input type="text" id="fluid-name" class="fluid-name-input" placeholder="牛奶 / 水…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();addFluidEntry()}">
+      <select id="fluid-name-select" class="fluid-name-select" onchange="onFluidSelectChange()">
+        <option value="牛奶">牛奶</option>
+        <option value="水">水</option>
+        <option value="飲料">飲料</option>
+        <option value="其他">其他…</option>
+      </select>
       <input type="number" id="fluid-amount" class="fluid-amount-input" placeholder="cc" min="1" max="5000" onkeydown="if(event.key==='Enter'){event.preventDefault();addFluidEntry()}">
       <button class="fluid-add-btn" onclick="addFluidEntry()">記錄</button>
+    </div>
+    <div class="fluid-custom-row" id="fluid-custom-row">
+      <input type="text" id="fluid-name-custom" class="fluid-name-input" placeholder="請輸入種類…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();addFluidEntry()}">
     </div>
   </div>
 
@@ -2088,18 +2099,31 @@ function renderFluidCard() {
     </div>`).join('');
 }
 
+window.onFluidSelectChange = () => {
+  const sel    = document.getElementById('fluid-name-select');
+  const row    = document.getElementById('fluid-custom-row');
+  const custom = document.getElementById('fluid-name-custom');
+  if (sel.value === '其他') {
+    row.classList.add('visible');
+    custom.focus();
+  } else {
+    row.classList.remove('visible');
+  }
+};
+
 window.addFluidEntry = async () => {
   const timeEl   = document.getElementById('fluid-time');
-  const nameEl   = document.getElementById('fluid-name');
+  const selEl    = document.getElementById('fluid-name-select');
+  const customEl = document.getElementById('fluid-name-custom');
   const amountEl = document.getElementById('fluid-amount');
   const time   = timeEl.value || nowTime();
-  const name   = nameEl.value.trim() || '液體';
+  const name   = selEl.value === '其他' ? (customEl.value.trim() || '其他') : selEl.value;
   const amount = parseInt(amountEl.value);
   if (!amount || amount < 1) { alert('請輸入飲水量（cc）'); amountEl.focus(); return; }
   const entry = { time, name, amount, logId: null };
   fluidEntries.push(entry);
   fluidEntries.sort((a, b) => a.time.localeCompare(b.time));
-  nameEl.value = '';
+  customEl.value = '';
   amountEl.value = '';
   timeEl.value = nowTime();
   renderFluidCard();
