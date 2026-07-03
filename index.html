@@ -406,7 +406,7 @@
     </div>
     <div class="fluid-list" id="fluid-list"></div>
     <div class="fluid-add-row">
-      <input type="time" id="fluid-time" class="fluid-time-input">
+      <input type="time" id="fluid-time" class="fluid-time-input" onfocus="this.value=nowTime()">
       <select id="fluid-name-select" class="fluid-name-select" onchange="onFluidSelectChange()">
         <option value="牛奶">牛奶</option>
         <option value="水">水</option>
@@ -2125,7 +2125,7 @@ window.addFluidEntry = async () => {
   fluidEntries.sort((a, b) => a.time.localeCompare(b.time));
   customEl.value = '';
   amountEl.value = '';
-  timeEl.value = nowTime();
+  timeEl.value = '';
   renderFluidCard();
   if (db) {
     try {
