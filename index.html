@@ -576,6 +576,8 @@
   <div class="card" style="margin-top:12px">
     <div class="card-title"><span>ℹ️</span> 關於</div>
     <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App 🌸<br>資料儲存於 Firebase Firestore<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
+    <p id="app-version-label" style="font-size:0.72rem;color:var(--text-light);margin-top:6px">版本：<span id="app-build-date"></span></p>
+    <button class="btn btn-secondary btn-sm" onclick="forceUpdate()" style="margin-top:10px">🔄 強制更新 App</button>
   </div>
   <div class="card">
     <div class="card-title"><span>🏷️</span> 標籤管理</div>
@@ -890,6 +892,13 @@ let tempReadings = { 早: null, 晚: null }; // { value, logId, time }
 let fluidEntries = []; // [{time, name, amount, logId}] for currentDate
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
+
+const APP_BUILD = '2026-07-03c';
+window.forceUpdate = () => { window.location.href = window.location.pathname + '?v=' + Date.now(); };
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('app-build-date');
+  if (el) el.textContent = APP_BUILD;
+});
 
 function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
