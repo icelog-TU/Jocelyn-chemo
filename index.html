@@ -901,7 +901,7 @@ const prnDoses = new Map();     // key: "date|medId" → [{time, logId}, ...]
 let tempReadings = { 早: null, 晚: null }; // { value, logId, time }
 let fluidEntries = []; // [{time, name, amount, logId}] for currentDate
 let medMgmtOpen = false;
-let prnSectionOpen = true;
+let prnSectionOpen = false;
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
 
