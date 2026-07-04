@@ -365,7 +365,6 @@
     </div>
     <div class="today-meds-body" id="today-meds-body">
       <div id="today-meds-list"></div>
-      <button onclick="openMedForm()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 14px;cursor:pointer;margin-top:2px;font-family:inherit">＋ 新增用藥</button>
     </div>
   </div>
 
@@ -901,6 +900,8 @@ const takenMedDoses = new Map(); // key: "date|medId|slotKey" → Firestore log 
 const prnDoses = new Map();     // key: "date|medId" → [{time, logId}, ...]
 let tempReadings = { 早: null, 晚: null }; // { value, logId, time }
 let fluidEntries = []; // [{time, name, amount, logId}] for currentDate
+let medMgmtOpen = false;
+let prnSectionOpen = true;
 let _medNotifTimers = [];
 let _medPhotoDataUrl = null;
 
@@ -2267,7 +2268,7 @@ function renderTodayMeds() {
     countEl.textContent = prnTotal ? `${taken}/${total} 次・PRN ${prnTotal} 次` : `${taken}/${total} 次`;
   }
 
-  // Edit/delete management row
+  // Edit/delete management row (collapsible)
   const mgmtHtml = todayMeds.map(m => {
     const sl = formatMedSchedule(m);
     const prnBadge = (m.timingType||'fixed') === 'prn' ? '<span style="font-size:0.65rem;background:#f3eeff;color:#7c5cbf;border-radius:8px;padding:1px 5px;margin-left:2px">PRN</span>' : '';
@@ -2278,7 +2279,16 @@ function renderTodayMeds() {
     </span>`;
   }).join('');
 
-  list.innerHTML = `<div style="margin-bottom:8px;line-height:2">${mgmtHtml}</div>`;
+  const mgmtSection = `<div style="border-bottom:1px solid #f0e8ff;margin-bottom:6px;padding-bottom:4px">
+    <div onclick="toggleMedMgmt()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;color:#9c6fcf;font-weight:600;padding:2px 0;user-select:none;-webkit-user-select:none">
+      <span>📋 管理用藥</span>
+      <span>${medMgmtOpen ? '▼' : '▶'}</span>
+    </div>
+    ${medMgmtOpen ? `<div style="margin-top:6px;line-height:2">${mgmtHtml}</div>
+    <button onclick="openMedForm()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 14px;cursor:pointer;margin-top:4px;font-family:inherit">＋ 新增用藥</button>` : ''}
+  </div>`;
+
+  list.innerHTML = mgmtSection;
 
   // Scheduled med rows
   const rowsHtml = sortedKeys.map(slotKey => {
@@ -2291,30 +2301,38 @@ function renderTodayMeds() {
   }).join('');
   list.innerHTML += rowsHtml;
 
-  // PRN section
+  // PRN section (collapsible)
   if (prnMeds.length) {
     const prnDiv = document.createElement('div');
     prnDiv.style.cssText = 'margin-top:8px;padding-top:7px;border-top:1px dashed #e0d4f5';
-    prnDiv.innerHTML = '<div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.5px;margin-bottom:5px">PRN 按需用藥</div>';
-    prnMeds.forEach(med => {
-      const key = `${currentDate}|${med.id}`;
-      const doses = prnDoses.get(key) || [];
-      const doseTagsHtml = doses.map((d, i) =>
-        `<span style="font-size:0.72rem;color:#6a3caf;background:#f3eeff;border-radius:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px">
-          ${d.time}
-          <button onclick="deletePrnDose('${med.id}',${i})" style="background:none;border:none;color:#bbb;font-size:0.7rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
-        </span>`
-      ).join('');
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #f3eeff';
-      row.innerHTML = `
-        <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text)">${escapeHtml(med.name)}${med.dosage?`<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:5px">${escapeHtml(med.dosage)}</span>`:''}</div>
-          ${doses.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${doseTagsHtml}</div>` : ''}
-        </div>
-        <button onclick="markPrnTaken('${med.id}')" style="padding:4px 11px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1.5px solid #c5aaf0;background:white;color:#7c5cbf;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">喂藥</button>`;
-      prnDiv.appendChild(row);
-    });
+    const prnTotalDoses = prnMeds.reduce((s,m) => s + (prnDoses.get(`${currentDate}|${m.id}`) || []).length, 0);
+    const prnArrow = prnSectionOpen ? '▼' : '▶';
+    const prnCount = prnTotalDoses ? `<span style="font-size:0.68rem;color:#9c6fcf;margin-left:4px">${prnTotalDoses} 次</span>` : '';
+    prnDiv.innerHTML = `<div onclick="togglePrnSection()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:${prnSectionOpen?'6px':'0'};user-select:none;-webkit-user-select:none">
+      <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.5px;display:flex;align-items:center">PRN 按需用藥${prnCount}</div>
+      <span style="font-size:0.72rem;color:#9c6fcf">${prnArrow}</span>
+    </div>`;
+    if (prnSectionOpen) {
+      prnMeds.forEach(med => {
+        const key = `${currentDate}|${med.id}`;
+        const doses = prnDoses.get(key) || [];
+        const doseTagsHtml = doses.map((d, i) =>
+          `<span style="font-size:0.72rem;color:#6a3caf;background:#f3eeff;border-radius:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px">
+            ${d.time}
+            <button onclick="deletePrnDose('${med.id}',${i})" style="background:none;border:none;color:#bbb;font-size:0.7rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
+          </span>`
+        ).join('');
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #f3eeff';
+        row.innerHTML = `
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text)">${escapeHtml(med.name)}${med.dosage?`<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:5px">${escapeHtml(med.dosage)}</span>`:''}</div>
+            ${doses.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${doseTagsHtml}</div>` : ''}
+          </div>
+          <button onclick="markPrnTaken('${med.id}')" style="padding:4px 11px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1.5px solid #c5aaf0;background:white;color:#7c5cbf;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">喂藥</button>`;
+        prnDiv.appendChild(row);
+      });
+    }
     list.appendChild(prnDiv);
   }
 }
@@ -2417,6 +2435,9 @@ window.toggleTodayMeds = () => {
   arrow.textContent = open ? '▶' : '▼';
   hdr.classList.toggle('expanded', !open);
 };
+
+window.toggleMedMgmt = () => { medMgmtOpen = !medMgmtOpen; renderTodayMeds(); };
+window.togglePrnSection = () => { prnSectionOpen = !prnSectionOpen; renderTodayMeds(); };
 
 function applyMedNoEnd(noEnd) {
   medNoEnd = noEnd;
