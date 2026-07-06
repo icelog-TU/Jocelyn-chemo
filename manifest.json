@@ -1,0 +1,13 @@
+{
+  "name": "琳琳的化療記錄",
+  "short_name": "化療記錄",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#fdf8f2",
+  "theme_color": "#7c5cbf",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

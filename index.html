@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>琳琳的化療記錄</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="化療記錄">
+<meta name="theme-color" content="#7c5cbf">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --pink: #f4a7b9; --pink-light: #fde8ef; --pink-dark: #d97093;
+    --cream: #fdf8f2; --text: #4a3f3f; --text-light: #8a7070;
+    --border: #ecd9d9; --shadow: 0 2px 12px rgba(180,120,120,0.10); --radius: 14px;
+    --c-med:    #9c6fcf;
+    --c-neuro:  #e03060;
+    --c-sym:    #e07050;
+    --c-food:   #5aaa7a;
+    --c-act:    #4a90d9;
+    --c-toilet: #8b6340;
+    --c-sleep:  #5070b0;
+    --c-exam:   #b03030;
+    --c-assess: #c07800;
+    --c-plan:   #16a085;
+    --c-temp:   #d97030;
+    --c-fluid:  #2a7fc0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system,'PingFang TC','Noto Sans TC',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; padding-bottom:72px; }
+
+  /* Header */
+  .app-header { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; padding:14px 16px 12px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(180,80,100,0.18); }
+  .app-header-row { display:flex; justify-content:space-between; align-items:flex-start; }
+  .app-header h1 { font-size:1.15rem; font-weight:700; }
+  .app-header p { font-size:0.75rem; opacity:0.85; margin-top:2px; }
+  .diag-badge { background:rgba(255,255,255,0.22); border-radius:10px; padding:5px 12px; text-align:center; }
+  .diag-badge .day-num { font-size:1.3rem; font-weight:800; line-height:1.1; }
+
+  /* Nav */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1.5px solid var(--border); display:flex; z-index:100; box-shadow:0 -2px 12px rgba(180,120,120,0.08); }
+  .nav-btn { flex:1; padding:8px 4px 6px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-light); font-size:0.65rem; transition:color 0.2s; }
+  .nav-btn.active { color:var(--pink-dark); }
+  .nav-btn svg { width:22px; height:22px; }
+
+  /* Pages */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* Card */
+  .card { background:white; border-radius:var(--radius); padding:14px; margin:12px 12px 0; box-shadow:var(--shadow); border:1px solid var(--border); }
+  .card-title { font-size:0.88rem; font-weight:700; color:var(--pink-dark); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+
+  /* Date nav */
+  .date-nav { display:flex; align-items:center; gap:8px; padding:10px 12px 0; }
+  .date-nav input { flex:1; padding:8px 10px; border:1.5px solid var(--border); border-radius:9px; font-size:0.88rem; color:var(--text); background:white; outline:none; font-family:inherit; }
+  .date-nav input:focus { border-color:var(--pink); }
+  .date-nav button { background:white; border:1.5px solid var(--border); border-radius:9px; padding:8px 12px; font-size:1rem; cursor:pointer; color:var(--text-light); }
+
+  /* Timeline */
+  .timeline { padding:10px 12px 0; }
+  .tl-empty { text-align:center; padding:24px 0; color:var(--text-light); font-size:0.85rem; }
+  .tl-empty .big { font-size:2rem; margin-bottom:6px; }
+  .log-entry { display:flex; gap:10px; align-items:flex-start; background:white; border-radius:12px; padding:10px 12px; margin-bottom:8px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .log-time { font-size:0.78rem; font-weight:700; color:var(--text-light); min-width:36px; padding-top:2px; flex-shrink:0; }
+  .log-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .log-body { flex:1; min-width:0; cursor:pointer; }
+  .log-body:active { opacity:0.7; }
+  .log-cat { font-size:0.72rem; font-weight:700; margin-bottom:3px; }
+  .log-content { font-size:0.85rem; line-height:1.5; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+  .log-meta { font-size:0.72rem; color:var(--text-light); margin-top:3px; }
+  .log-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  .log-tag { font-size:0.68rem; padding:2px 7px; border-radius:10px; background:#f0ecfb; color:#6a4caf; font-weight:600; }
+  .log-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; padding:0 2px; flex-shrink:0; align-self:flex-start; }
+  .log-del:hover { color:var(--c-exam); }
+
+  /* Category colors */
+  .cat-用藥    { color:var(--c-med); }    .dot-用藥    { background:var(--c-med); }
+  .cat-神經毒性 { color:var(--c-neuro); }  .dot-神經毒性 { background:var(--c-neuro); }
+  .cat-症狀    { color:var(--c-sym); }    .dot-症狀    { background:var(--c-sym); }
+  .cat-飲食    { color:var(--c-food); }   .dot-飲食    { background:var(--c-food); }
+  .cat-活動功能 { color:var(--c-act); }    .dot-活動功能 { background:var(--c-act); }
+  .cat-排泄    { color:var(--c-toilet); } .dot-排泄    { background:var(--c-toilet); }
+  .cat-睡眠    { color:var(--c-sleep); }  .dot-睡眠    { background:var(--c-sleep); }
+  .cat-檢查    { color:var(--c-exam); }   .dot-檢查    { background:var(--c-exam); }
+  .cat-評估    { color:var(--c-assess); } .dot-評估    { background:var(--c-assess); }
+  .cat-醫療計畫 { color:var(--c-plan); }   .dot-醫療計畫 { background:var(--c-plan); }
+  .cat-體溫    { color:var(--c-temp); }   .dot-體溫    { background:var(--c-temp); }
+  .cat-飲水    { color:#2a7fc0; }        .dot-飲水    { background:#2a7fc0; }
+
+  /* Entry form */
+  .entry-form { background:white; border-radius:var(--radius); padding:14px; margin:10px 12px 12px; box-shadow:var(--shadow); border:1.5px solid var(--pink-light); }
+  .form-title { font-size:0.82rem; font-weight:700; color:var(--pink-dark); margin-bottom:10px; }
+
+  /* Mode toggle */
+  .mode-toggle { display:flex; gap:6px; margin-bottom:12px; }
+  .mode-btn { flex:1; padding:7px; border-radius:9px; border:1.5px solid var(--border); background:white; font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--text-light); font-family:inherit; transition:all 0.18s; }
+  .mode-btn.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); }
+
+  /* Category chips */
+  .cat-chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:10px; scrollbar-width:none; }
+  .cat-chips::-webkit-scrollbar { display:none; }
+  .cat-chip { flex-shrink:0; padding:5px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; transition:all 0.18s; }
+  .cat-chip.sel-用藥    { background:#f3ecfb; border-color:var(--c-med);    color:var(--c-med);    font-weight:700; }
+  .cat-chip.sel-神經毒性 { background:#fdeaf0; border-color:var(--c-neuro);  color:var(--c-neuro);  font-weight:700; }
+  .cat-chip.sel-症狀    { background:#fdf0ec; border-color:var(--c-sym);    color:var(--c-sym);    font-weight:700; }
+  .cat-chip.sel-飲食    { background:#eaf7ee; border-color:var(--c-food);   color:var(--c-food);   font-weight:700; }
+  .cat-chip.sel-活動功能 { background:#eaf2fc; border-color:var(--c-act);    color:var(--c-act);    font-weight:700; }
+  .cat-chip.sel-排泄    { background:#f5ede6; border-color:var(--c-toilet); color:var(--c-toilet); font-weight:700; }
+  .cat-chip.sel-睡眠    { background:#eaeff8; border-color:var(--c-sleep);  color:var(--c-sleep);  font-weight:700; }
+  .cat-chip.sel-檢查    { background:#fdeaea; border-color:var(--c-exam);   color:var(--c-exam);   font-weight:700; }
+  .cat-chip.sel-評估    { background:#fff4e0; border-color:var(--c-assess); color:var(--c-assess); font-weight:700; }
+  .cat-chip.sel-醫療計畫 { background:#e6f7f4; border-color:var(--c-plan);   color:var(--c-plan);   font-weight:700; }
+
+  /* Form fields */
+  textarea, input[type=text], input[type=number], input[type=time], select {
+    width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px;
+    font-size:0.88rem; color:var(--text); background:var(--cream); outline:none;
+    transition:border-color 0.2s; font-family:inherit;
+  }
+  textarea:focus, input:focus, select:focus { border-color:var(--pink); background:white; }
+  textarea { resize:none; min-height:76px; }
+  .field-label { font-size:0.78rem; color:var(--text-light); margin-bottom:4px; margin-top:10px; display:block; }
+  .field-label:first-child { margin-top:0; }
+  .time-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .time-row label { font-size:0.78rem; color:var(--text-light); white-space:nowrap; }
+  .time-row input { width:110px !important; }
+
+  /* Severity */
+  .sev-row { margin-top:10px; }
+  .sev-lbl-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .sev-lbl-row span { font-size:0.78rem; color:var(--text-light); }
+  .sev-lbl-row .val { font-weight:700; color:var(--c-sym); }
+  input[type=range] { width:100%; accent-color:var(--c-sym); }
+  .sev-ends { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-light); margin-top:2px; }
+
+  /* Blood fields */
+  .blood-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .blood-item label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .blood-item input { padding:7px 10px; font-size:0.85rem; }
+
+  /* Fluid card */
+  .today-fluid-wrap { margin:8px 12px 0; background:white; border:1.5px solid #a8d0f0; border-radius:12px; padding:10px 14px; }
+  .today-fluid-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .today-fluid-title { font-size:0.82rem; font-weight:700; color:var(--c-fluid); }
+  .fluid-total { font-size:1rem; font-weight:800; color:var(--c-fluid); transition:color 0.3s; }
+  .fluid-list { margin-bottom:6px; }
+  .fluid-entry-row { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:0.82rem; border-bottom:1px solid #f0f6fc; }
+  .fluid-entry-row:last-child { border-bottom:none; }
+  .fluid-entry-time { color:var(--text-light); min-width:36px; font-size:0.78rem; flex-shrink:0; }
+  .fluid-entry-name { flex:1; color:var(--text); min-width:0; }
+  .fluid-entry-amount { font-weight:700; color:var(--c-fluid); white-space:nowrap; flex-shrink:0; }
+  .fluid-entry-del { background:none; border:none; color:#ccc; cursor:pointer; padding:0 2px; font-size:0.9rem; flex-shrink:0; }
+  .fluid-add-row { display:flex; gap:5px; margin-top:8px; align-items:center; }
+  .fluid-time-input { width:86px !important; padding:5px 7px !important; font-size:0.82rem; flex-shrink:0; }
+  .fluid-name-select { flex:1; min-width:0; padding:5px 8px; font-size:0.82rem; border:1px solid #c8dff0; border-radius:8px; background:white; color:var(--text); font-family:inherit; height:32px; }
+  .fluid-custom-row { display:none; margin-top:4px; }
+  .fluid-custom-row.visible { display:block; }
+  .fluid-name-input { width:100%; padding:5px 8px !important; font-size:0.82rem; box-sizing:border-box; }
+  .fluid-amount-input { width:60px !important; padding:5px 6px !important; font-size:0.82rem; text-align:center; flex-shrink:0; }
+  .fluid-add-btn { padding:5px 10px; border-radius:18px; font-size:0.78rem; font-weight:600; border:1.5px solid #8ac4e8; background:white; color:var(--c-fluid); cursor:pointer; font-family:inherit; flex-shrink:0; white-space:nowrap; }
+
+  /* Temperature card */
+  .today-temp-wrap { margin:8px 12px 0; background:white; border:1.5px solid #f0d0a8; border-radius:12px; padding:10px 14px; }
+  .today-temp-title { font-size:0.82rem; font-weight:700; color:#c06820; margin-bottom:8px; }
+  .temp-row { display:flex; align-items:center; gap:8px; padding:3px 0; }
+  .temp-label { font-size:0.82rem; font-weight:700; color:var(--text-light); width:18px; flex-shrink:0; }
+  .temp-saved { display:flex; align-items:center; gap:6px; }
+  .temp-val { font-size:1rem; font-weight:700; color:var(--c-temp); }
+  .temp-val.fever { color:#c62828; }
+  .temp-edit { display:flex; align-items:center; gap:6px; }
+  .temp-input { width:72px !important; padding:5px 8px !important; font-size:0.9rem; text-align:center; }
+  .temp-unit { font-size:0.78rem; color:var(--text-light); }
+  .temp-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; padding:0 2px; }
+  .temp-save-btn { padding:5px 12px; border-radius:18px; font-size:0.78rem; font-weight:600; border:1.5px solid #f0c090; background:white; color:#c06820; cursor:pointer; font-family:inherit; flex-shrink:0; }
+
+  /* Tags */
+  .tag-section { margin-top:10px; }
+  .tag-input-row { display:flex; gap:6px; margin-bottom:6px; }
+  .tag-input-row input { flex:1; padding:7px 10px; font-size:0.82rem; }
+  .tag-input-row button { background:var(--pink-dark); color:white; border:none; border-radius:9px; padding:7px 12px; font-size:0.8rem; cursor:pointer; white-space:nowrap; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; min-height:0; }
+  .tag-chip { display:flex; align-items:center; gap:4px; font-size:0.72rem; padding:3px 9px; border-radius:10px; background:#f0ecfb; color:#6a4caf; font-weight:600; }
+  .tag-chip button { background:none; border:none; color:#9c6fcf; cursor:pointer; font-size:0.85rem; padding:0; line-height:1; }
+  .tag-suggest { display:flex; flex-wrap:nowrap; gap:5px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .tag-suggest::-webkit-scrollbar { display:none; }
+  .tag-sug-chip { flex-shrink:0; }
+  .tag-sug-chip { font-size:0.72rem; padding:3px 9px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; white-space:nowrap; }
+  .tag-sug-chip:hover { background:#f0ecfb; }
+
+  /* AI editable preview cards */
+  .ai-edit-card { background:white; border:1.5px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; }
+  .ai-edit-header { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .ai-edit-header input[type=time] { width:105px; padding:6px 8px; font-size:0.82rem; flex-shrink:0; }
+  .ai-edit-header select { flex:1; padding:6px 8px; font-size:0.82rem; min-width:0; }
+  .ai-content-ta { min-height:60px; font-size:0.85rem; margin-bottom:0; padding:7px 10px; }
+  .ai-tag-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; min-height:0; }
+  .ai-tag-add-row { display:flex; gap:6px; margin-top:6px; }
+  .ai-tag-add-row input { flex:1; padding:5px 8px; font-size:0.78rem; }
+  .ai-tag-add-row button { background:var(--pink-dark); color:white; border:none; border-radius:8px; padding:5px 10px; font-size:0.8rem; cursor:pointer; }
+
+  /* Buttons */
+  .btn { display:block; width:100%; padding:12px; border-radius:var(--radius); border:none; cursor:pointer; font-size:0.92rem; font-weight:700; font-family:inherit; transition:opacity 0.18s,transform 0.1s; margin-top:10px; }
+  .btn:active { transform:scale(0.98); }
+  .btn-primary { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; }
+  .btn-secondary { background:var(--pink-light); color:var(--pink-dark); }
+  .btn-ai { background:linear-gradient(135deg,#7c5cbf,#a07be0); color:white; }
+  .btn:disabled { opacity:0.5; }
+  .btn-sm { display:inline-block; width:auto; padding:7px 16px; font-size:0.82rem; }
+
+  /* Alert */
+  .alert { padding:9px 13px; border-radius:10px; font-size:0.82rem; margin:8px 0; display:none; }
+  .alert.success { background:#e8f5e9; color:#388e3c; display:block; }
+  .alert.error { background:#fdecea; color:#c62828; display:block; }
+
+  /* Spinner */
+  .spinner { display:inline-block; width:16px; height:16px; border:2.5px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:5px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* History */
+  .hist-filter { padding:10px 12px 0; }
+  .hist-search-wrap { position:relative; margin-bottom:8px; }
+  .hist-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-light); }
+  .hist-search-wrap input { padding:9px 36px 9px 34px; font-size:0.88rem; width:100%; }
+  .hist-search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-light); font-size:1.1rem; cursor:pointer; padding:0 4px; display:none; }
+  .hist-date-row { display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; }
+  .hist-date-row > div { flex:1; }
+  .hist-date-row label { font-size:0.72rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .hist-date-row input { padding:8px 10px; font-size:0.82rem; }
+  .hist-date-row button { padding:8px 14px; border-radius:9px; border:none; background:var(--pink-dark); color:white; font-size:0.82rem; font-weight:700; cursor:pointer; }
+  .hist-collapse-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:white; border:1.5px solid var(--border); border-radius:9px; cursor:pointer; margin-bottom:6px; font-size:0.82rem; color:var(--text-light); user-select:none; -webkit-user-select:none; }
+  .hist-collapse-hdr:active { opacity:0.75; }
+  .hist-collapse-hdr.active-filter { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .hist-filter-body { margin-bottom:8px; padding:4px 2px 2px; }
+  .hist-cat-row { display:flex; flex-wrap:wrap; gap:5px; }
+  .hist-cat-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; }
+  .hist-cat-btn.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .hist-tag-row { display:flex; flex-wrap:wrap; gap:5px; }
+  .hist-tag-btn { font-size:0.72rem; padding:4px 10px; border-radius:10px; border:1.5px solid #d9cff0; color:#7a5cbf; background:white; cursor:pointer; }
+  .hist-tag-btn.active { background:#f0ecfb; border-color:#9c6fcf; font-weight:700; }
+  .hist-list { padding:10px 12px; }
+  .hist-search-highlight { background:#fff3a0; border-radius:2px; }
+  .hist-day-hdr { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 12px; background:var(--pink-light); border-radius:10px; cursor:pointer; margin-bottom:4px; user-select:none; -webkit-user-select:none; }
+  .hist-day-hdr:active { opacity:0.75; }
+  .hist-day-hdr-date { font-size:0.82rem; font-weight:700; color:var(--pink-dark); }
+  .hist-day-hdr-meta { font-size:0.72rem; color:var(--pink-dark); display:flex; align-items:center; gap:5px; }
+  .hist-day-body { padding-bottom:4px; }
+
+  /* AI chat */
+  .chat-wrap { padding:10px 12px; }
+  .chat-box { background:white; border-radius:var(--radius); border:1px solid var(--border); min-height:260px; max-height:380px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+  .msg { max-width:88%; }
+  .msg.user { align-self:flex-end; }
+  .msg.ai { align-self:flex-start; }
+  .msg-bubble { padding:9px 13px; border-radius:16px; font-size:0.86rem; line-height:1.55; white-space:pre-wrap; }
+  .msg.user .msg-bubble { background:var(--pink-dark); color:white; border-bottom-right-radius:4px; }
+  .msg.ai .msg-bubble { background:#f0ecf7; color:var(--text); border-bottom-left-radius:4px; }
+  .msg-time { font-size:0.68rem; color:var(--text-light); margin-top:3px; }
+  .msg.user .msg-time { text-align:right; }
+  .chat-input-row { display:flex; gap:8px; margin-bottom:10px; }
+  .chat-input-row input { flex:1; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px; font-size:0.88rem; font-family:inherit; color:var(--text); background:white; outline:none; }
+  .chat-input-row input:focus { border-color:var(--pink); }
+  .chat-input-row button { background:#7c5cbf; color:white; border:none; border-radius:9px; padding:0 16px; font-size:1.1rem; cursor:pointer; }
+  .quick-btns { display:flex; flex-direction:column; gap:7px; }
+
+  /* Settings */
+  .settings-group { margin-bottom:10px; }
+  .settings-label { font-size:0.78rem; color:var(--text-light); margin-bottom:4px; }
+
+  /* Course / Milestones */
+  .course-wrap { padding:10px 12px; }
+  .course-section-hdr { font-size:0.72rem; font-weight:700; color:var(--text-light); padding:10px 0 5px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .milestone-item { display:flex; gap:10px; align-items:flex-start; background:white; border-radius:12px; padding:10px 12px; margin-bottom:7px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .milestone-item.future { border-left:3px solid var(--pink-dark); }
+  .milestone-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+  .milestone-body { flex:1; min-width:0; }
+  .milestone-type-lbl { font-size:0.68rem; font-weight:700; color:var(--text-light); margin-bottom:1px; }
+  .milestone-name { font-size:0.9rem; font-weight:700; color:var(--text); word-break:break-word; }
+  .milestone-date { font-size:0.73rem; color:var(--text-light); margin-top:2px; }
+  .milestone-del { background:none; border:none; color:#ccc; font-size:1rem; cursor:pointer; flex-shrink:0; align-self:flex-start; padding:0 2px; }
+  .milestone-del:hover { color:var(--c-exam); }
+  .phase-badge { display:inline-block; font-size:0.68rem; padding:1px 7px; border-radius:10px; background:rgba(217,112,147,0.14); color:var(--pink-dark); font-weight:700; margin-top:3px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ms-event-icons { font-size:0.95rem; letter-spacing:1px; }
+  .ms-type-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .ms-type-chip { padding:6px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; }
+  .ms-type-chip.active { background:var(--pink-light); border-color:var(--pink-dark); color:var(--pink-dark); font-weight:700; }
+  .record-phase-bar { font-size:0.78rem; color:var(--pink-dark); padding:5px 14px 0; font-weight:600; }
+
+  /* Medications */
+  .today-meds-wrap { margin:6px 12px 0; }
+  .today-meds-hdr { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f3ecfb; border-radius:10px; cursor:pointer; border:1px solid #d9cff0; user-select:none; -webkit-user-select:none; }
+  .today-meds-hdr.expanded { border-radius:10px 10px 0 0; border-bottom:none; }
+  .today-meds-title { font-size:0.85rem; font-weight:700; color:#7c5cbf; }
+  .today-meds-body { background:white; border:1px solid #d9cff0; border-top:none; border-radius:0 0 10px 10px; padding:8px 10px 10px; }
+  .med-row { display:flex; align-items:flex-start; gap:8px; padding:5px 0; border-bottom:1px solid #f3eeff; }
+  .med-row:last-child { border-bottom:none; }
+  .med-row-time { font-size:0.8rem; font-weight:700; color:#6a3caf; min-width:48px; flex-shrink:0; padding-top:4px; white-space:nowrap; }
+  .med-row-drugs { display:flex; flex-wrap:wrap; gap:5px; }
+  .med-chip { padding:4px 11px; border-radius:20px; font-size:0.78rem; font-weight:600; border:1.5px solid #c5aaf0; background:white; color:#7c5cbf; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+  .med-chip.taken { background:#7c5cbf; color:white; border-color:#7c5cbf; }
+  .med-act-btn { background:none; border:none; color:#ccc; font-size:0.88rem; cursor:pointer; padding:1px 4px; }
+  .med-act-btn:hover { color:var(--pink-dark); }
+  .med-sched-chip { padding:6px 11px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); white-space:nowrap; font-family:inherit; }
+  .med-sched-chip.active { background:#f3ecfb; border-color:#9c6fcf; color:#6a3caf; font-weight:700; }
+  .med-dow-chip { padding:6px 10px; border-radius:50%; min-width:34px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; text-align:center; }
+  .med-dow-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
+  .med-meal-chip { padding:6px 12px; border-radius:20px; font-size:0.78rem; border:1.5px solid var(--border); background:white; cursor:pointer; color:var(--text-light); font-family:inherit; }
+  .med-meal-chip.active { background:#7c5cbf; border-color:#7c5cbf; color:white; font-weight:700; }
+  .hist-selected { background:#f0e8ff !important; outline:2px solid #9c6fcf; }
+  .hist-select-bar { position:fixed; bottom:57px; left:0; right:0; background:#7c5cbf; color:white; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; z-index:200; box-shadow:0 -2px 12px rgba(100,50,150,0.25); }
+
+  /* Edit modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; }
+  .modal-overlay.open { display:block; }
+  .modal-sheet { position:fixed; bottom:0; left:0; right:0; background:white; border-radius:20px 20px 0 0; padding:20px 16px 36px; z-index:201; box-shadow:0 -4px 24px rgba(0,0,0,0.15); transform:translateY(100%); transition:transform 0.28s cubic-bezier(.32,.72,0,1); max-height:90vh; overflow-y:auto; }
+  .modal-sheet.open { transform:translateY(0); }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+  .modal-title { font-size:1rem; font-weight:700; color:var(--pink-dark); margin-bottom:14px; }
+  .modal-row { display:flex; gap:8px; margin-bottom:10px; }
+  .modal-row > div { flex:1; }
+  .modal-row label { font-size:0.75rem; color:var(--text-light); display:block; margin-bottom:3px; }
+  .modal-btns { display:flex; gap:8px; margin-top:14px; }
+  .modal-btns button { flex:1; padding:12px; border-radius:var(--radius); border:none; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  .modal-btn-cancel { background:var(--pink-light); color:var(--pink-dark); }
+  .modal-btn-save { background:linear-gradient(135deg,var(--pink-dark),var(--pink)); color:white; }
+  .modal-field { margin-bottom:10px; }
+  .modal-field label { font-size:0.75rem; color:var(--text-light); display:block; margin-bottom:3px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <div class="app-header-row">
+    <div>
+      <h1>🌸 琳琳的化療記錄</h1>
+      <p id="header-date"></p>
+    </div>
+    <div class="diag-badge">
+      <div class="day-num" id="diag-day">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- 記錄頁 -->
+<div id="page-record" class="page active">
+  <div class="date-nav">
+    <button onclick="changeDate(-1)">◀</button>
+    <input type="date" id="record-date" onchange="onDateChange()">
+    <button onclick="changeDate(1)">▶</button>
+  </div>
+  <div id="record-phase" class="record-phase-bar" style="display:none"></div>
+
+  <!-- 今日用藥 -->
+  <div class="today-meds-wrap" id="today-meds-wrap" style="display:none">
+    <div class="today-meds-hdr expanded" id="today-meds-hdr" onclick="toggleTodayMeds()">
+      <span class="today-meds-title">💊 今日用藥</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <span id="today-meds-count" style="font-size:0.72rem;color:#9c6fcf"></span>
+        <span id="today-meds-arrow" style="font-size:0.75rem;color:#9c6fcf">▼</span>
+      </span>
+    </div>
+    <div class="today-meds-body" id="today-meds-body">
+      <div id="today-meds-list"></div>
+    </div>
+  </div>
+
+  <!-- 今日體溫 -->
+  <div class="today-temp-wrap" id="today-temp-wrap">
+    <div class="today-temp-title">🌡️ 今日體溫</div>
+    <div class="temp-row">
+      <span class="temp-label">早</span>
+      <span class="temp-saved" id="temp-saved-早" style="display:none">
+        <span class="temp-val" id="temp-display-早"></span>
+        <button class="temp-del" onclick="deleteTempReading('早')">✕</button>
+      </span>
+      <span class="temp-edit" id="temp-edit-早">
+        <input type="number" id="temp-input-早" class="temp-input" step="0.1" min="35" max="42" placeholder="—">
+        <span class="temp-unit">°C</span>
+        <button class="temp-save-btn" onclick="saveTempReading('早')">記錄</button>
+      </span>
+    </div>
+    <div class="temp-row">
+      <span class="temp-label">晚</span>
+      <span class="temp-saved" id="temp-saved-晚" style="display:none">
+        <span class="temp-val" id="temp-display-晚"></span>
+        <button class="temp-del" onclick="deleteTempReading('晚')">✕</button>
+      </span>
+      <span class="temp-edit" id="temp-edit-晚">
+        <input type="number" id="temp-input-晚" class="temp-input" step="0.1" min="35" max="42" placeholder="—">
+        <span class="temp-unit">°C</span>
+        <button class="temp-save-btn" onclick="saveTempReading('晚')">記錄</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- 今日飲水 -->
+  <div class="today-fluid-wrap" id="today-fluid-wrap">
+    <div class="today-fluid-hdr">
+      <span class="today-fluid-title">💧 今日飲水</span>
+      <span class="fluid-total" id="fluid-total">0 cc</span>
+    </div>
+    <div class="fluid-list" id="fluid-list"></div>
+    <div class="fluid-add-row">
+      <input type="time" id="fluid-time" class="fluid-time-input" onfocus="this.value=nowTime()">
+      <select id="fluid-name-select" class="fluid-name-select" onchange="onFluidSelectChange()">
+        <option value="牛奶">牛奶</option>
+        <option value="水">水</option>
+        <option value="飲料">飲料</option>
+        <option value="其他">其他…</option>
+      </select>
+      <input type="number" id="fluid-amount" class="fluid-amount-input" placeholder="cc" min="1" max="5000" onkeydown="if(event.key==='Enter'){event.preventDefault();addFluidEntry()}">
+      <button class="fluid-add-btn" onclick="addFluidEntry()">記錄</button>
+    </div>
+    <div class="fluid-custom-row" id="fluid-custom-row">
+      <input type="text" id="fluid-name-custom" class="fluid-name-input" placeholder="請輸入種類…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();addFluidEntry()}">
+    </div>
+  </div>
+
+  <!-- 新增記錄表單 -->
+  <div class="entry-form">
+    <div class="form-title">＋ 新增記錄</div>
+    <div id="form-alert" class="alert"></div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">手動</button>
+      <button class="mode-btn" id="mode-ai" onclick="setMode('ai')">✨ AI 智慧輸入</button>
+    </div>
+
+    <!-- AI 輸入 -->
+    <div id="ai-section" style="display:none">
+      <span class="field-label">直接說你要記錄的事，AI 幫你分類</span>
+      <textarea id="ai-raw" placeholder="例：下午兩點打了嗎啡 5mg，之後噁心感很強大概 7 分，然後吃了半碗稀飯" style="min-height:90px"></textarea>
+      <button class="btn btn-ai" id="ai-parse-btn" onclick="parseWithAI()">✨ AI 解析</button>
+      <div id="ai-preview" style="margin-top:10px"></div>
+      <button class="btn btn-primary" id="ai-save-all-btn" onclick="saveAllParsed()" style="display:none">💾 全部儲存</button>
+    </div>
+
+    <!-- 手動輸入 -->
+    <div id="manual-section">
+      <div class="time-row">
+        <label>時間</label>
+        <input type="time" id="entry-time">
+      </div>
+
+      <div class="cat-chips" id="cat-chips">
+        <div class="cat-chip" data-cat="用藥"    onclick="selectCat(this)">💊 用藥</div>
+        <div class="cat-chip" data-cat="神經毒性" onclick="selectCat(this)">❤️ 神經毒性</div>
+        <div class="cat-chip" data-cat="症狀"    onclick="selectCat(this)">🤒 症狀</div>
+        <div class="cat-chip" data-cat="飲食"    onclick="selectCat(this)">🍚 飲食</div>
+        <div class="cat-chip" data-cat="活動功能" onclick="selectCat(this)">🚶 活動/功能</div>
+        <div class="cat-chip" data-cat="排泄"    onclick="selectCat(this)">🚽 排泄</div>
+        <div class="cat-chip" data-cat="睡眠"    onclick="selectCat(this)">😴 睡眠</div>
+        <div class="cat-chip" data-cat="檢查"    onclick="selectCat(this)">🔬 檢查</div>
+        <div class="cat-chip" data-cat="評估"    onclick="selectCat(this)">📈 評估</div>
+        <div class="cat-chip" data-cat="醫療計畫" onclick="selectCat(this)">👩‍⚕️ 醫療計畫</div>
+      </div>
+
+      <span class="field-label">內容</span>
+      <textarea id="entry-content" placeholder="輸入記錄內容…"></textarea>
+
+      <!-- 症狀/神經毒性嚴重度 -->
+      <div id="sev-section" style="display:none">
+        <div class="sev-row">
+          <div class="sev-lbl-row"><span>嚴重程度</span><span class="val" id="sev-val">0</span></div>
+          <input type="range" min="0" max="10" value="0" id="sev-slider" oninput="document.getElementById('sev-val').textContent=this.value">
+          <div class="sev-ends"><span>沒有</span><span>非常嚴重</span></div>
+        </div>
+      </div>
+
+      <!-- 血液/檢查欄位 -->
+      <div id="blood-section" style="display:none">
+        <div class="blood-grid">
+          <div class="blood-item"><label>WBC (×10³/μL)</label><input type="number" id="b-wbc" placeholder="4.5" step="0.01"></div>
+          <div class="blood-item"><label>ANC (×10³/μL)</label><input type="number" id="b-anc" placeholder="2.0" step="0.01"></div>
+          <div class="blood-item"><label>Hb (g/dL)</label><input type="number" id="b-hb" placeholder="12.5" step="0.1"></div>
+          <div class="blood-item"><label>PLT (×10³/μL)</label><input type="number" id="b-plt" placeholder="150" step="1"></div>
+          <div class="blood-item"><label>ALT (U/L)</label><input type="number" id="b-alt" placeholder="25" step="1"></div>
+          <div class="blood-item"><label>Cr (mg/dL)</label><input type="number" id="b-cr" placeholder="0.8" step="0.01"></div>
+        </div>
+      </div>
+
+      <!-- 標籤 -->
+      <div class="tag-section">
+        <span class="field-label">標籤（可選）</span>
+        <div class="tag-list" id="tag-list"></div>
+        <div class="tag-input-row">
+          <input type="text" id="tag-input" placeholder="打幾個字就會出現建議" autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag()}">
+          <button onclick="addTag()">＋</button>
+        </div>
+        <div class="tag-suggest" id="tag-suggest"></div>
+      </div>
+
+      <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 儲存</button>
+    </div>
+  </div>
+
+  <div class="timeline" id="timeline-wrap">
+    <div class="tl-empty"><div class="big">📭</div>今天還沒有記錄</div>
+  </div>
+</div>
+
+<!-- 歷史頁 -->
+<div id="page-history" class="page">
+  <div class="hist-filter">
+    <div class="hist-search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="search" id="hist-search" placeholder="搜尋記錄、標籤、分類…" oninput="onHistSearch(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="hist-search-clear" id="hist-search-clear" onclick="clearHistSearch()">✕</button>
+    </div>
+    <div class="hist-date-row">
+      <div><label>從</label><input type="date" id="hist-from"></div>
+      <div><label>到</label><input type="date" id="hist-to"></div>
+      <button onclick="loadHistory()">查詢</button>
+    </div>
+
+    <!-- 類別篩選 -->
+    <div class="hist-collapse-hdr" id="hist-cat-hdr" onclick="toggleHistSection('cat')">
+      <span id="hist-cat-hdr-text">📂 類別篩選</span>
+      <span id="hist-cat-arrow">▶</span>
+    </div>
+    <div id="hist-cat-section" class="hist-filter-body" style="display:none">
+      <div class="hist-cat-row">
+        <button class="hist-cat-btn" data-cat="用藥"    onclick="filterByCat('用藥')">💊 用藥</button>
+        <button class="hist-cat-btn" data-cat="神經毒性" onclick="filterByCat('神經毒性')">❤️ 神經毒性</button>
+        <button class="hist-cat-btn" data-cat="症狀"    onclick="filterByCat('症狀')">🤒 症狀</button>
+        <button class="hist-cat-btn" data-cat="飲食"    onclick="filterByCat('飲食')">🍚 飲食</button>
+        <button class="hist-cat-btn" data-cat="活動功能" onclick="filterByCat('活動功能')">🚶 活動功能</button>
+        <button class="hist-cat-btn" data-cat="排泄"    onclick="filterByCat('排泄')">🚽 排泄</button>
+        <button class="hist-cat-btn" data-cat="睡眠"    onclick="filterByCat('睡眠')">😴 睡眠</button>
+        <button class="hist-cat-btn" data-cat="檢查"    onclick="filterByCat('檢查')">🔬 檢查</button>
+        <button class="hist-cat-btn" data-cat="評估"    onclick="filterByCat('評估')">📈 評估</button>
+        <button class="hist-cat-btn" data-cat="醫療計畫" onclick="filterByCat('醫療計畫')">👩‍⚕️ 醫療計畫</button>
+        <button class="hist-cat-btn" data-cat="體溫" onclick="filterByCat('體溫')">🌡️ 體溫</button>
+        <button class="hist-cat-btn" data-cat="飲水" onclick="filterByCat('飲水')">💧 飲水</button>
+      </div>
+    </div>
+
+    <!-- 標籤篩選 -->
+    <div class="hist-collapse-hdr" id="hist-tag-hdr" onclick="toggleHistSection('tag')">
+      <span id="hist-tag-hdr-text">🏷️ 標籤篩選</span>
+      <span id="hist-tag-arrow">▶</span>
+    </div>
+    <div id="hist-tag-section" class="hist-filter-body" style="display:none">
+      <div id="hist-tag-filter" class="hist-tag-row"></div>
+    </div>
+  </div>
+  <div class="hist-list" id="hist-list"></div>
+  <div class="hist-select-bar" id="hist-select-bar" style="display:none">
+    <span id="hist-select-count" style="font-size:0.9rem;font-weight:600">已選 0 筆</span>
+    <div style="display:flex;gap:10px">
+      <button onclick="cancelHistSelect()" style="padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.6);background:transparent;color:white;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit">取消</button>
+      <button onclick="deleteHistSelected()" style="padding:6px 14px;border-radius:20px;border:none;background:white;color:#7c5cbf;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI 頁 -->
+<div id="page-ai" class="page">
+  <div class="chat-wrap">
+    <div class="chat-box" id="chat-box">
+      <div class="msg ai">
+        <div class="msg-bubble">您好！我是琳琳的化療記錄助理 🌸<br>可以幫你查詢記錄、分析症狀趨勢，或回答任何問題。</div>
+        <div class="msg-time">剛剛</div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="輸入問題…" onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()" id="chat-send-btn">➤</button>
+    </div>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近神經毒性的症狀有什麼變化？Jaw pain 和手腳麻有改善嗎？')">❤️ 神經毒性趨勢</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近一週的用藥記錄有哪些？止痛藥使用頻率如何？')">💊 用藥記錄</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('最近的血液和檢查數據正常嗎？有哪些需要注意？')">🔬 檢查數據分析</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('排便和排尿狀況最近如何？有便秘或尿滯留嗎？')">🚽 排泄狀況</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickAsk('活動功能最近有變化嗎？能走路、站立的狀況怎樣？')">🚶 活動功能評估</button>
+    </div>
+  </div>
+</div>
+
+<!-- 設定頁 -->
+<div id="page-settings" class="page">
+  <div class="card" style="margin-top:12px">
+    <div class="card-title"><span>ℹ️</span> 關於</div>
+    <p style="font-size:0.82rem;color:var(--text-light);line-height:1.6">琳琳的化療記錄 App 🌸<br>資料儲存於 Firebase Firestore<br>AI 功能由 ChatGPT (OpenAI) 提供</p>
+    <p id="app-version-label" style="font-size:0.72rem;color:var(--text-light);margin-top:6px">版本：<span id="app-build-date"></span></p>
+    <button class="btn btn-secondary btn-sm" onclick="forceUpdate()" style="margin-top:10px">🔄 強制更新 App</button>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>🏷️</span> 標籤管理</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">統一更名或刪除標籤，會同步套用到所有記錄。</p>
+    <button class="btn btn-secondary btn-sm" onclick="loadTagsForMgmt()" id="tag-mgmt-load-btn">載入所有標籤</button>
+    <div id="tag-mgmt-list" style="margin-top:10px"></div>
+    <div id="tag-mgmt-alert" class="alert"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>📲</span> 跨裝置同步設定</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px;line-height:1.6">在這台裝置匯出代碼，到新裝置貼入匯入，Firebase 和 AI 設定即可還原。</p>
+    <button class="btn btn-secondary btn-sm" onclick="exportSettings()" style="margin-bottom:4px">📤 匯出設定代碼</button>
+    <div id="export-code-wrap" style="display:none;margin-top:8px">
+      <textarea id="export-code" autocomplete="off" autocorrect="off" spellcheck="false" style="min-height:72px;font-family:monospace;font-size:0.68rem;word-break:break-all;resize:none" readonly></textarea>
+      <button class="btn btn-primary btn-sm" onclick="copySettingsCode()" style="margin-top:4px">📋 複製代碼</button>
+      <div id="copy-alert" class="alert"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="settings-label">貼上設定代碼（在新裝置匯入）</div>
+      <textarea id="import-code" placeholder="貼上從舊裝置複製的代碼…" autocomplete="off" autocorrect="off" spellcheck="false" style="min-height:72px;font-family:monospace;font-size:0.68rem;word-break:break-all;resize:none;margin-top:4px"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="importSettings()" style="margin-top:4px">📥 匯入設定</button>
+      <div id="import-alert" class="alert"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>🔥</span> Firebase 設定</div>
+    <div class="settings-group"><div class="settings-label">API Key</div><input type="text" id="cfg-apiKey" placeholder="AIza..." autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">Auth Domain</div><input type="text" id="cfg-authDomain" placeholder="your-app.firebaseapp.com" autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">Project ID</div><input type="text" id="cfg-projectId" placeholder="your-project-id" autocomplete="off"></div>
+    <div class="settings-group"><div class="settings-label">App ID</div><input type="text" id="cfg-appId" placeholder="1:123:web:abc" autocomplete="off"></div>
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 儲存 Firebase 設定</button>
+    <div id="firebase-alert" class="alert"></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title"><span>🤖</span> ChatGPT AI 設定</div>
+    <p style="font-size:0.78rem;color:var(--text-light);margin-bottom:10px">填入 OpenAI API Key<br><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--pink-dark)">取得 API Key →</a></p>
+    <div class="settings-group">
+      <div class="settings-label">OpenAI API Key</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="cfg-claudeKey" placeholder="sk-..." autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1;-webkit-text-security:disc;font-family:monospace">
+        <button onclick="toggleKeyVisibility()" id="key-eye-btn" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:1rem;color:var(--text-light);flex-shrink:0">👁</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveClaudeConfig()">💾 儲存 AI 設定</button>
+    <div id="claude-alert" class="alert"></div>
+  </div>
+</div>
+
+<!-- 課表頁 -->
+<div id="page-course" class="page">
+  <div class="course-wrap">
+    <button class="btn btn-primary" onclick="openMilestoneForm()" style="margin-bottom:10px;display:flex;align-items:center;gap:5px;justify-content:center">
+      <span style="font-size:1.1rem">＋</span> 新增課程事件
+    </button>
+    <div id="course-list"></div>
+  </div>
+</div>
+
+<!-- 編輯 Modal -->
+<div class="modal-overlay" id="edit-overlay" onclick="closeEditModal()"></div>
+<div class="modal-sheet" id="edit-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title">✏️ 編輯記錄</div>
+  <div class="modal-row">
+    <div><label>時間</label><input type="time" id="edit-time"></div>
+    <div>
+      <label>類別</label>
+      <select id="edit-cat" onchange="onEditCatChange()">
+        <option>用藥</option><option>神經毒性</option><option>症狀</option>
+        <option>飲食</option><option>活動功能</option><option>排泄</option>
+        <option>睡眠</option><option>檢查</option><option>評估</option><option>醫療計畫</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-field"><label>內容</label><textarea id="edit-content" style="min-height:80px"></textarea></div>
+  <div id="edit-sev-row" style="display:none;margin-bottom:10px">
+    <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:4px">嚴重程度</label>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:0.78rem;color:var(--text-light)">0 = 沒有</span>
+      <span style="font-size:0.88rem;font-weight:700;color:var(--c-sym)" id="edit-sev-val">0</span>
+    </div>
+    <input type="range" min="0" max="10" value="0" id="edit-sev" oninput="document.getElementById('edit-sev-val').textContent=this.value">
+  </div>
+  <!-- 編輯標籤 -->
+  <div class="modal-field">
+    <label>標籤</label>
+    <div class="tag-list" id="edit-tag-list"></div>
+    <div class="tag-input-row">
+      <input type="text" id="edit-tag-input" placeholder="打幾個字就會出現建議" oninput="filterEditTagSuggestions(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag()}">
+      <button onclick="addEditTag()">＋</button>
+    </div>
+    <div class="tag-suggest" id="edit-tag-suggest" style="margin-top:6px"></div>
+  </div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
+    <button class="modal-btn-save" id="edit-save-btn" onclick="saveEdit()">儲存</button>
+  </div>
+</div>
+
+<!-- Milestone Modal -->
+<div class="modal-overlay" id="ms-overlay" onclick="closeMilestoneForm()"></div>
+<div class="modal-sheet" id="ms-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title">📋 新增課程事件</div>
+  <div class="modal-field">
+    <label>日期（可選未來日期預先安排）</label>
+    <input type="date" id="ms-date">
+  </div>
+  <div class="modal-field">
+    <label>類型</label>
+    <div class="ms-type-chips" id="ms-type-chips">
+      <div class="ms-type-chip active" data-type="phase" onclick="selectMsType(this)">📋 療程階段</div>
+      <div class="ms-type-chip" data-type="pause" onclick="selectMsType(this)">⏸️ 治療暫停</div>
+      <div class="ms-type-chip" data-type="admit" onclick="selectMsType(this)">🏥 入院</div>
+      <div class="ms-type-chip" data-type="discharge" onclick="selectMsType(this)">🏠 出院</div>
+      <div class="ms-type-chip" data-type="clinic" onclick="selectMsType(this)">🩺 門診</div>
+      <div class="ms-type-chip" data-type="chemo" onclick="selectMsType(this)">💉 化療日</div>
+      <div class="ms-type-chip" data-type="spine" onclick="selectMsType(this)">💉 背針</div>
+    </div>
+  </div>
+  <div class="modal-field" id="ms-name-field">
+    <label id="ms-name-label">階段名稱（如：維持期第一週）</label>
+    <input type="text" id="ms-name" placeholder="維持期第一週" autocomplete="off">
+  </div>
+  <div id="ms-form-alert" class="alert"></div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeMilestoneForm()">取消</button>
+    <button class="modal-btn-save" onclick="saveMilestone()">儲存</button>
+  </div>
+</div>
+
+<!-- Medication Modal -->
+<div class="modal-overlay" id="med-overlay" onclick="closeMedForm()"></div>
+<div class="modal-sheet" id="med-sheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="med-modal-title">💊 新增用藥提醒</div>
+  <div class="modal-field">
+    <label>藥袋照片（讓 AI 自動判讀）</label>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
+      <label for="med-photo" style="flex:1;padding:9px;border:1.5px dashed #c5aaf0;border-radius:9px;text-align:center;cursor:pointer;font-size:0.82rem;color:#9c6fcf;font-weight:600">📷 選擇藥袋照片</label>
+      <input type="file" id="med-photo" accept="image/*" capture="environment" style="display:none" onchange="onMedPhotoSelected(this)">
+      <button id="med-ai-btn" onclick="parseMedFromPhoto()" style="background:#7c5cbf;color:white;border:none;border-radius:9px;padding:9px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit" disabled>✨ AI 判讀</button>
+    </div>
+    <div id="med-photo-preview" style="margin-top:6px;display:none;text-align:center">
+      <img id="med-photo-img" style="max-width:100%;max-height:110px;border-radius:8px;object-fit:contain">
+    </div>
+    <div id="med-ai-result" style="font-size:0.75rem;color:var(--text-light);margin-top:4px;display:none"></div>
+  </div>
+  <div class="modal-field">
+    <label>藥品名稱 *</label>
+    <input type="text" id="med-name" placeholder="Morphine Sulfate" autocomplete="off">
+  </div>
+  <div class="modal-row">
+    <div><label>劑量</label><input type="text" id="med-dosage" placeholder="2cc" autocomplete="off"></div>
+    <div id="med-freq-wrap">
+      <label>每天幾次</label>
+      <select id="med-freq" onchange="onMedFreqChange()">
+        <option value="1">1 次</option>
+        <option value="2">2 次</option>
+        <option value="3">3 次</option>
+        <option value="4">4 次（q6h）</option>
+        <option value="6">6 次</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-field">
+    <label>服藥週期</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-sched-chip active" data-sched="daily" onclick="selectMedSched(this)">每天</button>
+      <button class="med-sched-chip" data-sched="weekdays" onclick="selectMedSched(this)">每週指定日</button>
+      <button class="med-sched-chip" data-sched="interval" onclick="selectMedSched(this)">每隔幾天</button>
+    </div>
+  </div>
+  <div id="med-weekdays-picker" class="modal-field" style="display:none">
+    <label>選擇星期（可複選）</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-dow-chip" data-dow="0" onclick="toggleMedDow(this)">日</button>
+      <button class="med-dow-chip" data-dow="1" onclick="toggleMedDow(this)">一</button>
+      <button class="med-dow-chip" data-dow="2" onclick="toggleMedDow(this)">二</button>
+      <button class="med-dow-chip" data-dow="3" onclick="toggleMedDow(this)">三</button>
+      <button class="med-dow-chip" data-dow="4" onclick="toggleMedDow(this)">四</button>
+      <button class="med-dow-chip" data-dow="5" onclick="toggleMedDow(this)">五</button>
+      <button class="med-dow-chip" data-dow="6" onclick="toggleMedDow(this)">六</button>
+    </div>
+  </div>
+  <div id="med-interval-picker" class="modal-field" style="display:none">
+    <label>間隔天數</label>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+      <span style="font-size:0.85rem;color:var(--text-light)">每隔</span>
+      <input type="number" id="med-interval-days" value="2" min="1" max="30" style="width:72px;padding:7px 10px;font-size:0.9rem;border:1.5px solid var(--border);border-radius:9px;background:var(--cream);outline:none;font-family:inherit">
+      <span style="font-size:0.85rem;color:var(--text-light)">天（從開始日算起）</span>
+    </div>
+  </div>
+  <div class="modal-field">
+    <label>時間類型</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-sched-chip active" data-timing="fixed" onclick="selectMedTimingType(this)">固定時間</button>
+      <button class="med-sched-chip" data-timing="meal" onclick="selectMedTimingType(this)">依餐次</button>
+      <button class="med-sched-chip" data-timing="prn" onclick="selectMedTimingType(this)">PRN 按需</button>
+    </div>
+  </div>
+  <div id="med-fixed-time-section" class="modal-field">
+    <label>服藥時間（可調整）</label>
+    <div id="med-times-editor" style="margin-top:5px"></div>
+  </div>
+  <div id="med-meal-section" class="modal-field" style="display:none">
+    <label>餐次（可複選）</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="med-meal-chip" data-meal="早餐前" onclick="toggleMedMeal(this)">早餐前</button>
+      <button class="med-meal-chip" data-meal="早餐後" onclick="toggleMedMeal(this)">早餐後</button>
+      <button class="med-meal-chip" data-meal="午餐前" onclick="toggleMedMeal(this)">午餐前</button>
+      <button class="med-meal-chip" data-meal="午餐後" onclick="toggleMedMeal(this)">午餐後</button>
+      <button class="med-meal-chip" data-meal="晚餐前" onclick="toggleMedMeal(this)">晚餐前</button>
+      <button class="med-meal-chip" data-meal="晚餐後" onclick="toggleMedMeal(this)">晚餐後</button>
+      <button class="med-meal-chip" data-meal="睡前" onclick="toggleMedMeal(this)">睡前</button>
+      <button class="med-meal-chip" data-meal="入睡前" onclick="toggleMedMeal(this)">入睡前</button>
+      <button class="med-meal-chip" data-meal="睡眠中" onclick="toggleMedMeal(this)">睡眠中</button>
+    </div>
+  </div>
+  <div id="med-prn-note" class="modal-field" style="display:none">
+    <div style="background:#f3eeff;border-radius:9px;padding:9px 12px;font-size:0.8rem;color:#6a3caf;line-height:1.6">
+      按需用藥（PRN）：不設固定時間，有需要時手動按「喂藥」即可記錄當下時間。今天可多次喂藥，每次都會分別記錄。
+    </div>
+  </div>
+  <div class="modal-row">
+    <div><label>開始日期 *</label><input type="date" id="med-start"></div>
+    <div>
+      <label>結束日期</label>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:3px">
+        <input type="date" id="med-end" style="flex:1">
+        <button id="med-noend-btn" onclick="toggleMedNoEnd()" style="padding:8px 10px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--text-light);font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit">無期限</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-field">
+    <label>備注</label>
+    <input type="text" id="med-notes" placeholder="飯後服用" autocomplete="off">
+  </div>
+  <div id="med-form-alert" class="alert"></div>
+  <div class="modal-btns">
+    <button class="modal-btn-cancel" onclick="closeMedForm()">取消</button>
+    <button class="modal-btn-save" onclick="saveMed()">儲存</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="showPage('record',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    記錄
+  </button>
+  <button class="nav-btn" onclick="showPage('history',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    歷史
+  </button>
+  <button class="nav-btn" onclick="showPage('ai',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+    AI助理
+  </button>
+  <button class="nav-btn" onclick="showPage('course',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    課表
+  </button>
+  <button class="nav-btn" onclick="showPage('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    設定
+  </button>
+</nav>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const CAT_ICON = {
+  '用藥':'💊','神經毒性':'❤️','症狀':'🤒','飲食':'🍚',
+  '活動功能':'🚶','排泄':'🚽','睡眠':'😴','檢查':'🔬','評估':'📈','醫療計畫':'👩‍⚕️','體溫':'🌡️','飲水':'💧'
+};
+const SUGGESTED_TAGS = ['Vincristine','Morphine','嗎啡','Pregabalin','Ibuprofen','MgO','類固醇','B6','Glutamine','神經毒性','Jaw pain','足下垂','便秘','住院','門診','化療日','腰椎穿刺','噁吐'];
+const SEV_CATS = new Set(['症狀','神經毒性']);
+const BLOOD_CATS = new Set(['檢查']);
+const MS_ICON  = { phase:'📋', pause:'⏸️', admit:'🏥', discharge:'🏠', clinic:'🩺', chemo:'💉', spine:'💉' };
+const MS_LABEL = { phase:'療程階段', pause:'治療暫停', admit:'入院', discharge:'出院', clinic:'門診', chemo:'化療日', spine:'背針' };
+const MEAL_ORDER = ['早餐前','早餐後','午餐前','午餐後','晚餐前','晚餐後','睡前','入睡前','睡眠中'];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let db = null;
+let currentDate = todayStr();
+let selectedCat = '';
+let entryTags = [];
+let editTags = [];
+let parsedEntries = [];
+let parsedEntryTags = [];
+let allTags = [];
+let activeTagFilter = '';
+let activeCatFilter = '';
+let histSearchQuery = '';
+let histSelectMode = false;
+const histSelectedIds = new Set();
+let editingId = null, editingDate = null;
+let milestones = [];
+let selectedMsType = 'phase';
+let editingMilestoneId = null;
+let meds = [];
+let medEditId = null;
+let selectedMedSched = 'daily';
+let selectedMedTimingType = 'fixed';
+let medNoEnd = false;
+const takenMedDoses = new Map(); // key: "date|medId|slotKey" → Firestore log doc ID
+const prnDoses = new Map();     // key: "date|medId" → [{time, logId}, ...]
+let tempReadings = { 早: null, 晚: null }; // { value, logId, time }
+let fluidEntries = []; // [{time, name, amount, logId}] for currentDate
+let medMgmtOpen = false;
+let prnSectionOpen = false;
+let _medNotifTimers = [];
+let _medPhotoDataUrl = null;
+
+const APP_BUILD = '2026-07-03c';
+window.forceUpdate = () => { window.location.href = window.location.pathname + '?v=' + Date.now(); };
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('app-build-date');
+  if (el) el.textContent = APP_BUILD;
+});
+
+function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function localDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function nowTime() { const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function formatDateTW(s) {
+  const[y,m,d]=s.split('-');
+  const weekdays=['日','一','二','三','四','五','六'];
+  const dow=weekdays[new Date(+y,+m-1,+d).getDay()];
+  return `${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日　週${dow}`;
+}
+function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function nowChatTime() { return new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}); }
+function getOpenAIKey() { return localStorage.getItem('openai_key')||''; }
+function getFirebaseConfig() { try{return JSON.parse(localStorage.getItem('fb_config')||'null');}catch{return null;} }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('record-date').value = currentDate;
+  document.getElementById('header-date').textContent = formatDateTW(currentDate);
+  const diagDate = new Date('2025-12-31T00:00:00');
+  const todayD = new Date(); todayD.setHours(0,0,0,0);
+  document.getElementById('diag-day').textContent = 'D' + Math.floor((todayD-diagDate)/86400000);
+  document.getElementById('entry-time').value = nowTime();
+  const from=new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('hist-from').value = localDateStr(from);
+  document.getElementById('hist-to').value = todayStr();
+  tryInitFirebase();
+  restoreSettingsFields();
+  loadTimeline(currentDate);
+  renderSuggestedTags();
+  loadMilestones().then(() => updateRecordPhase());
+  loadMeds().then(async () => { await syncTakenMeds(currentDate); renderTodayMeds(); scheduleMedNotifications(); requestNotifPermission(); });
+});
+
+function tryInitFirebase() {
+  const cfg = getFirebaseConfig();
+  if (!cfg?.projectId) return;
+  try {
+    const app = getApps().length ? getApps()[0] : initializeApp(cfg);
+    db = getFirestore(app);
+  } catch(e) { console.warn('Firebase:',e); }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+window.showPage = (page, btn) => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(page==='history') loadHistory();
+  if(page==='course') loadMilestones().then(() => renderCourseList());
+  if(page==='record') { updateRecordPhase(); syncTakenMeds(currentDate).then(() => renderTodayMeds()); }
+};
+
+window.changeDate = (d) => {
+  const [y,m,day] = currentDate.split('-').map(Number);
+  const s = localDateStr(new Date(Date.UTC(y, m-1, day+d)));
+  const [ty,tm,td] = todayStr().split('-').map(Number);
+  const maxFuture = localDateStr(new Date(Date.UTC(ty, tm-1, td+60)));
+  if(s > maxFuture) return;
+  currentDate=s;
+  document.getElementById('record-date').value=s;
+  document.getElementById('header-date').textContent=formatDateTW(s);
+  loadTimeline(s);
+  updateRecordPhase();
+  syncTakenMeds(s).then(() => renderTodayMeds());
+};
+window.onDateChange = () => {
+  currentDate=document.getElementById('record-date').value;
+  document.getElementById('header-date').textContent=formatDateTW(currentDate);
+  loadTimeline(currentDate);
+  updateRecordPhase();
+  syncTakenMeds(currentDate).then(() => renderTodayMeds());
+};
+
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+window.setMode = (mode) => {
+  const isAI = mode==='ai';
+  document.getElementById('ai-section').style.display = isAI?'block':'none';
+  document.getElementById('manual-section').style.display = isAI?'none':'block';
+  document.getElementById('mode-manual').classList.toggle('active',!isAI);
+  document.getElementById('mode-ai').classList.toggle('active',isAI);
+};
+
+// ── Category select ───────────────────────────────────────────────────────────
+window.selectCat = (chip) => {
+  document.querySelectorAll('.cat-chip').forEach(c=>c.className='cat-chip');
+  const cat = chip.dataset.cat;
+  chip.classList.add('sel-'+cat);
+  selectedCat = cat;
+  document.getElementById('sev-section').style.display = SEV_CATS.has(cat)?'block':'none';
+  document.getElementById('blood-section').style.display = BLOOD_CATS.has(cat)?'block':'none';
+};
+
+// ── Tags (entry form) ─────────────────────────────────────────────────────────
+function renderEntryTags() {
+  const list = document.getElementById('tag-list');
+  list.innerHTML = entryTags.map(t=>`
+    <div class="tag-chip">${escapeHtml(t)}<button onclick="removeEntryTag('${escapeHtml(t)}')">×</button></div>
+  `).join('');
+}
+window.addTag = () => {
+  const inp = document.getElementById('tag-input');
+  const val = normalizeTags([inp.value.trim()])[0];
+  if(val && !entryTags.includes(val)) { entryTags.push(val); renderEntryTags(); saveRecentTag(val); }
+  inp.value='';
+  filterTagSuggestions('');
+};
+window.removeEntryTag = (t) => { entryTags=entryTags.filter(x=>x!==t); renderEntryTags(); };
+window.addSuggestedTag = (t) => {
+  if(!entryTags.includes(t)) { entryTags.push(t); renderEntryTags(); saveRecentTag(t); }
+  const inp = document.getElementById('tag-input');
+  inp.value = ''; inp.focus();
+  filterTagSuggestions('');
+};
+window.addEditTagFromSuggest = (t) => {
+  if(!editTags.includes(t)) { editTags.push(t); renderEditTags(); saveRecentTag(t); }
+  const inp = document.getElementById('edit-tag-input');
+  inp.value = ''; inp.focus();
+  filterEditTagSuggestions('');
+};
+
+function renderSuggestedTags() {
+  const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
+  allTags = [...new Set([...recent, ...SUGGESTED_TAGS])].slice(0, 40);
+  filterTagSuggestions(document.getElementById('tag-input')?.value||'');
+}
+
+function filterTagSuggestions(val) {
+  const q = val.trim().toLowerCase();
+  const avail = allTags.filter(t => !entryTags.includes(t));
+  const matched = q ? avail.filter(t => t.toLowerCase().includes(q)) : avail;
+  document.getElementById('tag-suggest').innerHTML = matched.map(t =>
+    `<div class="tag-sug-chip" onclick="addSuggestedTag('${escapeHtml(t).replace(/'/g,"&#39;")}')">${highlight(t, q)}</div>`
+  ).join('');
+}
+
+function filterEditTagSuggestions(val) {
+  const q = val.trim().toLowerCase();
+  const avail = allTags.filter(t => !editTags.includes(t));
+  const matched = q ? avail.filter(t => t.toLowerCase().includes(q)) : avail.slice(0, 12);
+  const el = document.getElementById('edit-tag-suggest');
+  if(el) el.innerHTML = matched.map(t =>
+    `<div class="tag-sug-chip" onclick="addEditTagFromSuggest('${escapeHtml(t).replace(/'/g,"&#39;")}')">${highlight(t, q)}</div>`
+  ).join('');
+}
+function saveRecentTag(t) {
+  const recent = JSON.parse(localStorage.getItem('recent_tags')||'[]');
+  const updated = [t, ...recent.filter(x=>x!==t)].slice(0,10);
+  localStorage.setItem('recent_tags', JSON.stringify(updated));
+  renderSuggestedTags();
+}
+
+// ── Save entry ────────────────────────────────────────────────────────────────
+window.saveEntry = async () => {
+  if(!db) { showAlert('form-alert','error','⚠️ 請先在「設定」填入 Firebase 設定！'); return; }
+  if(!selectedCat) { showAlert('form-alert','error','請選擇類別'); return; }
+  const content = document.getElementById('entry-content').value.trim();
+  const time = document.getElementById('entry-time').value;
+  let finalContent = content, bloodData = null;
+  if(BLOOD_CATS.has(selectedCat)) {
+    const labels={wbc:'WBC',anc:'ANC',hb:'Hb',plt:'PLT',alt:'ALT',cr:'Cr'};
+    bloodData={}; const parts=[];
+    ['wbc','anc','hb','plt','alt','cr'].forEach(f=>{
+      const v=document.getElementById('b-'+f).value;
+      if(v){bloodData[f]=+v; parts.push(`${labels[f]} ${v}`);}
+    });
+    if(!finalContent && parts.length) finalContent=parts.join('　');
+    if(!finalContent){showAlert('form-alert','error','請填入至少一項數值');return;}
+  } else if(!finalContent){showAlert('form-alert','error','請填入記錄內容');return;}
+
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>儲存中…';
+  try {
+    await addDoc(collection(db,'logs'),{
+      date:currentDate, time:time||nowTime(),
+      timestamp:currentDate+'T'+(time||nowTime())+':00',
+      category:selectedCat, content:finalContent,
+      severity:SEV_CATS.has(selectedCat)?+document.getElementById('sev-slider').value:null,
+      blood:bloodData, tags:[...entryTags],
+      createdAt:new Date().toISOString(),
+    });
+    showAlert('form-alert','success','✅ 已儲存！');
+    document.getElementById('entry-content').value='';
+    document.getElementById('sev-slider').value=0;
+    document.getElementById('sev-val').textContent='0';
+    ['wbc','anc','hb','plt','alt','cr'].forEach(f=>document.getElementById('b-'+f).value='');
+    document.getElementById('entry-time').value=nowTime();
+    entryTags=[]; renderEntryTags();
+    loadTimeline(currentDate);
+  } catch(e){showAlert('form-alert','error','❌ 儲存失敗：'+e.message);}
+  btn.disabled=false; btn.innerHTML='💾 儲存';
+};
+
+// ── AI Parse ──────────────────────────────────────────────────────────────────
+window.parseWithAI = async () => {
+  const key=getOpenAIKey();
+  if(!key){showAlert('form-alert','error','⚠️ 請先設定 OpenAI API Key！');return;}
+  const raw=document.getElementById('ai-raw').value.trim();
+  if(!raw){showAlert('form-alert','error','請輸入要記錄的內容');return;}
+  const btn=document.getElementById('ai-parse-btn');
+  btn.disabled=true; btn.textContent='解析中…';
+  document.getElementById('ai-preview').innerHTML='<div style="text-align:center;padding:12px;color:var(--text-light);font-size:0.83rem">AI 分析中…</div>';
+  document.getElementById('ai-save-all-btn').style.display='none';
+
+  const prompt=`你是化療病患記錄助理。將以下文字解析成記錄，返回 JSON 陣列（不要其他文字）。
+每筆欄位：
+- time: "HH:MM"（若未提及用 ${nowTime()}）
+- category: 只能是 ["用藥","神經毒性","症狀","飲食","活動功能","排泄","睡眠","檢查","評估","醫療計畫"] 之一
+- content: 繁體中文，簡潔
+- severity: 症狀/神經毒性填 0-10，其他填 null
+- tags: 相關標籤陣列（藥名、症狀名等，可空陣列）
+文字：${raw}`;
+
+  try {
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1000,
+        messages:[{role:'system',content:'只回傳 JSON 陣列，不含 markdown。'},{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=data.choices?.[0]?.message?.content||'';
+    parsedEntries=JSON.parse(text.replace(/```json|```/g,'').trim());
+    parsedEntries=parsedEntries.map(e=>({...e,tags:normalizeTags(e.tags||[])}));
+    renderAIPreview(parsedEntries);
+  } catch(e){
+    document.getElementById('ai-preview').innerHTML=`<div style="text-align:center;padding:12px;color:var(--c-exam)">❌ 解析失敗：${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='✨ AI 解析';
+};
+
+// Normalize tag capitalization against known tags (most-recently-used wins)
+function normalizeTags(tags) {
+  return tags.map(tag => {
+    const lower = tag.toLowerCase();
+    const known = allTags.find(t => t.toLowerCase() === lower);
+    return known || tag;
+  });
+}
+
+function renderAIPreview(entries) {
+  parsedEntryTags = entries.map(e => normalizeTags([...(e.tags||[])]));
+  const box = document.getElementById('ai-preview');
+  if(!entries.length){box.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-light)">無法解析</div>';return;}
+  const catOptions = Object.keys(CAT_ICON).map(c=>`<option>${c}</option>`).join('');
+  box.innerHTML = entries.map((e,i)=>{
+    const cat = e.category||'症狀';
+    const sev = e.severity??0;
+    return `<div class="ai-edit-card">
+      <div class="ai-edit-header">
+        <input type="time" id="ai-time-${i}" value="${e.time||nowTime()}">
+        <select id="ai-cat-${i}" onchange="onAICardCatChange(${i})">
+          ${Object.keys(CAT_ICON).map(c=>`<option${c===cat?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <textarea id="ai-content-${i}" class="ai-content-ta">${escapeHtml(e.content)}</textarea>
+      <div id="ai-sev-row-${i}" style="display:${SEV_CATS.has(cat)?'block':'none'};margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-light);margin-bottom:2px">
+          <span>嚴重程度</span><span id="ai-sev-val-${i}">${sev}</span>
+        </div>
+        <input type="range" min="0" max="10" value="${sev}" id="ai-sev-${i}" oninput="document.getElementById('ai-sev-val-${i}').textContent=this.value" style="width:100%;accent-color:var(--c-sym)">
+      </div>
+      <div class="ai-tag-row" id="ai-tags-${i}"></div>
+      <div class="ai-tag-add-row">
+        <input type="text" id="ai-tag-input-${i}" placeholder="加標籤…" onkeydown="if(event.key==='Enter'){event.preventDefault();addAITag(${i})}">
+        <button onclick="addAITag(${i})">＋</button>
+      </div>
+    </div>`;
+  }).join('');
+  entries.forEach((_,i) => renderAICardTags(i));
+  document.getElementById('ai-save-all-btn').style.display='block';
+}
+
+function renderAICardTags(i) {
+  const tags = parsedEntryTags[i]||[];
+  document.getElementById('ai-tags-'+i).innerHTML = tags.map(t=>
+    `<div class="tag-chip">${escapeHtml(t)}<button onclick="removeAITag(${i},'${escapeHtml(t).replace(/'/g,'&#39;')}')">×</button></div>`
+  ).join('');
+}
+window.addAITag = (i) => {
+  const inp = document.getElementById('ai-tag-input-'+i);
+  const val = normalizeTags([inp.value.trim()])[0];
+  if(val && !(parsedEntryTags[i]||[]).includes(val)){
+    if(!parsedEntryTags[i]) parsedEntryTags[i]=[];
+    parsedEntryTags[i].push(val); renderAICardTags(i); saveRecentTag(val);
+  }
+  inp.value='';
+};
+window.removeAITag = (i,t) => { parsedEntryTags[i]=(parsedEntryTags[i]||[]).filter(x=>x!==t); renderAICardTags(i); };
+window.onAICardCatChange = (i) => {
+  const cat = document.getElementById('ai-cat-'+i).value;
+  document.getElementById('ai-sev-row-'+i).style.display = SEV_CATS.has(cat)?'block':'none';
+};
+
+window.saveAllParsed = async () => {
+  if(!db){showAlert('form-alert','error','⚠️ 請先設定 Firebase！');return;}
+  const count = parsedEntries.length;
+  if(!count) return;
+  const btn=document.getElementById('ai-save-all-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>儲存中…';
+  try {
+    for(let i=0; i<count; i++){
+      const t = document.getElementById('ai-time-'+i)?.value || nowTime();
+      const cat = document.getElementById('ai-cat-'+i)?.value || parsedEntries[i].category;
+      const content = (document.getElementById('ai-content-'+i)?.value||'').trim() || parsedEntries[i].content;
+      const sev = SEV_CATS.has(cat) ? +(document.getElementById('ai-sev-'+i)?.value||0) : null;
+      const tags = parsedEntryTags[i]||[];
+      await addDoc(collection(db,'logs'),{
+        date:currentDate, time:t, timestamp:currentDate+'T'+t+':00',
+        category:cat, content, severity:sev, blood:null, tags,
+        createdAt:new Date().toISOString(),
+      });
+    }
+    showAlert('form-alert','success',`✅ 已儲存 ${count} 筆！`);
+    document.getElementById('ai-raw').value='';
+    document.getElementById('ai-preview').innerHTML='';
+    parsedEntries=[]; parsedEntryTags=[]; btn.style.display='none';
+    loadTimeline(currentDate);
+  } catch(e){showAlert('form-alert','error','❌ 儲存失敗：'+e.message);}
+  btn.disabled=false; btn.innerHTML='💾 全部儲存';
+};
+
+// ── Timeline ──────────────────────────────────────────────────────────────────
+async function loadTimeline(dateStr) {
+  const wrap=document.getElementById('timeline-wrap');
+  if(!db){wrap.innerHTML='<div class="tl-empty"><div class="big">🔥</div>請先設定 Firebase</div>';return;}
+  wrap.innerHTML='<div class="tl-empty">載入中…</div>';
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('date','==',dateStr)));
+    if(snap.empty){wrap.innerHTML='<div class="tl-empty"><div class="big">📭</div>今天還沒有記錄</div>';return;}
+    const entries=[];
+    snap.forEach(d=>entries.push({id:d.id,...d.data()}));
+    entries.sort((a,b)=>(a.timestamp||'').localeCompare(b.timestamp||''));
+    wrap.innerHTML='';
+    entries.forEach(d=>wrap.appendChild(buildLogCard(d.id,d)));
+  } catch(e){wrap.innerHTML=`<div class="tl-empty">載入失敗：${e.message}</div>`;}
+}
+
+function buildLogCard(id, d, searchQ) {
+  const div=document.createElement('div');
+  div.className='log-entry';
+  const icon=CAT_ICON[d.category]||'📝';
+  const dataStr=JSON.stringify(d).replace(/"/g,'&quot;');
+  const q=searchQ||'';
+  const tagsHtml=d.tags?.length?`<div class="log-tags">${d.tags.map(t=>`<span class="log-tag">${highlight(t,q)}</span>`).join('')}</div>`:'';
+  const sevHtml=d.severity>0?`<div class="log-meta">嚴重程度 ${d.severity}/10</div>`:'';
+  div.innerHTML=`
+    <div class="log-time">${d.time||''}</div>
+    <div class="log-dot dot-${d.category}"></div>
+    <div class="log-body" onclick="openEditModal('${id}',${dataStr})">
+      <div class="log-cat cat-${d.category}">${icon} ${highlight(d.category,q)}</div>
+      <div class="log-content">${highlight(d.content,q)}</div>
+      ${sevHtml}${tagsHtml}
+    </div>
+    <button class="log-del" onclick="deleteEntry('${id}')">✕</button>`;
+  return div;
+}
+
+window.deleteEntry = async (id) => {
+  if(!confirm('確定刪除這筆記錄？')) return;
+  try {
+    await deleteDoc(doc(db,'logs',id));
+    loadTimeline(currentDate);
+    if(document.getElementById('page-history').classList.contains('active')) loadHistory();
+  } catch(e){alert('刪除失敗：'+e.message);}
+};
+
+// ── History ───────────────────────────────────────────────────────────────────
+window.loadHistory = async () => {
+  await loadMilestones();
+  const list=document.getElementById('hist-list');
+  if(!db){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>';return;}
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">載入中…</div>';
+  const from=document.getElementById('hist-from').value;
+  const to=document.getElementById('hist-to').value;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('date','>=',from),where('date','<=',to)));
+    if(snap.empty){
+      _histAllEntries=[];
+      renderTagFilter([]);
+      list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light)">這段期間沒有記錄</div>';
+      return;
+    }
+    _histAllEntries=[];
+    snap.forEach(d=>_histAllEntries.push({id:d.id,...d.data()}));
+    _histAllEntries.sort((a,b)=>(b.timestamp||b.date||'').localeCompare(a.timestamp||a.date||''));
+
+    // Collect all tags for filter
+    const tagSet=new Set();
+    _histAllEntries.forEach(e=>(e.tags||[]).forEach(t=>tagSet.add(t)));
+    renderTagFilter([...tagSet]);
+
+    renderHistList();
+  } catch(e){list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-light)">載入失敗：${e.message}</div>`;}
+};
+
+function renderTagFilter(tags) {
+  const row=document.getElementById('hist-tag-filter');
+  if(!tags.length){row.innerHTML='';updateFilterHeaders();return;}
+  row.innerHTML=tags.map(t=>`<button class="hist-tag-btn${activeTagFilter===t?' active':''}" onclick="filterByTag('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join('')
+    +(activeTagFilter?`<button class="hist-tag-btn" onclick="filterByTag('')">✕ 清除</button>`:'');
+  updateFilterHeaders();
+}
+window.filterByTag = (tag) => { activeTagFilter=tag; updateFilterHeaders(); loadHistory(); };
+window.filterByCat = (cat) => {
+  activeCatFilter = activeCatFilter===cat ? '' : cat; // tap same cat again to clear
+  document.querySelectorAll('.hist-cat-btn').forEach(b=>b.classList.toggle('active', b.dataset.cat===activeCatFilter));
+  updateFilterHeaders();
+  renderHistList();
+};
+window.toggleHistSection = (which) => {
+  const section=document.getElementById('hist-'+which+'-section');
+  const arrow=document.getElementById('hist-'+which+'-arrow');
+  const open=section.style.display!=='none';
+  section.style.display=open?'none':'block';
+  arrow.textContent=open?'▶':'▼';
+};
+function updateFilterHeaders() {
+  const catHdr=document.getElementById('hist-cat-hdr');
+  const tagHdr=document.getElementById('hist-tag-hdr');
+  if(catHdr){
+    document.getElementById('hist-cat-hdr-text').textContent=activeCatFilter?`📂 類別：${activeCatFilter}`:'📂 類別篩選';
+    catHdr.classList.toggle('active-filter',!!activeCatFilter);
+  }
+  if(tagHdr){
+    document.getElementById('hist-tag-hdr-text').textContent=activeTagFilter?`🏷️ 標籤：${activeTagFilter}`:'🏷️ 標籤篩選';
+    tagHdr.classList.toggle('active-filter',!!activeTagFilter);
+  }
+}
+
+// ── History search ────────────────────────────────────────────────────────────
+window.onHistSearch = (val) => {
+  histSearchQuery = val;
+  document.getElementById('hist-search-clear').style.display = val ? 'block' : 'none';
+  renderHistList();
+};
+window.clearHistSearch = () => {
+  document.getElementById('hist-search').value = '';
+  histSearchQuery = '';
+  document.getElementById('hist-search-clear').style.display = 'none';
+  renderHistList();
+};
+
+function matchesSearch(entry, q) {
+  if (!q) return true;
+  const lower = q.toLowerCase();
+  return (entry.category||'').toLowerCase().includes(lower)
+    || (entry.content||'').toLowerCase().includes(lower)
+    || (entry.tags||[]).some(t => t.toLowerCase().includes(lower));
+}
+
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const escaped = escapeHtml(text);
+  const eq = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return escaped.replace(new RegExp(eq,'gi'), m=>`<mark class="hist-search-highlight">${m}</mark>`);
+}
+
+let _histAllEntries = [];
+
+function milestoneMatchesSearch(m, q) {
+  if (!q) return true;
+  const lower = q.toLowerCase();
+  return (m.name||'').toLowerCase().includes(lower)
+    || (MS_LABEL[m.type]||'').toLowerCase().includes(lower);
+}
+
+function buildMilestoneHistCard(m) {
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.style.borderLeft = '3px solid var(--pink-dark)';
+  const icon = MS_ICON[m.type] || '📌';
+  const label = MS_LABEL[m.type] || m.type;
+  const q = histSearchQuery;
+  div.innerHTML = `
+    <div class="log-dot" style="background:var(--pink-dark);margin-top:4px"></div>
+    <div class="log-body" onclick="openMilestoneEdit('${m.id}')">
+      <div class="log-cat" style="color:var(--pink-dark)">${icon} ${highlight(label, q)}</div>
+      ${m.name ? `<div class="log-content" style="font-weight:600">${highlight(m.name, q)}</div>` : ''}
+    </div>
+    <button class="log-del" onclick="event.stopPropagation();deleteMilestone('${m.id}')">✕</button>`;
+  return div;
+}
+
+function renderHistList() {
+  const list = document.getElementById('hist-list');
+  const total = _histAllEntries.length;
+  let all = [..._histAllEntries];
+
+  // Category filter
+  if (activeCatFilter) all = all.filter(e => e.category === activeCatFilter);
+
+  // Tag filter
+  if (activeTagFilter) all = all.filter(e=>(e.tags||[]).includes(activeTagFilter));
+
+  // Search filter on logs
+  if (histSearchQuery) all = all.filter(e => matchesSearch(e, histSearchQuery));
+
+  // Build milestone map for the date range, filtered by search and cat/tag (milestones have no cat/tag)
+  const histFrom = document.getElementById('hist-from').value;
+  const histTo = document.getElementById('hist-to').value;
+  const dayMsMap = {};
+  if (!activeCatFilter && !activeTagFilter) { // milestones have no category/tag, skip if those filters active
+    milestones.forEach(m => {
+      if (m.date >= histFrom && m.date <= histTo) {
+        if (!histSearchQuery || milestoneMatchesSearch(m, histSearchQuery)) {
+          if (!dayMsMap[m.date]) dayMsMap[m.date] = [];
+          dayMsMap[m.date].push(m);
+        }
+      }
+    });
+  }
+
+  const shown = all.length;
+  const countLine = document.createElement('div');
+  countLine.style.cssText = 'font-size:0.72rem;color:var(--text-light);padding:4px 2px 8px;display:flex;justify-content:space-between;align-items:center';
+  const isFiltered = (activeCatFilter || activeTagFilter || histSearchQuery) && shown < total;
+  const selectBtnHtml = `<button onclick="toggleHistSelectMode()" style="font-size:0.72rem;color:${histSelectMode?'#7c5cbf':'var(--text-light)'};background:none;border:1px solid ${histSelectMode?'#c5aaf0':'var(--border)'};border-radius:12px;padding:2px 9px;cursor:pointer;font-family:inherit;font-weight:${histSelectMode?'700':'400'}">${histSelectMode?'✓ 選擇中':'選擇'}</button>`;
+  countLine.innerHTML = isFiltered
+    ? `<span>共 <b>${total}</b> 筆，篩選後顯示 <b>${shown}</b> 筆 <button onclick="clearAllHistFilters()" style="font-size:0.72rem;color:var(--pink-dark);background:none;border:none;cursor:pointer;text-decoration:underline">清除</button></span>${selectBtnHtml}`
+    : `<span>共 <b>${total}</b> 筆記錄</span>${selectBtnHtml}`;
+
+  const byDate = {};
+  all.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  // Add milestone-only dates
+  Object.keys(dayMsMap).forEach(date => { if(!byDate[date]) byDate[date]=[]; });
+
+  if (!Object.keys(byDate).length) {
+    list.innerHTML = '';
+    list.appendChild(countLine);
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;padding:20px;color:var(--text-light)';
+    empty.textContent = histSearchQuery ? `找不到符合「${histSearchQuery}」的記錄` : '這段期間沒有記錄';
+    list.appendChild(empty);
+    return;
+  }
+
+  list.innerHTML = '';
+  list.appendChild(countLine);
+  const sortedDates = Object.keys(byDate).sort().reverse();
+  sortedDates.forEach((date, idx)=>{
+    const entries = byDate[date].sort((a,b)=>(a.timestamp||a.date||'').localeCompare(b.timestamp||b.date||''));
+    const dayMs = dayMsMap[date] || [];
+    const isOpen = idx === 0;
+
+    const sec = document.createElement('div'); sec.style.marginBottom='6px';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'hist-day-hdr';
+    const phaseMilestone = getPhaseForDate(date);
+    const allDayMs = getMilestonesOnDate(date);
+    const phaseHtml = phaseMilestone ? `<div class="phase-badge">${MS_ICON[phaseMilestone.type]||''} ${escapeHtml(phaseMilestone.name||MS_LABEL[phaseMilestone.type])}</div>` : '';
+    const msEventsHtml = allDayMs.length ? `<span class="ms-event-icons" title="${allDayMs.map(m=>MS_LABEL[m.type]).join('、')}">${allDayMs.map(m=>MS_ICON[m.type]||'').join('')}</span>` : '';
+    const countLabel = [entries.length && `${entries.length} 筆`, dayMs.length && `${dayMs.length} 課表`].filter(Boolean).join('・');
+    hdr.innerHTML = `<div style="flex:1;min-width:0"><div class="hist-day-hdr-date">${formatDateTW(date)}</div>${phaseHtml}</div><span class="hist-day-hdr-meta">${msEventsHtml}<span>${countLabel}</span><span style="font-size:0.8rem">${isOpen?'▼':'▶'}</span></span>`;
+
+    const body = document.createElement('div');
+    body.className = 'hist-day-body';
+    body.style.display = isOpen ? 'block' : 'none';
+
+    hdr.onclick = () => {
+      const open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      hdr.querySelector('.hist-day-hdr-meta span:last-child').textContent = open ? '▶' : '▼';
+    };
+
+    dayMs.forEach(m => body.appendChild(buildMilestoneHistCard(m)));
+    entries.forEach(e=>{
+      try {
+        const card = buildLogCard(e.id, e, histSearchQuery);
+        if (histSelectMode) {
+          card.classList.toggle('hist-selected', histSelectedIds.has(e.id));
+          card.style.position = 'relative';
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:absolute;inset:0;z-index:5;cursor:pointer;border-radius:inherit';
+          const eId = e.id;
+          overlay.onclick = () => {
+            histSelectedIds.has(eId) ? histSelectedIds.delete(eId) : histSelectedIds.add(eId);
+            card.classList.toggle('hist-selected', histSelectedIds.has(eId));
+            updateHistSelectBar();
+          };
+          card.appendChild(overlay);
+        }
+        body.appendChild(card);
+      } catch(err) { console.warn('render error', e.id, err); }
+    });
+
+    sec.appendChild(hdr);
+    sec.appendChild(body);
+    list.appendChild(sec);
+  });
+}
+
+window.toggleHistSelectMode = () => {
+  histSelectMode = !histSelectMode;
+  if (!histSelectMode) histSelectedIds.clear();
+  updateHistSelectBar();
+  renderHistList();
+};
+window.cancelHistSelect = () => {
+  histSelectMode = false;
+  histSelectedIds.clear();
+  updateHistSelectBar();
+  renderHistList();
+};
+function updateHistSelectBar() {
+  const bar = document.getElementById('hist-select-bar');
+  if (!bar) return;
+  bar.style.display = histSelectMode ? 'flex' : 'none';
+  const cnt = document.getElementById('hist-select-count');
+  if (cnt) cnt.textContent = `已選 ${histSelectedIds.size} 筆`;
+}
+window.deleteHistSelected = async () => {
+  if (!histSelectedIds.size) return;
+  if (!confirm(`確定刪除選取的 ${histSelectedIds.size} 筆記錄？`)) return;
+  const ids = [...histSelectedIds];
+  histSelectMode = false;
+  histSelectedIds.clear();
+  updateHistSelectBar();
+  try {
+    await Promise.all(ids.map(id => deleteDoc(doc(db,'logs',id))));
+    loadTimeline(currentDate);
+    loadHistory();
+  } catch(e) { alert('刪除失敗：' + e.message); }
+};
+
+window.clearAllHistFilters = () => {
+  activeTagFilter = '';
+  activeCatFilter = '';
+  histSearchQuery = '';
+  document.getElementById('hist-search').value = '';
+  document.getElementById('hist-search-clear').style.display = 'none';
+  document.querySelectorAll('.hist-cat-btn').forEach(b=>b.classList.remove('active'));
+  updateFilterHeaders();
+  loadHistory();
+};
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+window.openEditModal = (id, data) => {
+  editingId=id; editingDate=data.date;
+  document.getElementById('edit-time').value=data.time||'';
+  document.getElementById('edit-cat').value=data.category||'其他';
+  document.getElementById('edit-content').value=data.content||'';
+  const sev=data.severity??0;
+  document.getElementById('edit-sev').value=sev;
+  document.getElementById('edit-sev-val').textContent=sev;
+  document.getElementById('edit-sev-row').style.display=SEV_CATS.has(data.category)?'block':'none';
+  editTags=[...(data.tags||[])]; renderEditTags();
+  document.getElementById('edit-tag-input').value='';
+  filterEditTagSuggestions('');
+  document.getElementById('edit-overlay').classList.add('open');
+  document.getElementById('edit-sheet').classList.add('open');
+};
+window.closeEditModal = () => {
+  document.getElementById('edit-overlay').classList.remove('open');
+  document.getElementById('edit-sheet').classList.remove('open');
+  editingId=null;
+};
+window.onEditCatChange = () => {
+  const cat=document.getElementById('edit-cat').value;
+  document.getElementById('edit-sev-row').style.display=SEV_CATS.has(cat)?'block':'none';
+};
+window.saveEdit = async () => {
+  if(!editingId) return;
+  const btn=document.getElementById('edit-save-btn');
+  btn.disabled=true; btn.textContent='儲存中…';
+  const time=document.getElementById('edit-time').value;
+  const cat=document.getElementById('edit-cat').value;
+  const content=document.getElementById('edit-content').value.trim();
+  const sev=SEV_CATS.has(cat)?+document.getElementById('edit-sev').value:null;
+  try {
+    await updateDoc(doc(db,'logs',editingId),{
+      time,category:cat,content,
+      timestamp:editingDate+'T'+time+':00',
+      severity:sev,tags:[...editTags],
+    });
+    closeEditModal();
+    loadTimeline(currentDate);
+    if(document.getElementById('page-history').classList.contains('active')) loadHistory();
+  } catch(e){alert('儲存失敗：'+e.message);}
+  btn.disabled=false; btn.textContent='儲存';
+};
+
+// Tags in edit modal
+function renderEditTags() {
+  document.getElementById('edit-tag-list').innerHTML=editTags.map(t=>
+    `<div class="tag-chip">${escapeHtml(t)}<button onclick="removeEditTag('${escapeHtml(t)}')">×</button></div>`
+  ).join('');
+}
+window.addEditTag = () => {
+  const inp=document.getElementById('edit-tag-input');
+  const val=normalizeTags([inp.value.trim()])[0];
+  if(val&&!editTags.includes(val)){editTags.push(val);renderEditTags();saveRecentTag(val);}
+  inp.value='';
+  filterEditTagSuggestions('');
+};
+window.removeEditTag = (t) => { editTags=editTags.filter(x=>x!==t); renderEditTags(); };
+
+// ── AI Chat ───────────────────────────────────────────────────────────────────
+window.sendChat = async () => {
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim(); if(!msg) return;
+  input.value=''; appendChat('user',msg); await doAiChat(msg);
+};
+window.quickAsk = (msg) => {
+  showPage('ai',document.querySelector('.nav-btn:nth-child(3)'));
+  document.getElementById('chat-input').value=msg; sendChat();
+};
+function appendChat(role,text) {
+  const box=document.getElementById('chat-box');
+  const div=document.createElement('div'); div.className='msg '+role;
+  div.innerHTML=`<div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${nowChatTime()}</div>`;
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+async function doAiChat(userMsg) {
+  const key=getOpenAIKey();
+  if(!key){appendChat('ai','⚠️ 請先在「設定」填入 OpenAI API Key！');return;}
+  const btn=document.getElementById('chat-send-btn'); btn.disabled=true;
+  const typing=document.createElement('div'); typing.className='msg ai'; typing.id='typing';
+  typing.innerHTML='<div class="msg-bubble">…</div>';
+  document.getElementById('chat-box').appendChild(typing);
+  document.getElementById('chat-box').scrollTop=9999;
+
+  let context='（Firebase 未設定）';
+  if(db){
+    try {
+      const from=new Date(); from.setDate(from.getDate()-30);
+      const fromStr=from.toISOString().split('T')[0];
+      const snap=await getDocs(query(collection(db,'logs'),where('date','>=',fromStr)));
+      const entries=[]; snap.forEach(d=>entries.push(d.data()));
+      entries.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+      context=entries.length?entries.map(e=>{
+        let line=`[${e.date} ${e.time}] ${e.category}：${e.content}`;
+        if(e.severity>0) line+=`（嚴重程度 ${e.severity}/10）`;
+        if(e.tags?.length) line+=`【標籤：${e.tags.join('、')}】`;
+        return line;
+      }).join('\n'):'過去 30 天內沒有記錄。';
+    } catch(e){context='（讀取失敗）';}
+  }
+
+  const system=`你是琳琳的化療記錄 AI 助理。琳琳正在接受化療（ALL，主要藥物包括 Vincristine）。
+根據以下記錄，用溫暖的繁體中文回答問題。簡潔清楚，若有警示症狀要明確指出。
+
+最近 30 天記錄：
+${context}`;
+
+  try {
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1024,
+        messages:[{role:'system',content:system},{role:'user',content:userMsg}]})
+    });
+    const data=await res.json();
+    document.getElementById('typing')?.remove();
+    if(data.choices?.[0]?.message?.content) appendChat('ai',data.choices[0].message.content);
+    else appendChat('ai','❌ 錯誤：'+(data.error?.message||JSON.stringify(data.error)));
+  } catch(e){document.getElementById('typing')?.remove();appendChat('ai','❌ 連線失敗：'+e.message);}
+  btn.disabled=false;
+}
+
+// ── Tag management ────────────────────────────────────────────────────────────
+window.loadTagsForMgmt = async () => {
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  const listEl=document.getElementById('tag-mgmt-list');
+  if(!db){showAlert('tag-mgmt-alert','error','請先設定 Firebase');return;}
+  btn.disabled=true; btn.textContent='載入中…';
+  try {
+    const snap=await getDocs(collection(db,'logs'));
+    const tagCount={};
+    snap.forEach(d=>(d.data().tags||[]).forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;}));
+    const tags=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]);
+    if(!tags.length){listEl.innerHTML='<div style="color:var(--text-light);font-size:0.82rem;padding:6px 0">沒有標籤</div>';btn.disabled=false;btn.textContent='重新載入';return;}
+    listEl.innerHTML=tags.map(([tag,count])=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;padding:8px 10px;background:var(--cream);border-radius:10px">
+        <span style="flex:1;font-size:0.82rem;font-weight:600;color:#6a4caf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(tag)}</span>
+        <span style="font-size:0.72rem;color:var(--text-light);white-space:nowrap;flex-shrink:0">${count} 筆</span>
+        <button onclick="startRenameTag('${escapeHtml(tag).replace(/'/g,'&#39;')}')" style="font-size:0.75rem;padding:5px 10px;border-radius:8px;border:1.5px solid var(--pink);background:white;color:var(--pink-dark);cursor:pointer;flex-shrink:0;white-space:nowrap">✏️ 更名</button>
+        <button onclick="confirmDeleteTag('${escapeHtml(tag).replace(/'/g,'&#39;')}')" style="font-size:0.75rem;padding:5px 8px;border-radius:8px;border:1.5px solid #ecc;background:white;color:var(--c-exam);cursor:pointer;flex-shrink:0">🗑️</button>
+      </div>`).join('');
+  } catch(e){showAlert('tag-mgmt-alert','error','載入失敗：'+e.message);}
+  btn.disabled=false; btn.textContent='重新載入';
+};
+
+window.startRenameTag = (oldTag) => {
+  const newTag=(prompt(`將「${oldTag}」改名為：`,oldTag)||'').trim();
+  if(!newTag||newTag===oldTag) return;
+  applyRenameTag(oldTag,newTag);
+};
+
+async function applyRenameTag(oldTag,newTag) {
+  if(!db) return;
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  btn.disabled=true;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('tags','array-contains',oldTag)));
+    let count=0;
+    for(const d of snap.docs){
+      const tags=[...new Set((d.data().tags||[]).map(t=>t===oldTag?newTag:t))];
+      await updateDoc(doc(db,'logs',d.id),{tags});
+      count++;
+    }
+    const recent=JSON.parse(localStorage.getItem('recent_tags')||'[]');
+    localStorage.setItem('recent_tags',JSON.stringify([...new Set(recent.map(t=>t===oldTag?newTag:t))]));
+    renderSuggestedTags();
+    showAlert('tag-mgmt-alert','success',`✅ 已將「${oldTag}」→「${newTag}」，更新 ${count} 筆`);
+    loadTagsForMgmt();
+  } catch(e){showAlert('tag-mgmt-alert','error','更新失敗：'+e.message);btn.disabled=false;}
+}
+
+window.confirmDeleteTag = async (tag) => {
+  if(!confirm(`確定要從所有記錄中移除標籤「${tag}」？`)) return;
+  if(!db) return;
+  const btn=document.getElementById('tag-mgmt-load-btn');
+  btn.disabled=true;
+  try {
+    const snap=await getDocs(query(collection(db,'logs'),where('tags','array-contains',tag)));
+    let count=0;
+    for(const d of snap.docs){
+      await updateDoc(doc(db,'logs',d.id),{tags:(d.data().tags||[]).filter(t=>t!==tag)});
+      count++;
+    }
+    const recent=JSON.parse(localStorage.getItem('recent_tags')||'[]');
+    localStorage.setItem('recent_tags',JSON.stringify(recent.filter(t=>t!==tag)));
+    renderSuggestedTags();
+    showAlert('tag-mgmt-alert','success',`✅ 已從 ${count} 筆記錄移除「${tag}」`);
+    loadTagsForMgmt();
+  } catch(e){showAlert('tag-mgmt-alert','error','刪除失敗：'+e.message);btn.disabled=false;}
+};
+
+// ── Milestones / Course ───────────────────────────────────────────────────────
+async function loadMilestones() {
+  if (!db) { milestones = []; return; }
+  try {
+    const snap = await getDocs(collection(db, 'milestones'));
+    milestones = [];
+    snap.forEach(d => milestones.push({ id: d.id, ...d.data() }));
+    milestones.sort((a, b) => a.date.localeCompare(b.date));
+  } catch(e) { console.warn('loadMilestones:', e); }
+}
+
+function getPhaseForDate(date) {
+  // Most recent phase or pause milestone on or before this date
+  const relevant = milestones.filter(m => (m.type === 'phase' || m.type === 'pause') && m.date <= date);
+  return relevant.length ? relevant[relevant.length - 1] : null;
+}
+
+function getMilestonesOnDate(date) {
+  return milestones.filter(m => m.date === date);
+}
+
+function updateRecordPhase() {
+  const el = document.getElementById('record-phase');
+  if (!el) return;
+  const m = getPhaseForDate(currentDate);
+  const dayMs = getMilestonesOnDate(currentDate).filter(ms => ms.type !== 'phase' && ms.type !== 'pause');
+  const eventsHtml = dayMs.map(ms => `<span style="margin-left:7px">${MS_ICON[ms.type]} ${MS_LABEL[ms.type]}</span>`).join('');
+  if (m || dayMs.length) {
+    const icon = m ? (MS_ICON[m.type]||'') : '';
+    const label = m ? escapeHtml(m.name || MS_LABEL[m.type]) : '';
+    el.innerHTML = (m ? `${icon} ${label}` : '') + eventsHtml;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function renderCourseList() {
+  const list = document.getElementById('course-list');
+  if (!list) return;
+  if (!db) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light)">請先設定 Firebase</div>'; return; }
+  if (!milestones.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-light);font-size:0.85rem;line-height:1.7">還沒有課程記錄<br>點上方按鈕新增第一個事件</div>';
+    return;
+  }
+  const today = todayStr();
+  const future = milestones.filter(m => m.date > today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = milestones.filter(m => m.date <= today).sort((a,b) => b.date.localeCompare(a.date));
+  let html = '';
+  if (future.length) {
+    html += '<div class="course-section-hdr">📅 即將到來</div>';
+    html += future.map(m => milestoneCard(m, true)).join('');
+  }
+  if (past.length) {
+    html += `<div class="course-section-hdr"${future.length?' style="margin-top:14px"':''}>📖 過去記錄</div>`;
+    html += past.map(m => milestoneCard(m, false)).join('');
+  }
+  list.innerHTML = html;
+}
+
+function milestoneCard(m, isFuture) {
+  const icon = MS_ICON[m.type] || '📌';
+  const label = MS_LABEL[m.type] || m.type;
+  const nameHtml = m.name ? `<div class="milestone-name">${escapeHtml(m.name)}</div>` : '';
+  const futureTag = isFuture ? ' <span style="color:var(--pink-dark);font-size:0.68rem;font-weight:700">（預定）</span>' : '';
+  return `<div class="milestone-item${isFuture?' future':''}">
+  <div class="milestone-icon">${icon}</div>
+  <div class="milestone-body">
+    <div class="milestone-type-lbl">${label}</div>
+    ${nameHtml}
+    <div class="milestone-date">${formatDateTW(m.date)}${futureTag}</div>
+  </div>
+  <button class="milestone-del" onclick="openMilestoneEdit('${m.id}')" style="color:#aaa;font-size:0.9rem;margin-right:2px" title="編輯">✏️</button>
+  <button class="milestone-del" onclick="deleteMilestone('${m.id}')">✕</button>
+</div>`;
+}
+
+window.openMilestoneForm = () => {
+  editingMilestoneId = null;
+  document.getElementById('ms-sheet').querySelector('.modal-title').textContent = '📋 新增課程事件';
+  document.getElementById('ms-date').value = todayStr();
+  selectedMsType = 'phase';
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === 'phase'));
+  document.getElementById('ms-name').value = '';
+  updateMsNameField();
+  document.getElementById('ms-form-alert').className = 'alert';
+  document.getElementById('ms-overlay').classList.add('open');
+  document.getElementById('ms-sheet').classList.add('open');
+};
+
+window.openMilestoneEdit = (id) => {
+  const m = milestones.find(x => x.id === id);
+  if (!m) return;
+  editingMilestoneId = id;
+  document.getElementById('ms-sheet').querySelector('.modal-title').textContent = '✏️ 編輯課程事件';
+  document.getElementById('ms-date').value = m.date;
+  selectedMsType = m.type || 'phase';
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === selectedMsType));
+  document.getElementById('ms-name').value = m.name || '';
+  updateMsNameField();
+  document.getElementById('ms-form-alert').className = 'alert';
+  document.getElementById('ms-overlay').classList.add('open');
+  document.getElementById('ms-sheet').classList.add('open');
+};
+
+window.closeMilestoneForm = () => {
+  editingMilestoneId = null;
+  document.getElementById('ms-overlay').classList.remove('open');
+  document.getElementById('ms-sheet').classList.remove('open');
+};
+
+window.selectMsType = (chip) => {
+  document.querySelectorAll('.ms-type-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedMsType = chip.dataset.type;
+  updateMsNameField();
+};
+
+function updateMsNameField() {
+  const label = document.getElementById('ms-name-label');
+  const inp = document.getElementById('ms-name');
+  if (selectedMsType === 'phase') {
+    label.textContent = '階段名稱（如：維持期第一週）';
+    inp.placeholder = '維持期第一週';
+  } else if (selectedMsType === 'pause') {
+    label.textContent = '暫停原因/說明';
+    inp.placeholder = '發燒暫停 5 天';
+  } else {
+    label.textContent = '備注（可空白）';
+    inp.placeholder = '';
+  }
+}
+
+window.saveMilestone = async () => {
+  if (!db) { showAlert('ms-form-alert', 'error', '請先設定 Firebase'); return; }
+  const date = document.getElementById('ms-date').value;
+  const name = document.getElementById('ms-name').value.trim();
+  if (!date) { showAlert('ms-form-alert', 'error', '請選擇日期'); return; }
+  if (selectedMsType === 'phase' && !name) { showAlert('ms-form-alert', 'error', '請填入階段名稱'); return; }
+  try {
+    if (editingMilestoneId) {
+      await updateDoc(doc(db, 'milestones', editingMilestoneId), { date, type: selectedMsType, name });
+    } else {
+      await addDoc(collection(db, 'milestones'), { date, type: selectedMsType, name, createdAt: new Date().toISOString() });
+    }
+    closeMilestoneForm();
+    await loadMilestones();
+    renderCourseList();
+    updateRecordPhase();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistList();
+  } catch(e) { showAlert('ms-form-alert', 'error', '儲存失敗：' + e.message); }
+};
+
+window.deleteMilestone = async (id) => {
+  if (!confirm('確定刪除這個課程記錄？')) return;
+  try {
+    await deleteDoc(doc(db, 'milestones', id));
+    await loadMilestones();
+    renderCourseList();
+    updateRecordPhase();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistList();
+  } catch(e) { alert('刪除失敗：' + e.message); }
+};
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+window.saveFirebaseConfig = () => {
+  const cfg={
+    apiKey:document.getElementById('cfg-apiKey').value.trim(),
+    authDomain:document.getElementById('cfg-authDomain').value.trim(),
+    projectId:document.getElementById('cfg-projectId').value.trim(),
+    appId:document.getElementById('cfg-appId').value.trim(),
+  };
+  if(!cfg.apiKey||!cfg.projectId){showAlert('firebase-alert','error','請填入 API Key 和 Project ID');return;}
+  localStorage.setItem('fb_config',JSON.stringify(cfg));
+  showAlert('firebase-alert','success','✅ 已儲存，重新整理後生效。');
+};
+window.saveClaudeConfig = () => {
+  const key=document.getElementById('cfg-claudeKey').value.trim();
+  if(!key||!key.startsWith('sk-')){showAlert('claude-alert','error','請填入有效的 API Key（sk- 開頭）');return;}
+  localStorage.setItem('openai_key',key);
+  showAlert('claude-alert','success','✅ AI 設定已儲存！');
+};
+window.toggleKeyVisibility = () => {
+  const inp=document.getElementById('cfg-claudeKey');
+  const btn=document.getElementById('key-eye-btn');
+  const hidden=inp.style.webkitTextSecurity==='disc';
+  inp.style.webkitTextSecurity=hidden?'none':'disc';
+  btn.textContent=hidden?'🙈':'👁';
+};
+function restoreSettingsFields() {
+  const cfg=getFirebaseConfig();
+  if(cfg){
+    const s=(id,v)=>{if(v)document.getElementById(id).value=v;};
+    s('cfg-apiKey',cfg.apiKey);s('cfg-authDomain',cfg.authDomain);
+    s('cfg-projectId',cfg.projectId);s('cfg-appId',cfg.appId);
+  }
+  const k=getOpenAIKey();
+  if(k) document.getElementById('cfg-claudeKey').value=k;
+}
+
+// ── Settings sync (export / import) ──────────────────────────────────────────
+window.exportSettings = () => {
+  const cfg = getFirebaseConfig();
+  const key = getOpenAIKey();
+  if (!cfg?.projectId && !key) {
+    document.getElementById('export-code-wrap').style.display = 'block';
+    showAlert('copy-alert', 'error', '沒有設定可以匯出，請先填入 Firebase 設定');
+    return;
+  }
+  const data = {};
+  if (cfg) data.fb = cfg;
+  if (key) data.ai = key;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  document.getElementById('export-code').value = encoded;
+  document.getElementById('export-code-wrap').style.display = 'block';
+};
+
+window.copySettingsCode = () => {
+  const code = document.getElementById('export-code').value;
+  if (!code) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(code)
+      .then(() => showAlert('copy-alert', 'success', '✅ 已複製！請妥善保管此代碼。'))
+      .catch(() => { document.getElementById('export-code').select(); document.execCommand('copy'); showAlert('copy-alert', 'success', '✅ 已複製！'); });
+  } else {
+    document.getElementById('export-code').select();
+    document.execCommand('copy');
+    showAlert('copy-alert', 'success', '✅ 已複製！');
+  }
+};
+
+window.importSettings = () => {
+  const code = document.getElementById('import-code').value.trim();
+  if (!code) { showAlert('import-alert', 'error', '請貼上設定代碼'); return; }
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (data.fb) {
+      localStorage.setItem('fb_config', JSON.stringify(data.fb));
+      restoreSettingsFields();
+      tryInitFirebase();
+    }
+    if (data.ai) {
+      localStorage.setItem('openai_key', data.ai);
+      document.getElementById('cfg-claudeKey').value = data.ai;
+    }
+    document.getElementById('import-code').value = '';
+    const what = [data.fb && 'Firebase', data.ai && 'OpenAI API Key'].filter(Boolean).join(' 和 ');
+    showAlert('import-alert', 'success', `✅ ${what} 設定已匯入！`);
+    if (data.fb) loadTimeline(currentDate);
+  } catch(e) {
+    showAlert('import-alert', 'error', '❌ 代碼無效，請重新從舊裝置複製');
+  }
+};
+
+// ── Medications ───────────────────────────────────────────────────────────────
+function suggestMedTimes(n) {
+  const map = {
+    1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','20:00'],
+    4:['08:00','14:00','20:00','02:00'], 6:['06:00','10:00','14:00','18:00','22:00','02:00'],
+  };
+  return map[n] || Array.from({length:n},(_,i)=>`${String(Math.floor(24/n*i)).padStart(2,'0')}:00`);
+}
+
+async function loadMeds() {
+  if (!db) { meds = []; return; }
+  try {
+    const snap = await getDocs(collection(db, 'meds'));
+    meds = [];
+    snap.forEach(d => meds.push({ id: d.id, ...d.data() }));
+  } catch(e) { console.warn('loadMeds:', e); }
+}
+
+function getMedsForDate(date) {
+  return meds.filter(m => {
+    if (m.startDate > date) return false;
+    if (m.endDate && m.endDate < date) return false; // null/absent endDate = no end
+    const sched = m.scheduleType || 'daily';
+    if (sched === 'weekdays') {
+      const dow = new Date(date + 'T00:00:00').getDay(); // 0=Sun
+      return (m.weekdays || []).includes(dow);
+    }
+    if (sched === 'interval') {
+      const [y1,mo1,d1] = m.startDate.split('-').map(Number);
+      const [y2,mo2,d2] = date.split('-').map(Number);
+      const diff = Math.round((Date.UTC(y2,mo2-1,d2) - Date.UTC(y1,mo1-1,d1)) / 86400000);
+      return diff >= 0 && diff % (m.intervalDays || 2) === 0;
+    }
+    return true;
+  });
+}
+
+function formatMedSchedule(m) {
+  const sched = m.scheduleType || 'daily';
+  if (sched === 'weekdays') {
+    const DOW = ['日','一','二','三','四','五','六'];
+    return '週' + (m.weekdays||[]).sort().map(d => DOW[d]).join('');
+  }
+  if (sched === 'interval') return (m.intervalDays||2) === 2 ? '隔天' : `每${m.intervalDays}天`;
+  return '';
+}
+
+async function syncTakenMeds(date) {
+  if (!db) return;
+  tempReadings = { 早: null, 晚: null };
+  fluidEntries = [];
+  try {
+    // Single where clause to avoid composite index requirement; filter category client-side
+    const snap = await getDocs(query(collection(db,'logs'), where('date','==',date)));
+    const dayMeds = getMedsForDate(date);
+    snap.forEach(d => {
+      const log = d.data();
+      if (log.category === '體溫' && (log._tempSlot === '早' || log._tempSlot === '晚')) {
+        tempReadings[log._tempSlot] = { value: log._tempValue, logId: d.id, time: log.time };
+        return;
+      }
+      if (log.category === '飲水' && log._fluidAmount) {
+        fluidEntries.push({ time: log.time, name: log._fluidName || '', amount: log._fluidAmount, logId: d.id });
+        return;
+      }
+      if (log.category !== '用藥') return;
+      if (log._medId && log._medTime === 'prn') {
+        // PRN dose — can have multiple per med per day
+        const key = `${date}|${log._medId}`;
+        if (!prnDoses.has(key)) prnDoses.set(key, []);
+        const arr = prnDoses.get(key);
+        if (!arr.find(x => x.logId === d.id)) arr.push({ time: log.time, logId: d.id });
+      } else if (log._medId && log._medTime) {
+        // Scheduled dose
+        const key = `${date}|${log._medId}|${log._medTime}`;
+        if (!takenMedDoses.has(key)) takenMedDoses.set(key, d.id);
+      } else {
+        // Fallback for old entries without _medId/_medTime
+        const med = dayMeds.find(m => (log.content||'').startsWith(m.name) && (m.times||[]).includes(log.time));
+        if (med) {
+          const key = `${date}|${med.id}|${log.time}`;
+          if (!takenMedDoses.has(key)) takenMedDoses.set(key, d.id);
+        }
+      }
+    });
+    // Sort PRN doses chronologically
+    prnDoses.forEach(arr => arr.sort((a,b) => a.time.localeCompare(b.time)));
+    fluidEntries.sort((a,b) => a.time.localeCompare(b.time));
+    renderTempCard();
+    renderFluidCard();
+  } catch(e) { console.warn('syncTakenMeds:', e); }
+}
+
+function renderFluidCard() {
+  const totalEl = document.getElementById('fluid-total');
+  const listEl  = document.getElementById('fluid-list');
+  if (!totalEl || !listEl) return;
+  const total = fluidEntries.reduce((s, e) => s + (e.amount || 0), 0);
+  totalEl.textContent = `${total} cc`;
+  totalEl.style.color = total >= 1500 ? '#388e3c' : '#2a7fc0';
+  listEl.innerHTML = fluidEntries.map((e, i) => `
+    <div class="fluid-entry-row">
+      <span class="fluid-entry-time">${e.time}</span>
+      <span class="fluid-entry-name">${escapeHtml(e.name)}</span>
+      <span class="fluid-entry-amount">${e.amount} cc</span>
+      <button class="fluid-entry-del" onclick="deleteFluidEntry(${i})">✕</button>
+    </div>`).join('');
+}
+
+window.onFluidSelectChange = () => {
+  const sel    = document.getElementById('fluid-name-select');
+  const row    = document.getElementById('fluid-custom-row');
+  const custom = document.getElementById('fluid-name-custom');
+  if (sel.value === '其他') {
+    row.classList.add('visible');
+    custom.focus();
+  } else {
+    row.classList.remove('visible');
+  }
+};
+
+window.addFluidEntry = async () => {
+  const timeEl   = document.getElementById('fluid-time');
+  const selEl    = document.getElementById('fluid-name-select');
+  const customEl = document.getElementById('fluid-name-custom');
+  const amountEl = document.getElementById('fluid-amount');
+  const time   = timeEl.value || nowTime();
+  const name   = selEl.value === '其他' ? (customEl.value.trim() || '其他') : selEl.value;
+  const amount = parseInt(amountEl.value);
+  if (!amount || amount < 1) { alert('請輸入飲水量（cc）'); amountEl.focus(); return; }
+  const entry = { time, name, amount, logId: null };
+  fluidEntries.push(entry);
+  fluidEntries.sort((a, b) => a.time.localeCompare(b.time));
+  customEl.value = '';
+  amountEl.value = '';
+  timeEl.value = '';
+  renderFluidCard();
+  if (db) {
+    try {
+      const ref = await addDoc(collection(db, 'logs'), {
+        date: currentDate, time, timestamp: currentDate+'T'+time+':00',
+        category: '飲水', content: `${name} ${amount} cc`,
+        severity: null, blood: null, tags: ['飲水'],
+        _fluidName: name, _fluidAmount: amount,
+        createdAt: new Date().toISOString(),
+      });
+      entry.logId = ref.id;
+      loadTimeline(currentDate);
+    } catch(e) {
+      console.warn('addFluidEntry:', e);
+      const idx = fluidEntries.indexOf(entry);
+      if (idx !== -1) fluidEntries.splice(idx, 1);
+      renderFluidCard();
+      alert('儲存失敗：' + e.message);
+    }
+  }
+};
+
+window.deleteFluidEntry = async (idx) => {
+  const entry = fluidEntries[idx];
+  if (!entry) return;
+  const logId = entry.logId;
+  fluidEntries.splice(idx, 1);
+  renderFluidCard();
+  if (db && logId) {
+    try {
+      await deleteDoc(doc(db, 'logs', logId));
+      loadTimeline(currentDate);
+    } catch(e) { console.warn('deleteFluidEntry:', e); }
+  }
+};
+
+function renderTempCard() {
+  ['早', '晚'].forEach(slot => {
+    const r = tempReadings[slot];
+    const saved = document.getElementById(`temp-saved-${slot}`);
+    const edit  = document.getElementById(`temp-edit-${slot}`);
+    const disp  = document.getElementById(`temp-display-${slot}`);
+    const inp   = document.getElementById(`temp-input-${slot}`);
+    if (!saved || !edit || !disp || !inp) return;
+    if (r) {
+      const t = parseFloat(r.value);
+      disp.textContent = `${t.toFixed(1)}°C`;
+      disp.className = `temp-val${t >= 38 ? ' fever' : ''}`;
+      saved.style.display = 'flex';
+      edit.style.display = 'none';
+    } else {
+      inp.value = '';
+      saved.style.display = 'none';
+      edit.style.display = 'flex';
+    }
+  });
+}
+
+window.saveTempReading = async (slot) => {
+  const inp = document.getElementById(`temp-input-${slot}`);
+  const val = parseFloat(inp.value);
+  if (isNaN(val) || val < 35 || val > 42) { alert('請輸入合理的體溫（35～42°C）'); return; }
+  if (tempReadings[slot]?.logId) {
+    try { await deleteDoc(doc(db, 'logs', tempReadings[slot].logId)); } catch(e) {}
+  }
+  const now = new Date();
+  const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  tempReadings[slot] = { value: val, logId: null, time: actualTime };
+  renderTempCard();
+  if (db) {
+    try {
+      const ref = await addDoc(collection(db, 'logs'), {
+        date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
+        category: '體溫', content: `體溫 ${val.toFixed(1)}°C（${slot}）`,
+        severity: null, blood: null, tags: ['體溫'],
+        _tempSlot: slot, _tempValue: val,
+        createdAt: new Date().toISOString(),
+      });
+      tempReadings[slot].logId = ref.id;
+      loadTimeline(currentDate);
+    } catch(e) {
+      console.warn('saveTempReading:', e);
+      tempReadings[slot] = null;
+      renderTempCard();
+      alert('儲存失敗：' + e.message);
+    }
+  }
+};
+
+window.deleteTempReading = async (slot) => {
+  const r = tempReadings[slot];
+  if (!r) return;
+  const logId = r.logId;
+  tempReadings[slot] = null;
+  renderTempCard();
+  if (db && logId) {
+    try {
+      await deleteDoc(doc(db, 'logs', logId));
+      loadTimeline(currentDate);
+    } catch(e) { console.warn('deleteTempReading:', e); }
+  }
+};
+
+function renderTodayMeds() {
+  const wrap = document.getElementById('today-meds-wrap');
+  const list = document.getElementById('today-meds-list');
+  if (!wrap || !list) return;
+  const todayMeds = getMedsForDate(currentDate);
+  wrap.style.display = (db || todayMeds.length) ? 'block' : 'none';
+  if (!todayMeds.length) {
+    list.innerHTML = '<div style="font-size:0.82rem;color:var(--text-light);padding:4px 0 2px">今天沒有用藥計畫</div>';
+    const countEl = document.getElementById('today-meds-count');
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  // Separate PRN meds from scheduled meds
+  const prnMeds = todayMeds.filter(m => (m.timingType||'fixed') === 'prn');
+  const schedMeds = todayMeds.filter(m => (m.timingType||'fixed') !== 'prn');
+
+  // Build slotKey → [med, ...] map (meal slots or clock times)
+  const slotMap = {};
+  schedMeds.forEach(med => {
+    const keys = (med.timingType||'fixed') === 'meal' ? (med.mealSlots||[]) : (med.times||[]);
+    keys.forEach(k => {
+      if (!slotMap[k]) slotMap[k] = [];
+      slotMap[k].push(med);
+    });
+  });
+  const mealKeys = MEAL_ORDER.filter(k => slotMap[k]);
+  const timeKeys = Object.keys(slotMap).filter(k => !MEAL_ORDER.includes(k)).sort();
+  const sortedKeys = [...mealKeys, ...timeKeys];
+
+  const countEl = document.getElementById('today-meds-count');
+  if (countEl) {
+    const taken = sortedKeys.reduce((s,k) => s + slotMap[k].filter(m => takenMedDoses.has(`${currentDate}|${m.id}|${k}`)).length, 0);
+    const total = sortedKeys.reduce((s,k) => s + slotMap[k].length, 0);
+    const prnTotal = prnMeds.reduce((s,m) => s + (prnDoses.get(`${currentDate}|${m.id}`) || []).length, 0);
+    countEl.textContent = prnTotal ? `${taken}/${total} 次・PRN ${prnTotal} 次` : `${taken}/${total} 次`;
+  }
+
+  // Edit/delete management row (collapsible)
+  const mgmtHtml = todayMeds.map(m => {
+    const sl = formatMedSchedule(m);
+    const prnBadge = (m.timingType||'fixed') === 'prn' ? '<span style="font-size:0.65rem;background:#f3eeff;color:#7c5cbf;border-radius:8px;padding:1px 5px;margin-left:2px">PRN</span>' : '';
+    return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.75rem;color:var(--text-light);margin-right:8px">
+      ${escapeHtml(m.name)}${prnBadge}${sl?`<span style="font-size:0.68rem;color:#9c6fcf">(${sl})</span>`:''}
+      <button class="med-act-btn" onclick="openMedEdit('${m.id}')">✏️</button>
+      <button class="med-act-btn" onclick="deleteMed('${m.id}')">✕</button>
+    </span>`;
+  }).join('');
+
+  const mgmtSection = `<div style="border-bottom:1px solid #f0e8ff;margin-bottom:6px;padding-bottom:4px">
+    <div onclick="toggleMedMgmt()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;color:#9c6fcf;font-weight:600;padding:2px 0;user-select:none;-webkit-user-select:none">
+      <span>📋 管理用藥</span>
+      <span>${medMgmtOpen ? '▼' : '▶'}</span>
+    </div>
+    ${medMgmtOpen ? `<div style="margin-top:6px;line-height:2">${mgmtHtml}</div>
+    <button onclick="openMedForm()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 14px;cursor:pointer;margin-top:4px;font-family:inherit">＋ 新增用藥</button>` : ''}
+  </div>`;
+
+  list.innerHTML = mgmtSection;
+
+  // Scheduled med rows
+  const rowsHtml = sortedKeys.map(slotKey => {
+    const chipsHtml = slotMap[slotKey].map(med => {
+      const key = `${currentDate}|${med.id}|${slotKey}`;
+      const taken = takenMedDoses.has(key);
+      return `<button class="med-chip${taken?' taken':''}" onclick="markMedTaken('${med.id}','${slotKey}')">${taken?'✓ ':''}${escapeHtml(med.name)}</button>`;
+    }).join('');
+    return `<div class="med-row"><span class="med-row-time">${slotKey}</span><div class="med-row-drugs">${chipsHtml}</div></div>`;
+  }).join('');
+  list.innerHTML += rowsHtml;
+
+  // PRN section (collapsible)
+  if (prnMeds.length) {
+    const prnDiv = document.createElement('div');
+    prnDiv.style.cssText = 'margin-top:8px;padding-top:7px;border-top:1px dashed #e0d4f5';
+    const prnTotalDoses = prnMeds.reduce((s,m) => s + (prnDoses.get(`${currentDate}|${m.id}`) || []).length, 0);
+    const prnArrow = prnSectionOpen ? '▼' : '▶';
+    const prnCount = prnTotalDoses ? `<span style="font-size:0.68rem;color:#9c6fcf;margin-left:4px">${prnTotalDoses} 次</span>` : '';
+    prnDiv.innerHTML = `<div onclick="togglePrnSection()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:${prnSectionOpen?'6px':'0'};user-select:none;-webkit-user-select:none">
+      <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.5px;display:flex;align-items:center">PRN 按需用藥${prnCount}</div>
+      <span style="font-size:0.72rem;color:#9c6fcf">${prnArrow}</span>
+    </div>`;
+    if (prnSectionOpen) {
+      prnMeds.forEach(med => {
+        const key = `${currentDate}|${med.id}`;
+        const doses = prnDoses.get(key) || [];
+        const doseTagsHtml = doses.map((d, i) =>
+          `<span style="font-size:0.72rem;color:#6a3caf;background:#f3eeff;border-radius:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px">
+            ${d.time}
+            <button onclick="deletePrnDose('${med.id}',${i})" style="background:none;border:none;color:#bbb;font-size:0.7rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
+          </span>`
+        ).join('');
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #f3eeff';
+        row.innerHTML = `
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text)">${escapeHtml(med.name)}${med.dosage?`<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:5px">${escapeHtml(med.dosage)}</span>`:''}</div>
+            ${doses.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${doseTagsHtml}</div>` : ''}
+          </div>
+          <button onclick="markPrnTaken('${med.id}')" style="padding:4px 11px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1.5px solid #c5aaf0;background:white;color:#7c5cbf;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">喂藥</button>`;
+        prnDiv.appendChild(row);
+      });
+    }
+    list.appendChild(prnDiv);
+  }
+}
+
+window.markMedTaken = async (medId, slotKey) => {
+  const key = `${currentDate}|${medId}|${slotKey}`;
+
+  if (takenMedDoses.has(key)) {
+    const logId = takenMedDoses.get(key);
+    takenMedDoses.delete(key);
+    renderTodayMeds();
+    if (db && logId) {
+      try {
+        await deleteDoc(doc(db, 'logs', logId));
+        loadTimeline(currentDate);
+      } catch(e) { console.warn('deleteMedLog:', e); }
+    }
+    return;
+  }
+
+  takenMedDoses.set(key, null);
+  renderTodayMeds();
+
+  if (db) {
+    const med = meds.find(m => m.id === medId);
+    if (med) {
+      try {
+        const now = new Date();
+        const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const ref = await addDoc(collection(db, 'logs'), {
+          date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
+          category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''}`,
+          severity: null, blood: null, tags: [med.name],
+          _medId: medId, _medTime: slotKey,
+          createdAt: new Date().toISOString(),
+        });
+        takenMedDoses.set(key, ref.id);
+        loadTimeline(currentDate);
+      } catch(e) {
+        console.warn('markMedTaken:', e);
+        takenMedDoses.delete(key);
+        renderTodayMeds();
+      }
+    }
+  }
+};
+
+window.markPrnTaken = async (medId) => {
+  const med = meds.find(m => m.id === medId);
+  if (!med) return;
+  const now = new Date();
+  const actualTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const key = `${currentDate}|${medId}`;
+  if (!prnDoses.has(key)) prnDoses.set(key, []);
+  const arr = prnDoses.get(key);
+  const idx = arr.length;
+  arr.push({ time: actualTime, logId: null });
+  renderTodayMeds();
+  if (db) {
+    try {
+      const ref = await addDoc(collection(db, 'logs'), {
+        date: currentDate, time: actualTime, timestamp: currentDate+'T'+actualTime+':00',
+        category: '用藥', content: `${med.name}${med.dosage?' '+med.dosage:''} (PRN)`,
+        severity: null, blood: null, tags: [med.name],
+        _medId: medId, _medTime: 'prn',
+        createdAt: new Date().toISOString(),
+      });
+      arr[idx].logId = ref.id;
+      loadTimeline(currentDate);
+    } catch(e) {
+      console.warn('markPrnTaken:', e);
+      arr.splice(idx, 1);
+      renderTodayMeds();
+    }
+  }
+};
+
+window.deletePrnDose = async (medId, idx) => {
+  const key = `${currentDate}|${medId}`;
+  const arr = prnDoses.get(key);
+  if (!arr || idx < 0 || idx >= arr.length) return;
+  const { logId } = arr[idx];
+  arr.splice(idx, 1);
+  if (arr.length === 0) prnDoses.delete(key);
+  renderTodayMeds();
+  if (db && logId) {
+    try {
+      await deleteDoc(doc(db, 'logs', logId));
+      loadTimeline(currentDate);
+    } catch(e) { console.warn('deletePrnDose:', e); }
+  }
+};
+
+window.toggleTodayMeds = () => {
+  const body = document.getElementById('today-meds-body');
+  const arrow = document.getElementById('today-meds-arrow');
+  const hdr = document.getElementById('today-meds-hdr');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '▶' : '▼';
+  hdr.classList.toggle('expanded', !open);
+};
+
+window.toggleMedMgmt = () => { medMgmtOpen = !medMgmtOpen; renderTodayMeds(); };
+window.togglePrnSection = () => { prnSectionOpen = !prnSectionOpen; renderTodayMeds(); };
+
+function applyMedNoEnd(noEnd) {
+  medNoEnd = noEnd;
+  const btn = document.getElementById('med-noend-btn');
+  const inp = document.getElementById('med-end');
+  if (!btn || !inp) return;
+  btn.style.background = noEnd ? '#7c5cbf' : 'white';
+  btn.style.color = noEnd ? 'white' : 'var(--text-light)';
+  btn.style.borderColor = noEnd ? '#7c5cbf' : 'var(--border)';
+  inp.style.display = noEnd ? 'none' : '';
+}
+window.toggleMedNoEnd = () => applyMedNoEnd(!medNoEnd);
+
+function resetMedSchedUI(sched, weekdays, intervalDays) {
+  selectedMedSched = sched || 'daily';
+  document.querySelectorAll('[data-sched]').forEach(b => b.classList.toggle('active', b.dataset.sched === selectedMedSched));
+  document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
+  document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
+  document.querySelectorAll('.med-dow-chip').forEach(b => b.classList.toggle('active', (weekdays||[]).includes(parseInt(b.dataset.dow))));
+  document.getElementById('med-interval-days').value = String(intervalDays || 2);
+}
+
+window.openMedForm = () => {
+  medEditId = null;
+  document.getElementById('med-modal-title').textContent = '💊 新增用藥提醒';
+  document.getElementById('med-name').value = '';
+  document.getElementById('med-dosage').value = '';
+  document.getElementById('med-freq').value = '1';
+  document.getElementById('med-start').value = currentDate;
+  document.getElementById('med-end').value = '';
+  document.getElementById('med-notes').value = '';
+  document.getElementById('med-form-alert').className = 'alert';
+  document.getElementById('med-photo-preview').style.display = 'none';
+  document.getElementById('med-ai-result').style.display = 'none';
+  document.getElementById('med-ai-btn').disabled = true;
+  document.getElementById('med-photo').value = '';
+  _medPhotoDataUrl = null;
+  applyMedNoEnd(false);
+  resetMedSchedUI('daily', [], 2);
+  applyMedTimingType('fixed', []);
+  renderMedTimesEditor(suggestMedTimes(1));
+  document.getElementById('med-overlay').classList.add('open');
+  document.getElementById('med-sheet').classList.add('open');
+};
+
+window.openMedEdit = (id) => {
+  const m = meds.find(x => x.id === id);
+  if (!m) return;
+  medEditId = id;
+  document.getElementById('med-modal-title').textContent = '✏️ 編輯用藥提醒';
+  document.getElementById('med-name').value = m.name || '';
+  document.getElementById('med-dosage').value = m.dosage || '';
+  const n = (m.times?.length || 1);
+  document.getElementById('med-freq').value = String(n <= 6 ? n : 1);
+  document.getElementById('med-start').value = m.startDate || '';
+  document.getElementById('med-end').value = m.endDate || '';
+  document.getElementById('med-notes').value = m.notes || '';
+  document.getElementById('med-form-alert').className = 'alert';
+  document.getElementById('med-photo-preview').style.display = 'none';
+  document.getElementById('med-ai-result').style.display = 'none';
+  document.getElementById('med-ai-btn').disabled = true;
+  document.getElementById('med-photo').value = '';
+  _medPhotoDataUrl = null;
+  applyMedNoEnd(!m.endDate);
+  resetMedSchedUI(m.scheduleType, m.weekdays, m.intervalDays);
+  applyMedTimingType(m.timingType || 'fixed', m.mealSlots || []);
+  renderMedTimesEditor(m.times || suggestMedTimes(1));
+  document.getElementById('med-overlay').classList.add('open');
+  document.getElementById('med-sheet').classList.add('open');
+};
+
+window.closeMedForm = () => {
+  medEditId = null;
+  document.getElementById('med-overlay').classList.remove('open');
+  document.getElementById('med-sheet').classList.remove('open');
+};
+
+window.selectMedSched = (btn) => {
+  document.querySelectorAll('[data-sched]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMedSched = btn.dataset.sched;
+  document.getElementById('med-weekdays-picker').style.display = selectedMedSched === 'weekdays' ? 'block' : 'none';
+  document.getElementById('med-interval-picker').style.display = selectedMedSched === 'interval' ? 'block' : 'none';
+};
+
+window.selectMedTimingType = (btn) => {
+  document.querySelectorAll('[data-timing]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMedTimingType = btn.dataset.timing;
+  _applyTimingTypeUI();
+};
+
+function applyMedTimingType(type, mealSlots) {
+  selectedMedTimingType = type || 'fixed';
+  document.querySelectorAll('[data-timing]').forEach(b => b.classList.toggle('active', b.dataset.timing === selectedMedTimingType));
+  _applyTimingTypeUI();
+  document.querySelectorAll('.med-meal-chip').forEach(b => b.classList.toggle('active', (mealSlots||[]).includes(b.dataset.meal)));
+}
+
+function _applyTimingTypeUI() {
+  const t = selectedMedTimingType;
+  document.getElementById('med-fixed-time-section').style.display = t === 'fixed' ? 'block' : 'none';
+  document.getElementById('med-meal-section').style.display = t === 'meal' ? 'block' : 'none';
+  document.getElementById('med-prn-note').style.display = t === 'prn' ? 'block' : 'none';
+  document.getElementById('med-freq-wrap').style.display = t === 'fixed' ? '' : 'none';
+}
+
+window.toggleMedMeal = (btn) => { btn.classList.toggle('active'); };
+
+function getMedMealSlots() {
+  return [...document.querySelectorAll('.med-meal-chip.active')].map(b => b.dataset.meal);
+}
+
+window.toggleMedDow = (btn) => { btn.classList.toggle('active'); };
+
+function getMedWeekdays() {
+  return [...document.querySelectorAll('.med-dow-chip.active')].map(b => parseInt(b.dataset.dow));
+}
+
+window.onMedFreqChange = () => {
+  renderMedTimesEditor(suggestMedTimes(parseInt(document.getElementById('med-freq').value)));
+};
+
+function renderMedTimesEditor(times) {
+  const el = document.getElementById('med-times-editor');
+  el.innerHTML = times.map((t,i) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
+      <input type="time" value="${t}" id="med-time-${i}" style="flex:1;padding:7px 10px;font-size:0.85rem;border:1.5px solid var(--border);border-radius:9px;background:var(--cream);outline:none;font-family:inherit">
+      <button onclick="removeMedTimeRow(${i})" style="background:none;border:none;color:#ccc;font-size:1.1rem;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    </div>`).join('') +
+    `<button onclick="addMedTimeRow()" style="font-size:0.78rem;color:#9c6fcf;background:none;border:1.5px dashed #c5aaf0;border-radius:8px;padding:5px 12px;cursor:pointer;margin-top:2px;font-family:inherit">＋ 新增時間</button>`;
+}
+
+function getMedTimesFromEditor() {
+  const times = [];
+  let i = 0;
+  while (document.getElementById(`med-time-${i}`)) {
+    const v = document.getElementById(`med-time-${i}`).value;
+    if (v) times.push(v);
+    i++;
+  }
+  return times;
+}
+
+window.removeMedTimeRow = (i) => {
+  const cur = getMedTimesFromEditor();
+  if (cur.length <= 1) return;
+  cur.splice(i, 1);
+  renderMedTimesEditor(cur);
+};
+
+window.addMedTimeRow = () => {
+  const cur = getMedTimesFromEditor();
+  cur.push('12:00');
+  renderMedTimesEditor(cur);
+};
+
+window.onMedPhotoSelected = (input) => {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _medPhotoDataUrl = e.target.result;
+    document.getElementById('med-photo-img').src = _medPhotoDataUrl;
+    document.getElementById('med-photo-preview').style.display = 'block';
+    document.getElementById('med-ai-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.parseMedFromPhoto = async () => {
+  const key = getOpenAIKey();
+  if (!key) { showAlert('med-form-alert','error','請先設定 OpenAI API Key'); return; }
+  if (!_medPhotoDataUrl) { showAlert('med-form-alert','error','請先選擇照片'); return; }
+  const btn = document.getElementById('med-ai-btn');
+  btn.disabled = true; btn.textContent = '判讀中…';
+  const resultEl = document.getElementById('med-ai-result');
+  resultEl.style.display = 'block'; resultEl.textContent = 'AI 分析藥袋中…';
+  let imageDataUrl = _medPhotoDataUrl;
+  try { imageDataUrl = await resizeImage(_medPhotoDataUrl, 1200); } catch(e) {}
+  const base64 = imageDataUrl.split(',')[1];
+  const mimeType = imageDataUrl.split(';')[0].split(':')[1];
+  const prompt = `這是一張藥袋或藥品包裝照片。請判讀並以 JSON 格式回傳（只回傳 JSON）：
+{"name":"藥品名稱","dosage":"每次劑量如2cc","timesPerDay":幾次數字,"startDate":"YYYY-MM-DD，若無用今天${currentDate}","durationDays":天數數字若無用7,"endDate":"YYYY-MM-DD","notes":"備注如飯後服用若無填空字串"}`;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o-mini',max_tokens:400,messages:[
+        {role:'system',content:'只回傳 JSON，不含 markdown。'},
+        {role:'user',content:[
+          {type:'image_url',image_url:{url:`data:${mimeType};base64,${base64}`,detail:'low'}},
+          {type:'text',text:prompt}
+        ]}
+      ]})
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if (parsed.name) document.getElementById('med-name').value = parsed.name;
+    if (parsed.dosage) document.getElementById('med-dosage').value = parsed.dosage;
+    if (parsed.timesPerDay) {
+      const n = Math.min(parseInt(parsed.timesPerDay)||1, 6);
+      document.getElementById('med-freq').value = String(n);
+      renderMedTimesEditor(suggestMedTimes(n));
+    }
+    if (parsed.startDate) document.getElementById('med-start').value = parsed.startDate;
+    if (parsed.endDate) document.getElementById('med-end').value = parsed.endDate;
+    else if (parsed.startDate && parsed.durationDays) {
+      const [y,mo,d] = parsed.startDate.split('-').map(Number);
+      document.getElementById('med-end').value = localDateStr(new Date(Date.UTC(y,mo-1,d+parsed.durationDays-1)));
+    }
+    if (parsed.notes) document.getElementById('med-notes').value = parsed.notes;
+    resultEl.textContent = '✅ AI 判讀完成，請確認後儲存';
+  } catch(e) {
+    resultEl.textContent = '❌ 判讀失敗：' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '✨ AI 判讀';
+};
+
+async function resizeImage(dataUrl, maxPx) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let {width:w, height:h} = img;
+      if (w <= maxPx && h <= maxPx) { resolve(dataUrl); return; }
+      const scale = maxPx / Math.max(w, h);
+      w = Math.round(w*scale); h = Math.round(h*scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+window.saveMed = async () => {
+  if (!db) { showAlert('med-form-alert','error','請先設定 Firebase'); return; }
+  const name = document.getElementById('med-name').value.trim();
+  const dosage = document.getElementById('med-dosage').value.trim();
+  const startDate = document.getElementById('med-start').value;
+  const endDate = medNoEnd ? null : (document.getElementById('med-end').value || null);
+  const notes = document.getElementById('med-notes').value.trim();
+  const timingType = selectedMedTimingType;
+  const times = timingType === 'fixed' ? getMedTimesFromEditor().sort() : [];
+  const mealSlots = timingType === 'meal' ? getMedMealSlots() : [];
+  const scheduleType = selectedMedSched;
+  const weekdays = scheduleType === 'weekdays' ? getMedWeekdays() : [];
+  const intervalDays = scheduleType === 'interval' ? (parseInt(document.getElementById('med-interval-days').value) || 2) : null;
+  if (!name) { showAlert('med-form-alert','error','請填入藥品名稱'); return; }
+  if (!startDate) { showAlert('med-form-alert','error','請填入開始日期'); return; }
+  if (!medNoEnd && !endDate) { showAlert('med-form-alert','error','請填入結束日期，或點「無期限」'); return; }
+  if (timingType === 'fixed' && !times.length) { showAlert('med-form-alert','error','請至少設定一個服藥時間'); return; }
+  if (timingType === 'meal' && !mealSlots.length) { showAlert('med-form-alert','error','請至少選擇一個餐次'); return; }
+  // PRN: no time/slot validation needed
+  if (scheduleType === 'weekdays' && !weekdays.length) { showAlert('med-form-alert','error','請至少選擇一個星期幾'); return; }
+  try {
+    const data = { name, dosage, timingType, times, mealSlots, scheduleType, weekdays, intervalDays, startDate, endDate, notes, createdAt: new Date().toISOString() };
+    if (medEditId) {
+      await updateDoc(doc(db,'meds',medEditId), data);
+    } else {
+      await addDoc(collection(db,'meds'), data);
+    }
+    closeMedForm();
+    await loadMeds();
+    renderTodayMeds();
+    scheduleMedNotifications();
+  } catch(e) { showAlert('med-form-alert','error','儲存失敗：'+e.message); }
+};
+
+window.deleteMed = async (id) => {
+  if (!confirm('確定刪除這個用藥提醒？')) return;
+  try {
+    await deleteDoc(doc(db,'meds',id));
+    await loadMeds();
+    renderTodayMeds();
+    scheduleMedNotifications();
+  } catch(e) { alert('刪除失敗：'+e.message); }
+};
+
+async function requestNotifPermission() {
+  if (!('Notification' in window) || Notification.permission !== 'default') return;
+  await Notification.requestPermission();
+}
+
+function scheduleMedNotifications() {
+  _medNotifTimers.forEach(t => clearTimeout(t));
+  _medNotifTimers = [];
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const today = todayStr();
+  const now = new Date();
+  getMedsForDate(today).forEach(med => {
+    (med.times||[]).forEach(timeStr => {
+      const [h,m] = timeStr.split(':').map(Number);
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+      const delay = target - now;
+      if (delay > 0 && delay < 86400000) {
+        _medNotifTimers.push(setTimeout(() => {
+          if (!takenMedDoses.has(`${today}|${med.id}|${timeStr}`)) {
+            new Notification('💊 用藥提醒', {
+              body: `${timeStr} 該服 ${med.name}${med.dosage?' '+med.dosage:''}`,
+              tag: `${today}|${med.id}|${timeStr}`,
+            });
+          }
+        }, delay));
+      }
+    });
+  });
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function showAlert(id,type,msg) {
+  const el=document.getElementById(id);
+  el.className='alert '+type; el.textContent=msg;
+  setTimeout(()=>el.className='alert',4000);
+}
+</script>
+</body>
+</html>
